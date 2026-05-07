@@ -4,6 +4,7 @@ import time
 
 console_address = 1024
 memory = [0] * (console_address + 128 * 32)
+console_pointer = console_address
 
 
 class TkScreen:
@@ -50,19 +51,28 @@ def keyboard_step(screen):
 
     if key is not None:
         memory[0] = key
+        memory[1] = 1
 
 
 def cpu_step():
-    pass
+    global console_pointer
+
+    if memory[1] == 1:
+        memory[console_pointer] = memory[0]
+        memory[1] = 0
+        console_pointer += 1
+
+        if console_pointer == console_address + 128 * 32:
+            console_pointer = console_address
 
 
 def console_step(screen):
-    memory[console_address] = memory[0]
     screen.draw(memory[console_address : console_address + 128 * 32])
 
 
 if __name__ == "__main__":
     memory[0] = ord(" ")
+    memory[1] = 0
     memory[console_address : console_address + 128 * 32] = [ord(" ")] * (128 * 32)
     screen = TkScreen()
 
@@ -70,4 +80,4 @@ if __name__ == "__main__":
         keyboard_step(screen)
         cpu_step()
         console_step(screen)
-        time.sleep(0.5)
+        time.sleep(0.05)
