@@ -1,5 +1,4 @@
 import tkinter as tk
-import time
 
 
 console_address = 1000072
@@ -18,13 +17,14 @@ SHIFT_RIGHT_BY_NUMBER = 11
 BITWISE_AND = 12
 BITWISE_AND_WITH_NUMBER = 13
 PUSH_NUMBER = 14
-COMPARE = 15
-COMPARE_TO_NUMBER = 16
-JUMP_IF_EQUAL = 17
-JUMP_IF_GREATER = 18
-JUMP = 19
-CALL = 20
-RETURN = 21
+POP = 15
+COMPARE = 16
+COMPARE_TO_NUMBER = 17
+JUMP_IF_EQUAL = 18
+JUMP_IF_GREATER = 19
+JUMP = 20
+CALL = 21
+RETURN = 22
 
 def as8(value):
     # Store one machine value as 8 big-endian bytes
@@ -112,17 +112,18 @@ operating_system_source = [
     MOVE_FROM_POINTER, 0, 3,
     COMPARE, 3, 1,
     JUMP_IF_GREATER, "ifNonEmptyInput", 0,
+    POP, 0, 0,
     JUMP, "terminalLoop", 0,
 
     "ifNonEmptyInput",
     CALL, "removeLastCharacterFromTranscript", 0,
+    POP, 0, 0,
     JUMP, "terminalLoop", 0,
 
     "elseBackspace",
-    CALL, "writeToTranscript", 0,
     COMPARE_TO_NUMBER, 2, 10,
     JUMP_IF_EQUAL, "ifEnter", 0,
-    JUMP, "terminalLoop", 0,
+    JUMP, "elseBackspaceElseEnter", 0,
 
     "ifEnter",
     PUSH_NUMBER, 0, 0,
@@ -138,7 +139,6 @@ operating_system_source = [
     PUSH_NUMBER, 0, 0,
     MOVE_FROM_POINTER, 0, 6,
     SUBTRACT, 5, 6,
-    ADD_NUMBER, -8, 6,
     PUSH_NUMBER, 0, 0,
     MOVE, 3, 7,
     PUSH_NUMBER, 3000000, 0,
@@ -157,6 +157,17 @@ operating_system_source = [
     CALL, 3000000, 0,
     MOVE_TO_POINTER, 8, 7,
     MOVE_FROM_POINTER, 0, 1,
+    POP, 0, 0,
+    POP, 0, 0,
+    POP, 0, 0,
+    POP, 0, 0,
+    POP, 0, 0,
+    POP, 0, 0,
+    POP, 0, 0,
+    JUMP, "terminalLoop", 0,
+
+    "elseBackspaceElseEnter",
+    CALL, "writeToTranscript", 0,
     JUMP, "terminalLoop", 0,
 
     "listenForKeypress",
@@ -833,34 +844,39 @@ def cpu_step(memory, equal_flag, greater_flag):
         memory[16:24] = as8(stack_top_pointer)
         memory[0:8] = as8(instruction_pointer + 24)
     elif opcode == 15:
+        # pop: move stack top back by one slot
+        stack_top_pointer -= 8
+        memory[16:24] = as8(stack_top_pointer)
+        memory[0:8] = as8(instruction_pointer + 24)
+    elif opcode == 16:
         # compare: set ALU flags by comparing slot(operand1) to slot(operand2)
         a = asint(memory[base_pointer + operand1 * 8 : base_pointer + operand1 * 8 + 8])
         b = asint(memory[base_pointer + operand2 * 8 : base_pointer + operand2 * 8 + 8])
         equal_flag = 1 if a == b else 0
         greater_flag = 1 if a > b else 0
         memory[0:8] = as8(instruction_pointer + 24)
-    elif opcode == 16:
+    elif opcode == 17:
         # compareToNumber: set ALU flags by comparing slot(operand1) to operand2
         value = asint(memory[base_pointer + operand1 * 8 : base_pointer + operand1 * 8 + 8])
         equal_flag = 1 if value == operand2 else 0
         greater_flag = 1 if value > operand2 else 0
         memory[0:8] = as8(instruction_pointer + 24)
-    elif opcode == 17:
+    elif opcode == 18:
         # jumpIfEqual: jump to operand1 if the equal flag is set
         if equal_flag == 1:
             memory[0:8] = as8(operand1)
         else:
             memory[0:8] = as8(instruction_pointer + 24)
-    elif opcode == 18:
+    elif opcode == 19:
         # jumpIfGreater: jump to operand1 if the greater flag is set
         if greater_flag == 1:
             memory[0:8] = as8(operand1)
         else:
             memory[0:8] = as8(instruction_pointer + 24)
-    elif opcode == 19:
+    elif opcode == 20:
         # jump: set instruction pointer to operand1
         memory[0:8] = as8(operand1)
-    elif opcode == 20:
+    elif opcode == 21:
         # call: push return address and old base, set new base, then jump
         return_address = instruction_pointer + 24
         old_base_pointer = base_pointer
@@ -874,7 +890,7 @@ def cpu_step(memory, equal_flag, greater_flag):
         memory[16:24] = as8(stack_top_pointer + 16)
         # Jump to callee
         memory[0:8] = as8(operand1)
-    elif opcode == 21:
+    elif opcode == 22:
         # return: restore return address, base pointer, and stack top
         return_address = asint(memory[base_pointer - 16 : base_pointer - 8])
         old_base_pointer = asint(memory[base_pointer - 8 : base_pointer])
@@ -918,4 +934,3 @@ if __name__ == "__main__":
         memory, disk = disk_step(memory, disk)
         memory, equal_flag, greater_flag = cpu_step(memory, equal_flag, greater_flag)
         memory = console_step(memory, screen)
-        time.sleep(0.001)

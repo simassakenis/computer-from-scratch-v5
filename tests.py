@@ -140,17 +140,21 @@ def test_shift_and_bitwise():
     assert read8(memory, slot(memory, 1)) == 2
 
 
-def test_push_number():
+def test_push_number_and_pop():
     memory = [0] * 4000000
     write8(memory, 0, 24)
     write8(memory, 8, 2000)
     write8(memory, 16, 2000)
-    memory[24 : 24 + 24] = instruction(14, 55)
+    program = instruction(14, 55) + instruction(15)
+    memory[24 : 24 + len(program)] = program
+    equal_flag = 0
+    greater_flag = 0
 
-    memory, equal_flag, greater_flag = computer.cpu_step(memory, 0, 0)
+    for _ in range(2):
+        memory, equal_flag, greater_flag = computer.cpu_step(memory, equal_flag, greater_flag)
 
     assert read8(memory, 2000) == 55
-    assert read8(memory, 16) == 2008
+    assert read8(memory, 16) == 2000
     assert equal_flag == 0
     assert greater_flag == 0
 
@@ -162,8 +166,8 @@ def test_compare_to_number_and_jump_if_equal():
     write8(memory, 16, 2000)
     program = (
         instruction(2, 5, 0)
-        + instruction(16, 0, 5)
-        + instruction(17, 120)
+        + instruction(17, 0, 5)
+        + instruction(18, 120)
         + instruction(2, 1, 1)
         + instruction(2, 9, 1)
     )
@@ -185,8 +189,8 @@ def test_compare_and_jump_if_greater():
     program = (
         instruction(2, 9, 0)
         + instruction(2, 3, 1)
-        + instruction(15, 0, 1)
-        + instruction(18, 144)
+        + instruction(16, 0, 1)
+        + instruction(19, 144)
         + instruction(2, 1, 2)
         + instruction(2, 8, 2)
     )
@@ -205,7 +209,7 @@ def test_jump():
     write8(memory, 0, 24)
     write8(memory, 8, 2000)
     write8(memory, 16, 2000)
-    program = instruction(19, 72) + instruction(2, 1, 0) + instruction(2, 2, 0)
+    program = instruction(20, 72) + instruction(2, 1, 0) + instruction(2, 2, 0)
     memory[24 : 24 + len(program)] = program
     equal_flag = 0
     greater_flag = 0
@@ -223,11 +227,11 @@ def test_call_and_return():
     write8(memory, 16, 2000)
     program = (
         instruction(14, 123)
-        + instruction(20, 120)
+        + instruction(21, 120)
         + instruction(1, 0, 1)
         + instruction(0)
         + instruction(1, -3, 0)
-        + instruction(21)
+        + instruction(22)
     )
     memory[24 : 24 + len(program)] = program
     equal_flag = 0
@@ -284,7 +288,7 @@ def test_os_invokes_read_disk_program():
         f"{8:016x}"
     )
     keys = [ord(character) for character in command] + [10]
-    expected = command + "\n" + "0000000000000018"
+    expected = command + "0000000000000018"
     equal_flag = 0
     greater_flag = 0
 
@@ -310,7 +314,7 @@ if __name__ == "__main__":
     run(test_pointer_moves)
     run(test_arithmetic)
     run(test_shift_and_bitwise)
-    run(test_push_number)
+    run(test_push_number_and_pop)
     run(test_compare_to_number_and_jump_if_equal)
     run(test_compare_and_jump_if_greater)
     run(test_jump)
