@@ -89,62 +89,40 @@ def assemble(source):
     return disk
 
 
-# Object that opens a minimal Tkinter-backed console window
-class TkScreen:
-    # Helper that initializes the Tkinter window
-    def __init__(self):
-        self.pending_key = None
-        self.root = tk.Tk()
-        self.root.title("Minimal Computer Console")
+# Helper that initializes a minimal Tkinter-backed console window
+def tkinter_window_init():
+    tkinter_window = {}
+    tkinter_window["pending_key"] = None
+    tkinter_window["root"] = tk.Tk()
+    tkinter_window["root"].title("Minimal Computer Console")
 
-        self.label = tk.Label(
-            self.root,
-            bg="white",
-            fg="black",
-            font=("Menlo", 14),
-            justify="left",
-            anchor="nw",
-        )
-        self.label.pack()
-        self.root.bind("<KeyPress>", self.on_key)
+    tkinter_window["label"] = tk.Label(
+        tkinter_window["root"],
+        bg="white",
+        fg="black",
+        font=("Menlo", 14),
+        justify="left",
+        anchor="nw",
+    )
+    tkinter_window["label"].pack()
 
-    # Helper that records the latest Tkinter keypress
-    def on_key(self, event):
+    def on_key(event):
         if event.keysym == "Return":
-            self.pending_key = 10
+            tkinter_window["pending_key"] = 10
         elif event.keysym == "BackSpace":
-            self.pending_key = 8
+            tkinter_window["pending_key"] = 8
         elif event.char:
-            self.pending_key = ord(event.char)
+            tkinter_window["pending_key"] = ord(event.char)
 
-    # Helper that returns one pending keypress if any
-    def read_key(self):
-        self.root.update()
-
-        key = self.pending_key
-        self.pending_key = None
-        return key
-
-    # Helper that renders console memory into Tkinter text
-    def draw(self, memory):
-        rows = []
-        for y in range(32):
-            row = []
-            for x in range(128):
-                address = 1000072 + (y * 128 + x) * 8
-                value = asint(memory[address : address + 8])
-                if value == 0:
-                    value = ord(" ")
-                row.append(chr(value & 255))
-            rows.append("".join(row))
-
-        self.label["text"] = "\n".join(rows)
-        self.root.update_idletasks()
+    tkinter_window["root"].bind("<KeyPress>", on_key)
+    return tkinter_window
 
 
 # Helper that copies a pending Tkinter keypress into keyboard IO memory
 def keyboard_step(memory, tkinter_window):
-    key = tkinter_window.read_key()
+    tkinter_window["root"].update()
+    key = tkinter_window["pending_key"]
+    tkinter_window["pending_key"] = None
 
     waiting_for_keypress = asint(memory[1000048 : 1000048 + 8])
 
@@ -339,12 +317,24 @@ def cpu_step(memory, equal_flag, greater_flag):
 
 # Helper that renders console memory into the Tkinter window
 def console_step(memory, tkinter_window):
-    tkinter_window.draw(memory)
+    rows = []
+    for y in range(32):
+        row = []
+        for x in range(128):
+            address = 1000072 + (y * 128 + x) * 8
+            value = asint(memory[address : address + 8])
+            if value == 0:
+                value = ord(" ")
+            row.append(chr(value & 255))
+        rows.append("".join(row))
+
+    tkinter_window["label"]["text"] = "\n".join(rows)
+    tkinter_window["root"].update_idletasks()
 
 
 if __name__ == "__main__":
     # Tkinter receives keypresses and renders the memory-mapped console
-    tkinter_window = TkScreen()
+    tkinter_window = tkinter_window_init()
 
     # Memory and disk are byte arrays: every element is one integer from 0 to 255
     disk = assemble(open("disk.txt").read())
