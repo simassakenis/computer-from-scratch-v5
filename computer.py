@@ -90,7 +90,7 @@ def tkinter_window_init():
     tkinter_window = {}
     tkinter_window["pending_key"] = None
     tkinter_window["root"] = tk.Tk()
-    tkinter_window["root"].title("Minimal Computer Console")
+    tkinter_window["root"].title("Computer")
 
     tkinter_window["label"] = tk.Label(
         tkinter_window["root"],
