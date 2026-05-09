@@ -120,6 +120,7 @@ def tkinter_window_init():
 
 # Helper that copies a pending Tkinter keypress into keyboard IO memory
 def keyboard_step(memory, tkinter_window):
+    # Assumes keyboard IO uses 1000048 for waiting and 1000056 for key value
     tkinter_window["root"].update()
     key = tkinter_window["pending_key"]
     tkinter_window["pending_key"] = None
@@ -134,6 +135,7 @@ def keyboard_step(memory, tkinter_window):
 
 # Helper that performs pending memory-mapped disk reads and writes
 def disk_step(memory, disk):
+    # Assumes disk IO uses addresses 1000008 through 1000040
     is_waiting_for_disk_read = asint(memory[1000032 : 1000032 + 8])
     is_waiting_for_disk_write = asint(memory[1000040 : 1000040 + 8])
 
@@ -156,6 +158,7 @@ def disk_step(memory, disk):
 
 # Helper that executes one CPU instruction
 def cpu_step(memory, equal_flag, greater_flag):
+    # Assumes control registers live at 0, 8, and 16
     # Fetch one 24-byte instruction: opcode, operand1, operand2
     instruction_pointer = asint(memory[0:8])
     opcode = asint(memory[instruction_pointer : instruction_pointer + 8])
@@ -317,6 +320,7 @@ def cpu_step(memory, equal_flag, greater_flag):
 
 # Helper that renders console memory into the Tkinter window
 def console_step(memory, tkinter_window):
+    # Assumes console starts at 1000072 and has 128 by 32 cells
     rows = []
     for y in range(32):
         row = []
