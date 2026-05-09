@@ -1,0 +1,498 @@
+instructionPointerStartValue
+    24
+basePointerStartValue
+    500000
+stackPointerStartValue
+    500000
+terminal
+    pushNumber 1000064
+    pushNumber 1000072
+    moveToPointer 1 0
+    moveNumber 1000000 0
+    moveNumber 2000000 1
+    moveToPointer 1 0
+    moveFromPointer 0 1
+    pushNumber 0
+    jump terminalLoop
+terminalLoop
+    call listenForKeypress
+    compareToNumber 2 8
+    jumpIfEqual ifBackspace
+    jump elseBackspace
+ifBackspace
+    pushNumber 0
+    moveFromPointer 0 3
+    compare 3 1
+    jumpIfGreater ifNonEmptyInput
+    pop
+    jump terminalLoop
+ifNonEmptyInput
+    call removeLastCharacterFromTranscript
+    pop
+    jump terminalLoop
+elseBackspace
+    compareToNumber 2 10
+    jumpIfEqual ifEnter
+    jump elseBackspaceElseEnter
+ifEnter
+    pushNumber 0
+    pushNumber 0
+    move 1 4
+    call parse8ByteValue
+    moveNumber 0 4
+    pushNumber 0
+    move 1 5
+    addNumber 128 5
+    call parse8ByteValue
+    addNumber 128 5
+    pushNumber 0
+    moveFromPointer 0 6
+    subtract 5 6
+    pushNumber 0
+    move 3 7
+    pushNumber 3000000
+    pushNumber 0
+    move 4 9
+    call readFromDisk
+    moveNumber 16 7
+    moveFromPointer 7 8
+    moveNumber 3000000 9
+    add 4 9
+    moveToPointer 5 9
+    addNumber 8 9
+    moveToPointer 6 9
+    addNumber 8 9
+    moveToPointer 9 7
+    call 3000000
+    moveToPointer 8 7
+    moveFromPointer 0 1
+    pop
+    pop
+    pop
+    pop
+    pop
+    pop
+    pop
+    jump terminalLoop
+elseBackspaceElseEnter
+    call writeToTranscript
+    jump terminalLoop
+listenForKeypress
+    pushNumber 1000048
+    pushNumber 1
+    moveToPointer 1 0
+    jump listenForKeypressLoop
+listenForKeypressLoop
+    moveFromPointer 0 1
+    compareToNumber 1 0
+    jumpIfEqual listenForKeypressLoopExit
+    jump listenForKeypressLoop
+listenForKeypressLoopExit
+    moveNumber 1000056 1
+    moveFromPointer 1 -3
+    return
+removeLastCharacterFromTranscript
+    pushNumber 1000000
+    pushNumber 0
+    moveFromPointer 0 1
+    compareToNumber 1 2000000
+    jumpIfGreater regularRemoveLastCharacter
+    jump removeLastCharacterExit
+regularRemoveLastCharacter
+    pushNumber 0
+    addNumber -8 1
+    moveToPointer 2 1
+    moveToPointer 1 0
+    jump removeLastCharacterFromConsole
+removeLastCharacterFromConsole
+    moveNumber 1000064 0
+    moveFromPointer 0 1
+    compareToNumber 1 1000072
+    jumpIfGreater regularRemoveLastCharacterFromConsole
+    jump removeLastCharacterExit
+regularRemoveLastCharacterFromConsole
+    addNumber -8 1
+    moveToPointer 2 1
+    moveToPointer 1 0
+    jump removeLastCharacterExit
+removeLastCharacterExit
+    return
+writeToTranscript
+    pushNumber 1000000
+    pushNumber 0
+    moveFromPointer 0 1
+    moveToPointer -3 1
+    addNumber 8 1
+    moveToPointer 1 0
+    jump writeToConsole
+writeToConsole
+    moveNumber 1000064 0
+    moveFromPointer 0 1
+    compareToNumber 1 1032840
+    jumpIfEqual shiftConsoleBack
+    jump regularWriteToConsole
+shiftConsoleBack
+    addNumber -8 1
+    pushNumber 1000080
+    pushNumber 1000072
+    pushNumber 0
+    jump shiftConsoleBackLoop
+shiftConsoleBackLoop
+    moveFromPointer 2 4
+    moveToPointer 4 3
+    addNumber 8 2
+    addNumber 8 3
+    compareToNumber 2 1032840
+    jumpIfEqual regularWriteToConsole
+    jump shiftConsoleBackLoop
+regularWriteToConsole
+    moveToPointer -3 1
+    addNumber 8 1
+    moveToPointer 1 0
+    return
+readFromDisk
+    pushNumber 1000008
+    moveToPointer -5 0
+    moveNumber 1000016 0
+    moveToPointer -4 0
+    moveNumber 1000024 0
+    moveToPointer -3 0
+    moveNumber 1000032 0
+    pushNumber 1
+    moveToPointer 1 0
+    jump readFromDiskLoop
+readFromDiskLoop
+    moveFromPointer 0 1
+    compareToNumber 1 0
+    jumpIfEqual readFromDiskLoopExit
+    jump readFromDiskLoop
+readFromDiskLoopExit
+    return
+writeToDisk
+    pushNumber 1000008
+    moveToPointer -5 0
+    moveNumber 1000016 0
+    moveToPointer -4 0
+    moveNumber 1000024 0
+    moveToPointer -3 0
+    moveNumber 1000040 0
+    pushNumber 1
+    moveToPointer 1 0
+    jump writeToDiskLoop
+writeToDiskLoop
+    moveFromPointer 0 1
+    compareToNumber 1 0
+    jumpIfEqual writeToDiskLoopExit
+    jump writeToDiskLoop
+writeToDiskLoopExit
+    return
+readFromDiskProgram
+    compareToNumber -3 256
+    jumpIfEqual readFromDiskProgramValidInput
+    jump readFromDiskProgramInvalidInput
+readFromDiskProgramInvalidInput
+    return
+readFromDiskProgramValidInput
+    pushNumber 0
+    pushNumber 0
+    move -4 1
+    call parse8ByteValue
+    pushNumber 0
+    move -4 2
+    addNumber 128 2
+    call parse8ByteValue
+    moveNumber 8 2
+    pushNumber 0
+    moveFromPointer 2 3
+    addNumber 56 3
+    pushNumber 0
+    move 3 4
+    add 1 4
+    pushNumber 0
+    move 4 5
+    moveToPointer 0 5
+    addNumber 8 5
+    moveToPointer 3 5
+    addNumber 8 5
+    moveToPointer 1 5
+    addNumber 8 5
+    pushNumber 16
+    moveToPointer 5 6
+    call readFromDisk
+    addNumber -8 5
+    move 3 0
+    move 4 1
+    addNumber -8 1
+    jump readFromDiskProgramPrintLoop
+readFromDiskProgramPrintLoop
+    compare 0 1
+    jumpIfGreater readFromDiskProgramPrintLoopExit
+    jump readFromDiskProgramPrintLoopBody
+readFromDiskProgramPrintLoopBody
+    moveFromPointer 0 2
+    moveToPointer 2 5
+    call print8ByteValue
+    addNumber 8 0
+    jump readFromDiskProgramPrintLoop
+readFromDiskProgramPrintLoopExit
+    return
+writeToDiskProgram
+    compareToNumber -3 128
+    jumpIfGreater writeToDiskProgramValidInput
+    jump writeToDiskProgramInvalidInput
+writeToDiskProgramInvalidInput
+    return
+writeToDiskProgramValidInput
+    pushNumber 0
+    pushNumber 0
+    move -4 1
+    call parse8ByteValue
+    addNumber 128 1
+    pushNumber 8
+    pushNumber 0
+    moveFromPointer 2 3
+    addNumber 56 3
+    pushNumber 0
+    move 3 4
+    addNumber 8 4
+    pushNumber 0
+    move 3 5
+    addNumber 16 5
+    pushNumber 0
+    move -4 6
+    add -3 6
+    addNumber -16 6
+    moveNumber 16 2
+    jump writeToDiskProgramReadLoop
+writeToDiskProgramReadLoop
+    compare 1 6
+    jumpIfGreater writeToDiskProgramReadLoopExit
+    jump writeToDiskProgramReadLoopBody
+writeToDiskProgramReadLoopBody
+    moveToPointer 1 4
+    moveToPointer 5 1
+    call parse8ByteValue
+    addNumber 16 1
+    addNumber 8 4
+    addNumber 8 5
+    jump writeToDiskProgramReadLoop
+writeToDiskProgramReadLoopExit
+    addNumber -8 4
+    move 4 5
+    subtract 3 5
+    moveToPointer 0 4
+    addNumber 8 4
+    moveToPointer 3 4
+    addNumber 8 4
+    moveToPointer 5 4
+    addNumber 8 4
+    moveToPointer 4 2
+    call writeToDisk
+    return
+parse8ByteValue
+    pushNumber 0
+    move -3 0
+    pushNumber 0
+    move -3 1
+    addNumber 120 1
+    pushNumber 0
+    pushNumber 0
+    pushNumber 0
+    jump parse8ByteValueLoop
+parse8ByteValueLoop
+    compare 0 1
+    jumpIfGreater parse8ByteValueLoopExit
+    jump parse8ByteValueLoopBody
+parse8ByteValueLoopBody
+    moveFromPointer 0 3
+    moveNumber 0 4
+    compareToNumber 3 48
+    jumpIfEqual parse8ByteValueLoopBody0
+    compareToNumber 3 49
+    jumpIfEqual parse8ByteValueLoopBody1
+    compareToNumber 3 50
+    jumpIfEqual parse8ByteValueLoopBody2
+    compareToNumber 3 51
+    jumpIfEqual parse8ByteValueLoopBody3
+    compareToNumber 3 52
+    jumpIfEqual parse8ByteValueLoopBody4
+    compareToNumber 3 53
+    jumpIfEqual parse8ByteValueLoopBody5
+    compareToNumber 3 54
+    jumpIfEqual parse8ByteValueLoopBody6
+    compareToNumber 3 55
+    jumpIfEqual parse8ByteValueLoopBody7
+    compareToNumber 3 56
+    jumpIfEqual parse8ByteValueLoopBody8
+    compareToNumber 3 57
+    jumpIfEqual parse8ByteValueLoopBody9
+    compareToNumber 3 97
+    jumpIfEqual parse8ByteValueLoopBody10
+    compareToNumber 3 98
+    jumpIfEqual parse8ByteValueLoopBody11
+    compareToNumber 3 99
+    jumpIfEqual parse8ByteValueLoopBody12
+    compareToNumber 3 100
+    jumpIfEqual parse8ByteValueLoopBody13
+    compareToNumber 3 101
+    jumpIfEqual parse8ByteValueLoopBody14
+    compareToNumber 3 102
+    jumpIfEqual parse8ByteValueLoopBody15
+parse8ByteValueLoopBody0
+    moveNumber 0 4
+    jump parse8ByteValueLoopBodyContinue
+parse8ByteValueLoopBody1
+    moveNumber 1 4
+    jump parse8ByteValueLoopBodyContinue
+parse8ByteValueLoopBody2
+    moveNumber 2 4
+    jump parse8ByteValueLoopBodyContinue
+parse8ByteValueLoopBody3
+    moveNumber 3 4
+    jump parse8ByteValueLoopBodyContinue
+parse8ByteValueLoopBody4
+    moveNumber 4 4
+    jump parse8ByteValueLoopBodyContinue
+parse8ByteValueLoopBody5
+    moveNumber 5 4
+    jump parse8ByteValueLoopBodyContinue
+parse8ByteValueLoopBody6
+    moveNumber 6 4
+    jump parse8ByteValueLoopBodyContinue
+parse8ByteValueLoopBody7
+    moveNumber 7 4
+    jump parse8ByteValueLoopBodyContinue
+parse8ByteValueLoopBody8
+    moveNumber 8 4
+    jump parse8ByteValueLoopBodyContinue
+parse8ByteValueLoopBody9
+    moveNumber 9 4
+    jump parse8ByteValueLoopBodyContinue
+parse8ByteValueLoopBody10
+    moveNumber 10 4
+    jump parse8ByteValueLoopBodyContinue
+parse8ByteValueLoopBody11
+    moveNumber 11 4
+    jump parse8ByteValueLoopBodyContinue
+parse8ByteValueLoopBody12
+    moveNumber 12 4
+    jump parse8ByteValueLoopBodyContinue
+parse8ByteValueLoopBody13
+    moveNumber 13 4
+    jump parse8ByteValueLoopBodyContinue
+parse8ByteValueLoopBody14
+    moveNumber 14 4
+    jump parse8ByteValueLoopBodyContinue
+parse8ByteValueLoopBody15
+    moveNumber 15 4
+    jump parse8ByteValueLoopBodyContinue
+parse8ByteValueLoopBodyContinue
+    shiftLeftByNumber 4 2
+    add 4 2
+    addNumber 8 0
+    jump parse8ByteValueLoop
+parse8ByteValueLoopExit
+    move 2 -4
+    return
+print8ByteValue
+    pushNumber 60
+    pushNumber 0
+    pushNumber 0
+    jump print8ByteValueLoop
+print8ByteValueLoop
+    compareToNumber 0 0
+    jumpIfGreater print8ByteValueLoopBody
+    compareToNumber 0 0
+    jumpIfEqual print8ByteValueLoopBody
+    jump print8ByteValueLoopExit
+print8ByteValueLoopBody
+    move -3 1
+    shiftRight 0 1
+    bitwiseAndWithNumber 15 1
+    moveNumber 48 2
+    compareToNumber 1 0
+    jumpIfEqual print8ByteValueLoopBody0
+    compareToNumber 1 1
+    jumpIfEqual print8ByteValueLoopBody1
+    compareToNumber 1 2
+    jumpIfEqual print8ByteValueLoopBody2
+    compareToNumber 1 3
+    jumpIfEqual print8ByteValueLoopBody3
+    compareToNumber 1 4
+    jumpIfEqual print8ByteValueLoopBody4
+    compareToNumber 1 5
+    jumpIfEqual print8ByteValueLoopBody5
+    compareToNumber 1 6
+    jumpIfEqual print8ByteValueLoopBody6
+    compareToNumber 1 7
+    jumpIfEqual print8ByteValueLoopBody7
+    compareToNumber 1 8
+    jumpIfEqual print8ByteValueLoopBody8
+    compareToNumber 1 9
+    jumpIfEqual print8ByteValueLoopBody9
+    compareToNumber 1 10
+    jumpIfEqual print8ByteValueLoopBody10
+    compareToNumber 1 11
+    jumpIfEqual print8ByteValueLoopBody11
+    compareToNumber 1 12
+    jumpIfEqual print8ByteValueLoopBody12
+    compareToNumber 1 13
+    jumpIfEqual print8ByteValueLoopBody13
+    compareToNumber 1 14
+    jumpIfEqual print8ByteValueLoopBody14
+    compareToNumber 1 15
+    jumpIfEqual print8ByteValueLoopBody15
+print8ByteValueLoopBody0
+    moveNumber 48 2
+    jump print8ByteValueLoopBodyContinue
+print8ByteValueLoopBody1
+    moveNumber 49 2
+    jump print8ByteValueLoopBodyContinue
+print8ByteValueLoopBody2
+    moveNumber 50 2
+    jump print8ByteValueLoopBodyContinue
+print8ByteValueLoopBody3
+    moveNumber 51 2
+    jump print8ByteValueLoopBodyContinue
+print8ByteValueLoopBody4
+    moveNumber 52 2
+    jump print8ByteValueLoopBodyContinue
+print8ByteValueLoopBody5
+    moveNumber 53 2
+    jump print8ByteValueLoopBodyContinue
+print8ByteValueLoopBody6
+    moveNumber 54 2
+    jump print8ByteValueLoopBodyContinue
+print8ByteValueLoopBody7
+    moveNumber 55 2
+    jump print8ByteValueLoopBodyContinue
+print8ByteValueLoopBody8
+    moveNumber 56 2
+    jump print8ByteValueLoopBodyContinue
+print8ByteValueLoopBody9
+    moveNumber 57 2
+    jump print8ByteValueLoopBodyContinue
+print8ByteValueLoopBody10
+    moveNumber 97 2
+    jump print8ByteValueLoopBodyContinue
+print8ByteValueLoopBody11
+    moveNumber 98 2
+    jump print8ByteValueLoopBodyContinue
+print8ByteValueLoopBody12
+    moveNumber 99 2
+    jump print8ByteValueLoopBodyContinue
+print8ByteValueLoopBody13
+    moveNumber 100 2
+    jump print8ByteValueLoopBodyContinue
+print8ByteValueLoopBody14
+    moveNumber 101 2
+    jump print8ByteValueLoopBodyContinue
+print8ByteValueLoopBody15
+    moveNumber 102 2
+    jump print8ByteValueLoopBodyContinue
+print8ByteValueLoopBodyContinue
+    call writeToTranscript
+    addNumber -4 0
+    jump print8ByteValueLoop
+print8ByteValueLoopExit
+    return

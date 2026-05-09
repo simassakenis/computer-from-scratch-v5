@@ -1,3 +1,5 @@
+from pathlib import Path
+
 import computer
 
 
@@ -68,6 +70,10 @@ def console(memory, length):
     for address in range(1000072, 1000072 + length * 8, 8):
         result.append(chr(read8(memory, address) & 255))
     return "".join(result)
+
+
+def disk_source():
+    return Path(__file__).with_name("disk.txt").read_text()
 
 
 def test_idle():
@@ -276,7 +282,7 @@ def test_call_and_return():
 
 
 def test_os_echoes_typed_character():
-    disk = computer.assemble(computer.operating_system_source)
+    disk = computer.assemble(disk_source())
     memory = [0] * len(disk)
     memory[:] = disk[:]
     keys = [ord("a")]
@@ -294,11 +300,12 @@ def test_os_echoes_typed_character():
 
 
 def test_os_invokes_read_disk_program():
-    disk = computer.assemble(computer.operating_system_source)
+    source = disk_source()
+    disk = computer.assemble(source)
     memory = [0] * len(disk)
     memory[:] = disk[:]
 
-    labels = label_addresses(computer.operating_system_source)
+    labels = label_addresses(source)
     program_start = labels["readFromDiskProgram"]
     program_length = labels["writeToDiskProgram"] - program_start
     command = (
