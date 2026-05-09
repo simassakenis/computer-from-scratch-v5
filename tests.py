@@ -47,6 +47,12 @@ def disk_source():
     return open("disk.txt").read()
 
 
+def power_on(disk):
+    memory = [0] * len(disk)
+    memory[:500000] = disk[:500000]
+    return memory
+
+
 def test_idle():
     memory = [0] * 4000000
     write8(memory, 0, 24)
@@ -252,10 +258,18 @@ def test_call_and_return():
     assert read8(memory, slot(memory, 1)) == 123
 
 
+def test_power_on_copies_only_startup_bytes():
+    disk = computer.assemble(disk_source())
+    write8(disk, 500000, 123)
+
+    memory = power_on(disk)
+
+    assert read8(memory, 500000) == 0
+
+
 def test_os_echoes_typed_character():
     disk = computer.assemble(disk_source())
-    memory = [0] * len(disk)
-    memory[:] = disk[:]
+    memory = power_on(disk)
     keys = [ord("a")]
     equal_flag = 0
     greater_flag = 0
@@ -273,8 +287,7 @@ def test_os_echoes_typed_character():
 def test_os_invokes_read_disk_program():
     source = disk_source()
     disk = computer.assemble(source)
-    memory = [0] * len(disk)
-    memory[:] = disk[:]
+    memory = power_on(disk)
 
     labels = label_addresses(source)
     program_start = labels["readFromDiskProgram"]
@@ -317,5 +330,6 @@ if __name__ == "__main__":
     run(test_compare_and_jump_if_greater)
     run(test_jump)
     run(test_call_and_return)
+    run(test_power_on_copies_only_startup_bytes)
     run(test_os_echoes_typed_character)
     run(test_os_invokes_read_disk_program)

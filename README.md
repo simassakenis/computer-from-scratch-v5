@@ -2,9 +2,9 @@
 
 This is a minimal simulated computer with memory, CPU, keyboard, disk, console, and a small terminal operating system loaded from `disk.txt`.
 
-When powered on, the computer copies the first 4,000,000 bytes from disk into memory and then executes instructions one by one forever, until the computer is powered off. The first three 8-byte values on disk initialize the instruction pointer, base pointer, and stack top pointer. After that, the CPU just follows the instruction pointer.
+When powered on (`python computer.py`), the computer copies the first `500000` sacred bytes from disk into memory and then executes instructions one by one forever, until the computer is powered off. The instruction pointer starts at `24`, so the CPU starts interpreting memory at address `24` as instructions.
 
-Conceptually, using the computer is just a series of program executions: execute one program, then execute another program, and so on. The preloaded terminal OS listens for keyboard input until Enter, interprets the input as a program invocation, and executes it. Enter itself is not written to the transcript or console. A program is just an arbitrary number of bytes read from any arbitrary address on disk. A program can print characters to the console. The command before Enter is interpreted as:
+Using the computer means running one program, then another program, and so on. The preloaded terminal OS listens for keyboard input until Enter, interprets the input as a program invocation, and executes it. A program is just an arbitrary number of bytes read from any arbitrary address on disk. A program can print characters to the console. The command before Enter is interpreted as:
 
 ```text
 <programDiskAddress><programLength><programInput>
@@ -105,7 +105,9 @@ The current memory layout is:
 
 Keyboard IO works by setting `1000048` to `1`. The keyboard hardware writes the pressed key to `1000056` and resets `1000048` to `0`.
 
-Disk IO works by writing disk address to `1000008`, memory address to `1000016`, and byte count to `1000024`. To read, set `1000032` to `1`; disk hardware copies from disk to memory and resets `1000032` to `0`. To write, set `1000040` to `1`; disk hardware copies from memory to disk and resets `1000040` to `0`.
+To read from disk, write disk address to `1000008`, memory address to `1000016`, byte count to `1000024`, and set `1000032` to `1`. Disk hardware copies from disk to memory and resets `1000032` to `0`.
+
+To write to disk, write disk address to `1000008`, memory address to `1000016`, byte count to `1000024`, and set `1000040` to `1`. Disk hardware copies from memory to disk and resets `1000040` to `0`.
 
 Console IO uses the memory region starting at `1000072`. Each console cell is one 8-byte character value. `1000064` stores the next console write address.
 

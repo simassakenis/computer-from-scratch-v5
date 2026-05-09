@@ -347,8 +347,8 @@ if __name__ == "__main__":
     disk = assemble(open("disk.txt").read())
     memory = [0] * 5000000
 
-    # Power-on loads the plugged-in disk image into memory
-    memory[: len(disk)] = disk[:]
+    # Power-on loads the sacred startup and operating system bytes into memory
+    memory[:500000] = disk[:500000]
     equal_flag = 0
     greater_flag = 0
 
