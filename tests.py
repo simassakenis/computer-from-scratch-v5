@@ -46,7 +46,7 @@ def label_addresses(source):
     address = 0
 
     for raw_line in source.splitlines():
-        line = raw_line.split("//")[0].rstrip()
+        line = raw_line.rstrip()
         if line == "":
             continue
 

@@ -59,7 +59,7 @@ def assemble(source):
     address = 0
 
     for raw_line in source.splitlines():
-        line = raw_line.split("//")[0].rstrip()
+        line = raw_line.rstrip()
         if line == "":
             continue
 
@@ -640,8 +640,8 @@ class TkScreen:
         self.root.update_idletasks()
 
 
-def keyboard_step(memory, screen):
-    key = screen.read_key()
+def keyboard_step(memory, tkinter_window):
+    key = tkinter_window.read_key()
 
     waiting_for_keypress = asint(memory[1000048 : 1000048 + 8])
 
@@ -832,23 +832,25 @@ def cpu_step(memory, equal_flag, greater_flag):
     return memory, equal_flag, greater_flag
 
 
-def console_step(memory, screen):
-    screen.draw(memory)
-    return memory
+def console_step(memory, tkinter_window):
+    tkinter_window.draw(memory)
 
 
 if __name__ == "__main__":
+    # Tkinter receives keypresses and renders the memory-mapped console
+    tkinter_window = TkScreen()
+
     # Memory and disk are byte arrays: every element is one integer from 0 to 255
     disk = assemble(operating_system_source)
-    memory = [0] * len(disk)
+    memory = [0] * 5000000
 
-    memory[:] = disk[:]
+    # Power-on loads the plugged-in disk image into memory
+    memory[: len(disk)] = disk[:]
     equal_flag = 0
     greater_flag = 0
-    screen = TkScreen()
 
     while True:
-        memory = keyboard_step(memory, screen)
-        memory, disk = disk_step(memory, disk)
+        memory = keyboard_step(memory, tkinter_window)
         memory, equal_flag, greater_flag = cpu_step(memory, equal_flag, greater_flag)
-        memory = console_step(memory, screen)
+        memory, disk = disk_step(memory, disk)
+        console_step(memory, tkinter_window)
