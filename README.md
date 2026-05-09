@@ -1,8 +1,53 @@
 # computer-from-scratch-v5
 
-A minimal simulated computer with memory, CPU, keyboard, disk, and console, and a small terminal operating system loaded from `disk.txt`.
+This is a minimal simulated computer with memory, CPU, keyboard, disk, console, and a small terminal operating system loaded from `disk.txt`.
 
-## Instruction Set
+When powered on, the computer copies the first 4,000,000 bytes from disk into memory and then executes instructions one by one forever, until the computer is powered off. The first three 8-byte values on disk initialize the instruction pointer, base pointer, and stack top pointer. After that, the CPU just follows the instruction pointer.
+
+Conceptually, using the computer is just a series of program executions: execute one program, then execute another program, and so on. The preloaded terminal OS listens for keyboard input until Enter, interprets the input as a program invocation, and executes it. Enter itself is not written to the transcript or console. A program is just an arbitrary number of bytes read from any arbitrary address on disk. A program can print characters to the console. The command before Enter is interpreted as:
+
+```text
+<programDiskAddress><programLength><programInput>
+```
+
+`programDiskAddress` and `programLength` are each typed as 16 hex characters. The OS reads that program from disk into memory at `3000000`, calls it with `programInputStart` and `numProgramInputBytes`, then listens for the next command.
+
+The disk currently includes two user programs. `readFromDiskProgram` reads bytes from disk and prints each 8-byte value as 16 hex characters. `writeToDiskProgram` parses hex input and writes those 8-byte values to disk. At the moment, `readFromDiskProgram` starts at disk address `3768` and is `1056` bytes long. `writeToDiskProgram` starts at disk address `4824`.
+
+For example, here is how to write a tiny program to disk address `500000` that prints `hi`, and then run it. This keeps the new program after the `0..<500000` disk space used for startup values and OS code.
+
+First type this command and press Enter. It invokes `writeToDiskProgram` and writes the new program bytes to disk:
+
+```text
+00000000000012d80000000000000468000000000007a120000000000000000e00000000000000680000000000000000000000000000001500000000000009480000000000000000000000000000000e00000000000000690000000000000000000000000000001500000000000009480000000000000000000000000000001600000000000000000000000000000000
+```
+
+Then type this command and press Enter. It runs the program at disk address `500000`, length `120` bytes:
+
+```text
+000000000007a1200000000000000078
+```
+
+The values typed above are:
+
+```text
+00000000000012d8  address of writeToDiskProgram
+0000000000000468  length of writeToDiskProgram
+000000000007a120  disk address to write the new program to
+
+000000000000000e 0000000000000068 0000000000000000  pushNumber 104, ASCII h
+0000000000000015 0000000000000948 0000000000000000  call writeToTranscript
+000000000000000e 0000000000000069 0000000000000000  pushNumber 105, ASCII i
+0000000000000015 0000000000000948 0000000000000000  call writeToTranscript
+0000000000000016 0000000000000000 0000000000000000  return
+
+000000000007a120  disk address of the new program
+0000000000000078  length of the new program
+```
+
+After the second Enter, the console should show `hi` appended after the typed command. The program above calls `writeToTranscript` at the hard-coded address `2376`, encoded as `0000000000000948`.
+
+Memory is byte-addressed, but machine values are 8 bytes. Most instructions operate on slots. A slot is an 8-byte value at an offset from the current base pointer: `slot(0)` is at the base pointer, `slot(1)` is 8 bytes after it, and `slot(-1)` is 8 bytes before it.
 
 Each instruction is 24 bytes: 8 bytes for opcode, 8 bytes for operand 1, and 8 bytes for operand 2. Unused operands are `0`. When an instruction changes something, operand 2 is usually the destination.
 
@@ -29,63 +74,7 @@ Each instruction is 24 bytes: 8 bytes for opcode, 8 bytes for operand 1, and 8 b
 - `call 4000000`: push return address and old base pointer, set a new base pointer, then jump
 - `return`: restore stack top, base pointer, and instruction pointer
 
-## Startup
-
-When powered on, the computer copies the 4,000,000-byte disk image into memory and then just executes instructions one by one until powered off. The first three 8-byte values on disk initialize the instruction pointer, base pointer, and stack top pointer.
-
-The preloaded program is a minimal terminal OS. It listens for keyboard input until Enter. Enter itself is not written to the transcript or console. The command before Enter is interpreted as:
-
-```text
-<programDiskAddress><programLength><programInput>
-```
-
-`programDiskAddress` and `programLength` are each typed as 16 hex characters. The OS reads that program from disk into memory at `3000000`, calls it with `programInputStart` and `numProgramInputBytes`, then listens for the next command.
-
-Example: write a tiny program to disk address `100000` that prints `hi`.
-
-First type this command and press Enter. It invokes `writeToDiskProgram` and writes the new program bytes to disk:
-
-```text
-00000000000012d8000000000000046800000000000186a0000000000000000e00000000000000680000000000000000000000000000001500000000000009480000000000000000000000000000000e00000000000000690000000000000000000000000000001500000000000009480000000000000000000000000000001600000000000000000000000000000000
-```
-
-Then type this command and press Enter. It runs the program at disk address `100000`, length `120` bytes:
-
-```text
-00000000000186a00000000000000078
-```
-
-The values typed above are:
-
-```text
-00000000000012d8  address of writeToDiskProgram
-0000000000000468  length of writeToDiskProgram
-00000000000186a0  disk address to write the new program to
-
-000000000000000e 0000000000000068 0000000000000000  pushNumber 104, ASCII h
-0000000000000015 0000000000000948 0000000000000000  call writeToTranscript
-000000000000000e 0000000000000069 0000000000000000  pushNumber 105, ASCII i
-0000000000000015 0000000000000948 0000000000000000  call writeToTranscript
-0000000000000016 0000000000000000 0000000000000000  return
-
-00000000000186a0  disk address of the new program
-0000000000000078  length of the new program
-```
-
-After the second Enter, the console should show `hi` appended after the typed command.
-
-## Preloaded Programs
-
-The disk currently includes two user programs:
-
-- `readFromDiskProgram`: reads bytes from disk and prints each 8-byte value as 16 hex characters
-- `writeToDiskProgram`: parses hex input and writes those 8-byte values to disk
-
-At the moment, `readFromDiskProgram` starts at disk address `3768` and is `1056` bytes long. `writeToDiskProgram` starts at disk address `4824`.
-
-For example, the `hi` program above calls `writeToTranscript` at the hard-coded address `2376`, encoded as `0000000000000948`.
-
-## Memory Layout
+The current memory layout is:
 
 ```text
 0: instruction pointer
@@ -114,14 +103,10 @@ For example, the `hi` program above calls `writeToTranscript` at the hard-coded 
 3000000..: loaded user program, then user program stack
 ```
 
-## Conventions
+Keyboard IO works by setting `1000048` to `1`. The keyboard hardware writes the pressed key to `1000056` and resets `1000048` to `0`.
 
-Keyboard IO: the program sets `1000048` to `1`. The keyboard hardware writes the pressed key to `1000056` and resets `1000048` to `0`.
+Disk IO works by writing disk address to `1000008`, memory address to `1000016`, and byte count to `1000024`. To read, set `1000032` to `1`; disk hardware copies from disk to memory and resets `1000032` to `0`. To write, set `1000040` to `1`; disk hardware copies from memory to disk and resets `1000040` to `0`.
 
-Disk IO: the program writes disk address to `1000008`, memory address to `1000016`, and byte count to `1000024`. To read, it sets `1000032` to `1`; disk hardware copies from disk to memory and resets `1000032` to `0`. To write, it sets `1000040` to `1`; disk hardware copies from memory to disk and resets `1000040` to `0`.
+Console IO uses the memory region starting at `1000072`. Each console cell is one 8-byte character value. `1000064` stores the next console write address.
 
-Console IO: console cells start at `1000072`; each cell is one 8-byte character value. `1000064` stores the next console write address.
-
-Arguments are pushed before `call`. The call instruction pushes the return address and old base pointer, then sets the base pointer to the new frame.
-
-Inside a function, non-negative slots are local variables. Negative slots refer to caller-provided values and call metadata: `slot(-1)` is old base pointer, `slot(-2)` is return address, and arguments live below those slots.
+Function calling works as follows. Arguments are pushed before `call`. The call instruction pushes the return address and old base pointer, then sets the base pointer to the new frame. Inside a function, non-negative slots are local variables. Negative slots refer to caller-provided values and call metadata: `slot(-1)` is old base pointer, `slot(-2)` is return address, and arguments live below those slots.
