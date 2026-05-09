@@ -3,29 +3,6 @@ import tkinter as tk
 
 console_address = 1000072
 
-MOVE = 1
-MOVE_NUMBER = 2
-MOVE_FROM_POINTER = 3
-MOVE_TO_POINTER = 4
-ADD = 5
-ADD_NUMBER = 6
-SUBTRACT = 7
-SHIFT_LEFT = 8
-SHIFT_LEFT_BY_NUMBER = 9
-SHIFT_RIGHT = 10
-SHIFT_RIGHT_BY_NUMBER = 11
-BITWISE_AND = 12
-BITWISE_AND_WITH_NUMBER = 13
-PUSH_NUMBER = 14
-POP = 15
-COMPARE = 16
-COMPARE_TO_NUMBER = 17
-JUMP_IF_EQUAL = 18
-JUMP_IF_GREATER = 19
-JUMP = 20
-CALL = 21
-RETURN = 22
-
 def as8(value):
     # Store one machine value as 8 big-endian bytes
     value = value % (2**64)
@@ -51,617 +28,568 @@ def asint(value):
     return result
 
 
-def assemble(source, start_address):
+def assemble(source):
+    opcodes = {
+        "move": 1,
+        "moveNumber": 2,
+        "moveFromPointer": 3,
+        "moveToPointer": 4,
+        "add": 5,
+        "addNumber": 6,
+        "subtract": 7,
+        "shiftLeft": 8,
+        "shiftLeftByNumber": 9,
+        "shiftRight": 10,
+        "shiftRightByNumber": 11,
+        "bitwiseAnd": 12,
+        "bitwiseAndWithNumber": 13,
+        "pushNumber": 14,
+        "pop": 15,
+        "compare": 16,
+        "compareToNumber": 17,
+        "jumpIfEqual": 18,
+        "jumpIfGreater": 19,
+        "jump": 20,
+        "call": 21,
+        "return": 22,
+    }
+    disk = [0] * 4000000
     labels = {}
-    address = start_address
-    i = 0
+    lines = []
+    address = 0
 
-    while i < len(source):
-        if isinstance(source[i], str):
-            labels[source[i]] = address
-            i += 1
-        else:
-            address += 24
-            i += 3
-
-    program = []
-    i = 0
-
-    while i < len(source):
-        if isinstance(source[i], str):
-            i += 1
+    for raw_line in source.splitlines():
+        line = raw_line.split("//")[0].rstrip()
+        if line == "":
             continue
 
-        opcode = source[i]
-        operand1 = source[i + 1]
-        operand2 = source[i + 2]
-
-        if isinstance(operand1, str):
-            operand1 = labels[operand1]
-        if isinstance(operand2, str):
-            operand2 = labels[operand2]
-
-        program += as8(opcode)
-        program += as8(operand1)
-        program += as8(operand2)
-        i += 3
-
-    return program
-
-
-operating_system_source = [
-    "terminal",
-    PUSH_NUMBER, 1000064, 0,
-    PUSH_NUMBER, 1000072, 0,
-    MOVE_TO_POINTER, 1, 0,
-    MOVE_NUMBER, 1000000, 0,
-    MOVE_NUMBER, 2000000, 1,
-    MOVE_TO_POINTER, 1, 0,
-    MOVE_FROM_POINTER, 0, 1,
-    PUSH_NUMBER, 0, 0,
-    JUMP, "terminalLoop", 0,
-
-    "terminalLoop",
-    CALL, "listenForKeypress", 0,
-    COMPARE_TO_NUMBER, 2, 8,
-    JUMP_IF_EQUAL, "ifBackspace", 0,
-    JUMP, "elseBackspace", 0,
-
-    "ifBackspace",
-    PUSH_NUMBER, 0, 0,
-    MOVE_FROM_POINTER, 0, 3,
-    COMPARE, 3, 1,
-    JUMP_IF_GREATER, "ifNonEmptyInput", 0,
-    POP, 0, 0,
-    JUMP, "terminalLoop", 0,
-
-    "ifNonEmptyInput",
-    CALL, "removeLastCharacterFromTranscript", 0,
-    POP, 0, 0,
-    JUMP, "terminalLoop", 0,
-
-    "elseBackspace",
-    COMPARE_TO_NUMBER, 2, 10,
-    JUMP_IF_EQUAL, "ifEnter", 0,
-    JUMP, "elseBackspaceElseEnter", 0,
-
-    "ifEnter",
-    PUSH_NUMBER, 0, 0,
-    PUSH_NUMBER, 0, 0,
-    MOVE, 1, 4,
-    CALL, "parse8ByteValue", 0,
-    MOVE_NUMBER, 0, 4,
-    PUSH_NUMBER, 0, 0,
-    MOVE, 1, 5,
-    ADD_NUMBER, 128, 5,
-    CALL, "parse8ByteValue", 0,
-    ADD_NUMBER, 128, 5,
-    PUSH_NUMBER, 0, 0,
-    MOVE_FROM_POINTER, 0, 6,
-    SUBTRACT, 5, 6,
-    PUSH_NUMBER, 0, 0,
-    MOVE, 3, 7,
-    PUSH_NUMBER, 3000000, 0,
-    PUSH_NUMBER, 0, 0,
-    MOVE, 4, 9,
-    CALL, "readFromDisk", 0,
-    MOVE_NUMBER, 16, 7,
-    MOVE_FROM_POINTER, 7, 8,
-    MOVE_NUMBER, 3000000, 9,
-    ADD, 4, 9,
-    MOVE_TO_POINTER, 5, 9,
-    ADD_NUMBER, 8, 9,
-    MOVE_TO_POINTER, 6, 9,
-    ADD_NUMBER, 8, 9,
-    MOVE_TO_POINTER, 9, 7,
-    CALL, 3000000, 0,
-    MOVE_TO_POINTER, 8, 7,
-    MOVE_FROM_POINTER, 0, 1,
-    POP, 0, 0,
-    POP, 0, 0,
-    POP, 0, 0,
-    POP, 0, 0,
-    POP, 0, 0,
-    POP, 0, 0,
-    POP, 0, 0,
-    JUMP, "terminalLoop", 0,
-
-    "elseBackspaceElseEnter",
-    CALL, "writeToTranscript", 0,
-    JUMP, "terminalLoop", 0,
-
-    "listenForKeypress",
-    PUSH_NUMBER, 1000048, 0,
-    PUSH_NUMBER, 1, 0,
-    MOVE_TO_POINTER, 1, 0,
-    JUMP, "listenForKeypressLoop", 0,
-
-    "listenForKeypressLoop",
-    MOVE_FROM_POINTER, 0, 1,
-    COMPARE_TO_NUMBER, 1, 0,
-    JUMP_IF_EQUAL, "listenForKeypressLoopExit", 0,
-    JUMP, "listenForKeypressLoop", 0,
-
-    "listenForKeypressLoopExit",
-    MOVE_NUMBER, 1000056, 1,
-    MOVE_FROM_POINTER, 1, -3,
-    RETURN, 0, 0,
-
-    "removeLastCharacterFromTranscript",
-    PUSH_NUMBER, 1000000, 0,
-    PUSH_NUMBER, 0, 0,
-    MOVE_FROM_POINTER, 0, 1,
-    COMPARE_TO_NUMBER, 1, 2000000,
-    JUMP_IF_GREATER, "regularRemoveLastCharacter", 0,
-    JUMP, "removeLastCharacterExit", 0,
-
-    "regularRemoveLastCharacter",
-    PUSH_NUMBER, 0, 0,
-    ADD_NUMBER, -8, 1,
-    MOVE_TO_POINTER, 2, 1,
-    MOVE_TO_POINTER, 1, 0,
-    JUMP, "removeLastCharacterFromConsole", 0,
-
-    "removeLastCharacterFromConsole",
-    MOVE_NUMBER, 1000064, 0,
-    MOVE_FROM_POINTER, 0, 1,
-    COMPARE_TO_NUMBER, 1, 1000072,
-    JUMP_IF_GREATER, "regularRemoveLastCharacterFromConsole", 0,
-    JUMP, "removeLastCharacterExit", 0,
-
-    "regularRemoveLastCharacterFromConsole",
-    ADD_NUMBER, -8, 1,
-    MOVE_TO_POINTER, 2, 1,
-    MOVE_TO_POINTER, 1, 0,
-    JUMP, "removeLastCharacterExit", 0,
-
-    "removeLastCharacterExit",
-    RETURN, 0, 0,
-
-    "writeToTranscript",
-    PUSH_NUMBER, 1000000, 0,
-    PUSH_NUMBER, 0, 0,
-    MOVE_FROM_POINTER, 0, 1,
-    MOVE_TO_POINTER, -3, 1,
-    ADD_NUMBER, 8, 1,
-    MOVE_TO_POINTER, 1, 0,
-    JUMP, "writeToConsole", 0,
-
-    "writeToConsole",
-    MOVE_NUMBER, 1000064, 0,
-    MOVE_FROM_POINTER, 0, 1,
-    COMPARE_TO_NUMBER, 1, 1032840,
-    JUMP_IF_EQUAL, "shiftConsoleBack", 0,
-    JUMP, "regularWriteToConsole", 0,
-
-    "shiftConsoleBack",
-    ADD_NUMBER, -8, 1,
-    PUSH_NUMBER, 1000080, 0,
-    PUSH_NUMBER, 1000072, 0,
-    PUSH_NUMBER, 0, 0,
-    JUMP, "shiftConsoleBackLoop", 0,
-
-    "shiftConsoleBackLoop",
-    MOVE_FROM_POINTER, 2, 4,
-    MOVE_TO_POINTER, 4, 3,
-    ADD_NUMBER, 8, 2,
-    ADD_NUMBER, 8, 3,
-    COMPARE_TO_NUMBER, 2, 1032840,
-    JUMP_IF_EQUAL, "regularWriteToConsole", 0,
-    JUMP, "shiftConsoleBackLoop", 0,
-
-    "regularWriteToConsole",
-    MOVE_TO_POINTER, -3, 1,
-    ADD_NUMBER, 8, 1,
-    MOVE_TO_POINTER, 1, 0,
-    RETURN, 0, 0,
-
-    "readFromDisk",
-    PUSH_NUMBER, 1000008, 0,
-    MOVE_TO_POINTER, -5, 0,
-    MOVE_NUMBER, 1000016, 0,
-    MOVE_TO_POINTER, -4, 0,
-    MOVE_NUMBER, 1000024, 0,
-    MOVE_TO_POINTER, -3, 0,
-    MOVE_NUMBER, 1000032, 0,
-    PUSH_NUMBER, 1, 0,
-    MOVE_TO_POINTER, 1, 0,
-    JUMP, "readFromDiskLoop", 0,
-
-    "readFromDiskLoop",
-    MOVE_FROM_POINTER, 0, 1,
-    COMPARE_TO_NUMBER, 1, 0,
-    JUMP_IF_EQUAL, "readFromDiskLoopExit", 0,
-    JUMP, "readFromDiskLoop", 0,
-
-    "readFromDiskLoopExit",
-    RETURN, 0, 0,
-
-    "writeToDisk",
-    PUSH_NUMBER, 1000008, 0,
-    MOVE_TO_POINTER, -5, 0,
-    MOVE_NUMBER, 1000016, 0,
-    MOVE_TO_POINTER, -4, 0,
-    MOVE_NUMBER, 1000024, 0,
-    MOVE_TO_POINTER, -3, 0,
-    MOVE_NUMBER, 1000040, 0,
-    PUSH_NUMBER, 1, 0,
-    MOVE_TO_POINTER, 1, 0,
-    JUMP, "writeToDiskLoop", 0,
-
-    "writeToDiskLoop",
-    MOVE_FROM_POINTER, 0, 1,
-    COMPARE_TO_NUMBER, 1, 0,
-    JUMP_IF_EQUAL, "writeToDiskLoopExit", 0,
-    JUMP, "writeToDiskLoop", 0,
-
-    "writeToDiskLoopExit",
-    RETURN, 0, 0,
-
-    "readFromDiskProgram",
-    COMPARE_TO_NUMBER, -3, 256,
-    JUMP_IF_EQUAL, "readFromDiskProgramValidInput", 0,
-    JUMP, "readFromDiskProgramInvalidInput", 0,
-
-    "readFromDiskProgramInvalidInput",
-    RETURN, 0, 0,
-
-    "readFromDiskProgramValidInput",
-    PUSH_NUMBER, 0, 0,
-    PUSH_NUMBER, 0, 0,
-    MOVE, -4, 1,
-    CALL, "parse8ByteValue", 0,
-    PUSH_NUMBER, 0, 0,
-    MOVE, -4, 2,
-    ADD_NUMBER, 128, 2,
-    CALL, "parse8ByteValue", 0,
-    MOVE_NUMBER, 8, 2,
-    PUSH_NUMBER, 0, 0,
-    MOVE_FROM_POINTER, 2, 3,
-    ADD_NUMBER, 56, 3,
-    PUSH_NUMBER, 0, 0,
-    MOVE, 3, 4,
-    ADD, 1, 4,
-    PUSH_NUMBER, 0, 0,
-    MOVE, 4, 5,
-    MOVE_TO_POINTER, 0, 5,
-    ADD_NUMBER, 8, 5,
-    MOVE_TO_POINTER, 3, 5,
-    ADD_NUMBER, 8, 5,
-    MOVE_TO_POINTER, 1, 5,
-    ADD_NUMBER, 8, 5,
-    PUSH_NUMBER, 16, 0,
-    MOVE_TO_POINTER, 5, 6,
-    CALL, "readFromDisk", 0,
-    ADD_NUMBER, -8, 5,
-    MOVE, 3, 0,
-    MOVE, 4, 1,
-    ADD_NUMBER, -8, 1,
-    JUMP, "readFromDiskProgramPrintLoop", 0,
-
-    "readFromDiskProgramPrintLoop",
-    COMPARE, 0, 1,
-    JUMP_IF_GREATER, "readFromDiskProgramPrintLoopExit", 0,
-    JUMP, "readFromDiskProgramPrintLoopBody", 0,
-
-    "readFromDiskProgramPrintLoopBody",
-    MOVE_FROM_POINTER, 0, 2,
-    MOVE_TO_POINTER, 2, 5,
-    CALL, "print8ByteValue", 0,
-    ADD_NUMBER, 8, 0,
-    JUMP, "readFromDiskProgramPrintLoop", 0,
-
-    "readFromDiskProgramPrintLoopExit",
-    RETURN, 0, 0,
-
-    "writeToDiskProgram",
-    COMPARE_TO_NUMBER, -3, 128,
-    JUMP_IF_GREATER, "writeToDiskProgramValidInput", 0,
-    JUMP, "writeToDiskProgramInvalidInput", 0,
-
-    "writeToDiskProgramInvalidInput",
-    RETURN, 0, 0,
-
-    "writeToDiskProgramValidInput",
-    PUSH_NUMBER, 0, 0,
-    PUSH_NUMBER, 0, 0,
-    MOVE, -4, 1,
-    CALL, "parse8ByteValue", 0,
-    ADD_NUMBER, 128, 1,
-    PUSH_NUMBER, 8, 0,
-    PUSH_NUMBER, 0, 0,
-    MOVE_FROM_POINTER, 2, 3,
-    ADD_NUMBER, 56, 3,
-    PUSH_NUMBER, 0, 0,
-    MOVE, 3, 4,
-    ADD_NUMBER, 8, 4,
-    PUSH_NUMBER, 0, 0,
-    MOVE, 3, 5,
-    ADD_NUMBER, 16, 5,
-    PUSH_NUMBER, 0, 0,
-    MOVE, -4, 6,
-    ADD, -3, 6,
-    ADD_NUMBER, -16, 6,
-    MOVE_NUMBER, 16, 2,
-    JUMP, "writeToDiskProgramReadLoop", 0,
-
-    "writeToDiskProgramReadLoop",
-    COMPARE, 1, 6,
-    JUMP_IF_GREATER, "writeToDiskProgramReadLoopExit", 0,
-    JUMP, "writeToDiskProgramReadLoopBody", 0,
-
-    "writeToDiskProgramReadLoopBody",
-    MOVE_TO_POINTER, 1, 4,
-    MOVE_TO_POINTER, 5, 1,
-    CALL, "parse8ByteValue", 0,
-    ADD_NUMBER, 16, 1,
-    ADD_NUMBER, 8, 4,
-    ADD_NUMBER, 8, 5,
-    JUMP, "writeToDiskProgramReadLoop", 0,
-
-    "writeToDiskProgramReadLoopExit",
-    ADD_NUMBER, -8, 4,
-    MOVE, 4, 5,
-    SUBTRACT, 3, 5,
-    MOVE_TO_POINTER, 0, 4,
-    ADD_NUMBER, 8, 4,
-    MOVE_TO_POINTER, 3, 4,
-    ADD_NUMBER, 8, 4,
-    MOVE_TO_POINTER, 5, 4,
-    ADD_NUMBER, 8, 4,
-    MOVE_TO_POINTER, 4, 2,
-    CALL, "writeToDisk", 0,
-    RETURN, 0, 0,
-
-    "parse8ByteValue",
-    PUSH_NUMBER, 0, 0,
-    MOVE, -3, 0,
-    PUSH_NUMBER, 0, 0,
-    MOVE, -3, 1,
-    ADD_NUMBER, 120, 1,
-    PUSH_NUMBER, 0, 0,
-    PUSH_NUMBER, 0, 0,
-    PUSH_NUMBER, 0, 0,
-    JUMP, "parse8ByteValueLoop", 0,
-
-    "parse8ByteValueLoop",
-    COMPARE, 0, 1,
-    JUMP_IF_GREATER, "parse8ByteValueLoopExit", 0,
-    JUMP, "parse8ByteValueLoopBody", 0,
-
-    "parse8ByteValueLoopBody",
-    MOVE_FROM_POINTER, 0, 3,
-    MOVE_NUMBER, 0, 4,
-    COMPARE_TO_NUMBER, 3, 48,
-    JUMP_IF_EQUAL, "parse8ByteValueLoopBody0", 0,
-    COMPARE_TO_NUMBER, 3, 49,
-    JUMP_IF_EQUAL, "parse8ByteValueLoopBody1", 0,
-    COMPARE_TO_NUMBER, 3, 50,
-    JUMP_IF_EQUAL, "parse8ByteValueLoopBody2", 0,
-    COMPARE_TO_NUMBER, 3, 51,
-    JUMP_IF_EQUAL, "parse8ByteValueLoopBody3", 0,
-    COMPARE_TO_NUMBER, 3, 52,
-    JUMP_IF_EQUAL, "parse8ByteValueLoopBody4", 0,
-    COMPARE_TO_NUMBER, 3, 53,
-    JUMP_IF_EQUAL, "parse8ByteValueLoopBody5", 0,
-    COMPARE_TO_NUMBER, 3, 54,
-    JUMP_IF_EQUAL, "parse8ByteValueLoopBody6", 0,
-    COMPARE_TO_NUMBER, 3, 55,
-    JUMP_IF_EQUAL, "parse8ByteValueLoopBody7", 0,
-    COMPARE_TO_NUMBER, 3, 56,
-    JUMP_IF_EQUAL, "parse8ByteValueLoopBody8", 0,
-    COMPARE_TO_NUMBER, 3, 57,
-    JUMP_IF_EQUAL, "parse8ByteValueLoopBody9", 0,
-    COMPARE_TO_NUMBER, 3, 97,
-    JUMP_IF_EQUAL, "parse8ByteValueLoopBody10", 0,
-    COMPARE_TO_NUMBER, 3, 98,
-    JUMP_IF_EQUAL, "parse8ByteValueLoopBody11", 0,
-    COMPARE_TO_NUMBER, 3, 99,
-    JUMP_IF_EQUAL, "parse8ByteValueLoopBody12", 0,
-    COMPARE_TO_NUMBER, 3, 100,
-    JUMP_IF_EQUAL, "parse8ByteValueLoopBody13", 0,
-    COMPARE_TO_NUMBER, 3, 101,
-    JUMP_IF_EQUAL, "parse8ByteValueLoopBody14", 0,
-    COMPARE_TO_NUMBER, 3, 102,
-    JUMP_IF_EQUAL, "parse8ByteValueLoopBody15", 0,
-
-    "parse8ByteValueLoopBody0",
-    MOVE_NUMBER, 0, 4,
-    JUMP, "parse8ByteValueLoopBodyContinue", 0,
-
-    "parse8ByteValueLoopBody1",
-    MOVE_NUMBER, 1, 4,
-    JUMP, "parse8ByteValueLoopBodyContinue", 0,
-
-    "parse8ByteValueLoopBody2",
-    MOVE_NUMBER, 2, 4,
-    JUMP, "parse8ByteValueLoopBodyContinue", 0,
-
-    "parse8ByteValueLoopBody3",
-    MOVE_NUMBER, 3, 4,
-    JUMP, "parse8ByteValueLoopBodyContinue", 0,
-
-    "parse8ByteValueLoopBody4",
-    MOVE_NUMBER, 4, 4,
-    JUMP, "parse8ByteValueLoopBodyContinue", 0,
-
-    "parse8ByteValueLoopBody5",
-    MOVE_NUMBER, 5, 4,
-    JUMP, "parse8ByteValueLoopBodyContinue", 0,
-
-    "parse8ByteValueLoopBody6",
-    MOVE_NUMBER, 6, 4,
-    JUMP, "parse8ByteValueLoopBodyContinue", 0,
-
-    "parse8ByteValueLoopBody7",
-    MOVE_NUMBER, 7, 4,
-    JUMP, "parse8ByteValueLoopBodyContinue", 0,
-
-    "parse8ByteValueLoopBody8",
-    MOVE_NUMBER, 8, 4,
-    JUMP, "parse8ByteValueLoopBodyContinue", 0,
-
-    "parse8ByteValueLoopBody9",
-    MOVE_NUMBER, 9, 4,
-    JUMP, "parse8ByteValueLoopBodyContinue", 0,
-
-    "parse8ByteValueLoopBody10",
-    MOVE_NUMBER, 10, 4,
-    JUMP, "parse8ByteValueLoopBodyContinue", 0,
-
-    "parse8ByteValueLoopBody11",
-    MOVE_NUMBER, 11, 4,
-    JUMP, "parse8ByteValueLoopBodyContinue", 0,
-
-    "parse8ByteValueLoopBody12",
-    MOVE_NUMBER, 12, 4,
-    JUMP, "parse8ByteValueLoopBodyContinue", 0,
-
-    "parse8ByteValueLoopBody13",
-    MOVE_NUMBER, 13, 4,
-    JUMP, "parse8ByteValueLoopBodyContinue", 0,
-
-    "parse8ByteValueLoopBody14",
-    MOVE_NUMBER, 14, 4,
-    JUMP, "parse8ByteValueLoopBodyContinue", 0,
-
-    "parse8ByteValueLoopBody15",
-    MOVE_NUMBER, 15, 4,
-    JUMP, "parse8ByteValueLoopBodyContinue", 0,
-
-    "parse8ByteValueLoopBodyContinue",
-    SHIFT_LEFT_BY_NUMBER, 4, 2,
-    ADD, 4, 2,
-    ADD_NUMBER, 8, 0,
-    JUMP, "parse8ByteValueLoop", 0,
-
-    "parse8ByteValueLoopExit",
-    MOVE, 2, -4,
-    RETURN, 0, 0,
-
-    "print8ByteValue",
-    PUSH_NUMBER, 60, 0,
-    PUSH_NUMBER, 0, 0,
-    PUSH_NUMBER, 0, 0,
-    JUMP, "print8ByteValueLoop", 0,
-
-    "print8ByteValueLoop",
-    COMPARE_TO_NUMBER, 0, 0,
-    JUMP_IF_GREATER, "print8ByteValueLoopBody", 0,
-    COMPARE_TO_NUMBER, 0, 0,
-    JUMP_IF_EQUAL, "print8ByteValueLoopBody", 0,
-    JUMP, "print8ByteValueLoopExit", 0,
-
-    "print8ByteValueLoopBody",
-    MOVE, -3, 1,
-    SHIFT_RIGHT, 0, 1,
-    BITWISE_AND_WITH_NUMBER, 15, 1,
-    MOVE_NUMBER, 48, 2,
-    COMPARE_TO_NUMBER, 1, 0,
-    JUMP_IF_EQUAL, "print8ByteValueLoopBody0", 0,
-    COMPARE_TO_NUMBER, 1, 1,
-    JUMP_IF_EQUAL, "print8ByteValueLoopBody1", 0,
-    COMPARE_TO_NUMBER, 1, 2,
-    JUMP_IF_EQUAL, "print8ByteValueLoopBody2", 0,
-    COMPARE_TO_NUMBER, 1, 3,
-    JUMP_IF_EQUAL, "print8ByteValueLoopBody3", 0,
-    COMPARE_TO_NUMBER, 1, 4,
-    JUMP_IF_EQUAL, "print8ByteValueLoopBody4", 0,
-    COMPARE_TO_NUMBER, 1, 5,
-    JUMP_IF_EQUAL, "print8ByteValueLoopBody5", 0,
-    COMPARE_TO_NUMBER, 1, 6,
-    JUMP_IF_EQUAL, "print8ByteValueLoopBody6", 0,
-    COMPARE_TO_NUMBER, 1, 7,
-    JUMP_IF_EQUAL, "print8ByteValueLoopBody7", 0,
-    COMPARE_TO_NUMBER, 1, 8,
-    JUMP_IF_EQUAL, "print8ByteValueLoopBody8", 0,
-    COMPARE_TO_NUMBER, 1, 9,
-    JUMP_IF_EQUAL, "print8ByteValueLoopBody9", 0,
-    COMPARE_TO_NUMBER, 1, 10,
-    JUMP_IF_EQUAL, "print8ByteValueLoopBody10", 0,
-    COMPARE_TO_NUMBER, 1, 11,
-    JUMP_IF_EQUAL, "print8ByteValueLoopBody11", 0,
-    COMPARE_TO_NUMBER, 1, 12,
-    JUMP_IF_EQUAL, "print8ByteValueLoopBody12", 0,
-    COMPARE_TO_NUMBER, 1, 13,
-    JUMP_IF_EQUAL, "print8ByteValueLoopBody13", 0,
-    COMPARE_TO_NUMBER, 1, 14,
-    JUMP_IF_EQUAL, "print8ByteValueLoopBody14", 0,
-    COMPARE_TO_NUMBER, 1, 15,
-    JUMP_IF_EQUAL, "print8ByteValueLoopBody15", 0,
-
-    "print8ByteValueLoopBody0",
-    MOVE_NUMBER, 48, 2,
-    JUMP, "print8ByteValueLoopBodyContinue", 0,
-
-    "print8ByteValueLoopBody1",
-    MOVE_NUMBER, 49, 2,
-    JUMP, "print8ByteValueLoopBodyContinue", 0,
-
-    "print8ByteValueLoopBody2",
-    MOVE_NUMBER, 50, 2,
-    JUMP, "print8ByteValueLoopBodyContinue", 0,
-
-    "print8ByteValueLoopBody3",
-    MOVE_NUMBER, 51, 2,
-    JUMP, "print8ByteValueLoopBodyContinue", 0,
-
-    "print8ByteValueLoopBody4",
-    MOVE_NUMBER, 52, 2,
-    JUMP, "print8ByteValueLoopBodyContinue", 0,
-
-    "print8ByteValueLoopBody5",
-    MOVE_NUMBER, 53, 2,
-    JUMP, "print8ByteValueLoopBodyContinue", 0,
-
-    "print8ByteValueLoopBody6",
-    MOVE_NUMBER, 54, 2,
-    JUMP, "print8ByteValueLoopBodyContinue", 0,
-
-    "print8ByteValueLoopBody7",
-    MOVE_NUMBER, 55, 2,
-    JUMP, "print8ByteValueLoopBodyContinue", 0,
-
-    "print8ByteValueLoopBody8",
-    MOVE_NUMBER, 56, 2,
-    JUMP, "print8ByteValueLoopBodyContinue", 0,
-
-    "print8ByteValueLoopBody9",
-    MOVE_NUMBER, 57, 2,
-    JUMP, "print8ByteValueLoopBodyContinue", 0,
-
-    "print8ByteValueLoopBody10",
-    MOVE_NUMBER, 97, 2,
-    JUMP, "print8ByteValueLoopBodyContinue", 0,
-
-    "print8ByteValueLoopBody11",
-    MOVE_NUMBER, 98, 2,
-    JUMP, "print8ByteValueLoopBodyContinue", 0,
-
-    "print8ByteValueLoopBody12",
-    MOVE_NUMBER, 99, 2,
-    JUMP, "print8ByteValueLoopBodyContinue", 0,
-
-    "print8ByteValueLoopBody13",
-    MOVE_NUMBER, 100, 2,
-    JUMP, "print8ByteValueLoopBodyContinue", 0,
-
-    "print8ByteValueLoopBody14",
-    MOVE_NUMBER, 101, 2,
-    JUMP, "print8ByteValueLoopBodyContinue", 0,
-
-    "print8ByteValueLoopBody15",
-    MOVE_NUMBER, 102, 2,
-    JUMP, "print8ByteValueLoopBodyContinue", 0,
-
-    "print8ByteValueLoopBodyContinue",
-    CALL, "writeToTranscript", 0,
-    ADD_NUMBER, -4, 0,
-    JUMP, "print8ByteValueLoop", 0,
-
-    "print8ByteValueLoopExit",
-    RETURN, 0, 0,
-]
+        if not line[0].isspace():
+            labels[line.rstrip(":")] = address
+            continue
+
+        parts = line.split()
+        if parts[0] in opcodes:
+            address += 24
+        else:
+            address += 8 * len(parts)
+        lines.append(parts)
+
+    address = 0
+    for parts in lines:
+        values = parts
+
+        if parts[0] in opcodes:
+            values = [opcodes[parts[0]], *parts[1:]]
+            values += [0] * (3 - len(values))
+
+        for value in values:
+            value = labels[value] if value in labels else int(value)
+            disk[address : address + 8] = as8(value)
+            address += 8
+
+    return disk
+
+
+operating_system_source = """
+instructionPointerStartValue
+    24
+basePointerStartValue
+    500000
+stackPointerStartValue
+    500000
+terminal
+    pushNumber 1000064
+    pushNumber 1000072
+    moveToPointer 1 0
+    moveNumber 1000000 0
+    moveNumber 2000000 1
+    moveToPointer 1 0
+    moveFromPointer 0 1
+    pushNumber 0
+    jump terminalLoop
+terminalLoop
+    call listenForKeypress
+    compareToNumber 2 8
+    jumpIfEqual ifBackspace
+    jump elseBackspace
+ifBackspace
+    pushNumber 0
+    moveFromPointer 0 3
+    compare 3 1
+    jumpIfGreater ifNonEmptyInput
+    pop
+    jump terminalLoop
+ifNonEmptyInput
+    call removeLastCharacterFromTranscript
+    pop
+    jump terminalLoop
+elseBackspace
+    compareToNumber 2 10
+    jumpIfEqual ifEnter
+    jump elseBackspaceElseEnter
+ifEnter
+    pushNumber 0
+    pushNumber 0
+    move 1 4
+    call parse8ByteValue
+    moveNumber 0 4
+    pushNumber 0
+    move 1 5
+    addNumber 128 5
+    call parse8ByteValue
+    addNumber 128 5
+    pushNumber 0
+    moveFromPointer 0 6
+    subtract 5 6
+    pushNumber 0
+    move 3 7
+    pushNumber 3000000
+    pushNumber 0
+    move 4 9
+    call readFromDisk
+    moveNumber 16 7
+    moveFromPointer 7 8
+    moveNumber 3000000 9
+    add 4 9
+    moveToPointer 5 9
+    addNumber 8 9
+    moveToPointer 6 9
+    addNumber 8 9
+    moveToPointer 9 7
+    call 3000000
+    moveToPointer 8 7
+    moveFromPointer 0 1
+    pop
+    pop
+    pop
+    pop
+    pop
+    pop
+    pop
+    jump terminalLoop
+elseBackspaceElseEnter
+    call writeToTranscript
+    jump terminalLoop
+listenForKeypress
+    pushNumber 1000048
+    pushNumber 1
+    moveToPointer 1 0
+    jump listenForKeypressLoop
+listenForKeypressLoop
+    moveFromPointer 0 1
+    compareToNumber 1 0
+    jumpIfEqual listenForKeypressLoopExit
+    jump listenForKeypressLoop
+listenForKeypressLoopExit
+    moveNumber 1000056 1
+    moveFromPointer 1 -3
+    return
+removeLastCharacterFromTranscript
+    pushNumber 1000000
+    pushNumber 0
+    moveFromPointer 0 1
+    compareToNumber 1 2000000
+    jumpIfGreater regularRemoveLastCharacter
+    jump removeLastCharacterExit
+regularRemoveLastCharacter
+    pushNumber 0
+    addNumber -8 1
+    moveToPointer 2 1
+    moveToPointer 1 0
+    jump removeLastCharacterFromConsole
+removeLastCharacterFromConsole
+    moveNumber 1000064 0
+    moveFromPointer 0 1
+    compareToNumber 1 1000072
+    jumpIfGreater regularRemoveLastCharacterFromConsole
+    jump removeLastCharacterExit
+regularRemoveLastCharacterFromConsole
+    addNumber -8 1
+    moveToPointer 2 1
+    moveToPointer 1 0
+    jump removeLastCharacterExit
+removeLastCharacterExit
+    return
+writeToTranscript
+    pushNumber 1000000
+    pushNumber 0
+    moveFromPointer 0 1
+    moveToPointer -3 1
+    addNumber 8 1
+    moveToPointer 1 0
+    jump writeToConsole
+writeToConsole
+    moveNumber 1000064 0
+    moveFromPointer 0 1
+    compareToNumber 1 1032840
+    jumpIfEqual shiftConsoleBack
+    jump regularWriteToConsole
+shiftConsoleBack
+    addNumber -8 1
+    pushNumber 1000080
+    pushNumber 1000072
+    pushNumber 0
+    jump shiftConsoleBackLoop
+shiftConsoleBackLoop
+    moveFromPointer 2 4
+    moveToPointer 4 3
+    addNumber 8 2
+    addNumber 8 3
+    compareToNumber 2 1032840
+    jumpIfEqual regularWriteToConsole
+    jump shiftConsoleBackLoop
+regularWriteToConsole
+    moveToPointer -3 1
+    addNumber 8 1
+    moveToPointer 1 0
+    return
+readFromDisk
+    pushNumber 1000008
+    moveToPointer -5 0
+    moveNumber 1000016 0
+    moveToPointer -4 0
+    moveNumber 1000024 0
+    moveToPointer -3 0
+    moveNumber 1000032 0
+    pushNumber 1
+    moveToPointer 1 0
+    jump readFromDiskLoop
+readFromDiskLoop
+    moveFromPointer 0 1
+    compareToNumber 1 0
+    jumpIfEqual readFromDiskLoopExit
+    jump readFromDiskLoop
+readFromDiskLoopExit
+    return
+writeToDisk
+    pushNumber 1000008
+    moveToPointer -5 0
+    moveNumber 1000016 0
+    moveToPointer -4 0
+    moveNumber 1000024 0
+    moveToPointer -3 0
+    moveNumber 1000040 0
+    pushNumber 1
+    moveToPointer 1 0
+    jump writeToDiskLoop
+writeToDiskLoop
+    moveFromPointer 0 1
+    compareToNumber 1 0
+    jumpIfEqual writeToDiskLoopExit
+    jump writeToDiskLoop
+writeToDiskLoopExit
+    return
+readFromDiskProgram
+    compareToNumber -3 256
+    jumpIfEqual readFromDiskProgramValidInput
+    jump readFromDiskProgramInvalidInput
+readFromDiskProgramInvalidInput
+    return
+readFromDiskProgramValidInput
+    pushNumber 0
+    pushNumber 0
+    move -4 1
+    call parse8ByteValue
+    pushNumber 0
+    move -4 2
+    addNumber 128 2
+    call parse8ByteValue
+    moveNumber 8 2
+    pushNumber 0
+    moveFromPointer 2 3
+    addNumber 56 3
+    pushNumber 0
+    move 3 4
+    add 1 4
+    pushNumber 0
+    move 4 5
+    moveToPointer 0 5
+    addNumber 8 5
+    moveToPointer 3 5
+    addNumber 8 5
+    moveToPointer 1 5
+    addNumber 8 5
+    pushNumber 16
+    moveToPointer 5 6
+    call readFromDisk
+    addNumber -8 5
+    move 3 0
+    move 4 1
+    addNumber -8 1
+    jump readFromDiskProgramPrintLoop
+readFromDiskProgramPrintLoop
+    compare 0 1
+    jumpIfGreater readFromDiskProgramPrintLoopExit
+    jump readFromDiskProgramPrintLoopBody
+readFromDiskProgramPrintLoopBody
+    moveFromPointer 0 2
+    moveToPointer 2 5
+    call print8ByteValue
+    addNumber 8 0
+    jump readFromDiskProgramPrintLoop
+readFromDiskProgramPrintLoopExit
+    return
+writeToDiskProgram
+    compareToNumber -3 128
+    jumpIfGreater writeToDiskProgramValidInput
+    jump writeToDiskProgramInvalidInput
+writeToDiskProgramInvalidInput
+    return
+writeToDiskProgramValidInput
+    pushNumber 0
+    pushNumber 0
+    move -4 1
+    call parse8ByteValue
+    addNumber 128 1
+    pushNumber 8
+    pushNumber 0
+    moveFromPointer 2 3
+    addNumber 56 3
+    pushNumber 0
+    move 3 4
+    addNumber 8 4
+    pushNumber 0
+    move 3 5
+    addNumber 16 5
+    pushNumber 0
+    move -4 6
+    add -3 6
+    addNumber -16 6
+    moveNumber 16 2
+    jump writeToDiskProgramReadLoop
+writeToDiskProgramReadLoop
+    compare 1 6
+    jumpIfGreater writeToDiskProgramReadLoopExit
+    jump writeToDiskProgramReadLoopBody
+writeToDiskProgramReadLoopBody
+    moveToPointer 1 4
+    moveToPointer 5 1
+    call parse8ByteValue
+    addNumber 16 1
+    addNumber 8 4
+    addNumber 8 5
+    jump writeToDiskProgramReadLoop
+writeToDiskProgramReadLoopExit
+    addNumber -8 4
+    move 4 5
+    subtract 3 5
+    moveToPointer 0 4
+    addNumber 8 4
+    moveToPointer 3 4
+    addNumber 8 4
+    moveToPointer 5 4
+    addNumber 8 4
+    moveToPointer 4 2
+    call writeToDisk
+    return
+parse8ByteValue
+    pushNumber 0
+    move -3 0
+    pushNumber 0
+    move -3 1
+    addNumber 120 1
+    pushNumber 0
+    pushNumber 0
+    pushNumber 0
+    jump parse8ByteValueLoop
+parse8ByteValueLoop
+    compare 0 1
+    jumpIfGreater parse8ByteValueLoopExit
+    jump parse8ByteValueLoopBody
+parse8ByteValueLoopBody
+    moveFromPointer 0 3
+    moveNumber 0 4
+    compareToNumber 3 48
+    jumpIfEqual parse8ByteValueLoopBody0
+    compareToNumber 3 49
+    jumpIfEqual parse8ByteValueLoopBody1
+    compareToNumber 3 50
+    jumpIfEqual parse8ByteValueLoopBody2
+    compareToNumber 3 51
+    jumpIfEqual parse8ByteValueLoopBody3
+    compareToNumber 3 52
+    jumpIfEqual parse8ByteValueLoopBody4
+    compareToNumber 3 53
+    jumpIfEqual parse8ByteValueLoopBody5
+    compareToNumber 3 54
+    jumpIfEqual parse8ByteValueLoopBody6
+    compareToNumber 3 55
+    jumpIfEqual parse8ByteValueLoopBody7
+    compareToNumber 3 56
+    jumpIfEqual parse8ByteValueLoopBody8
+    compareToNumber 3 57
+    jumpIfEqual parse8ByteValueLoopBody9
+    compareToNumber 3 97
+    jumpIfEqual parse8ByteValueLoopBody10
+    compareToNumber 3 98
+    jumpIfEqual parse8ByteValueLoopBody11
+    compareToNumber 3 99
+    jumpIfEqual parse8ByteValueLoopBody12
+    compareToNumber 3 100
+    jumpIfEqual parse8ByteValueLoopBody13
+    compareToNumber 3 101
+    jumpIfEqual parse8ByteValueLoopBody14
+    compareToNumber 3 102
+    jumpIfEqual parse8ByteValueLoopBody15
+parse8ByteValueLoopBody0
+    moveNumber 0 4
+    jump parse8ByteValueLoopBodyContinue
+parse8ByteValueLoopBody1
+    moveNumber 1 4
+    jump parse8ByteValueLoopBodyContinue
+parse8ByteValueLoopBody2
+    moveNumber 2 4
+    jump parse8ByteValueLoopBodyContinue
+parse8ByteValueLoopBody3
+    moveNumber 3 4
+    jump parse8ByteValueLoopBodyContinue
+parse8ByteValueLoopBody4
+    moveNumber 4 4
+    jump parse8ByteValueLoopBodyContinue
+parse8ByteValueLoopBody5
+    moveNumber 5 4
+    jump parse8ByteValueLoopBodyContinue
+parse8ByteValueLoopBody6
+    moveNumber 6 4
+    jump parse8ByteValueLoopBodyContinue
+parse8ByteValueLoopBody7
+    moveNumber 7 4
+    jump parse8ByteValueLoopBodyContinue
+parse8ByteValueLoopBody8
+    moveNumber 8 4
+    jump parse8ByteValueLoopBodyContinue
+parse8ByteValueLoopBody9
+    moveNumber 9 4
+    jump parse8ByteValueLoopBodyContinue
+parse8ByteValueLoopBody10
+    moveNumber 10 4
+    jump parse8ByteValueLoopBodyContinue
+parse8ByteValueLoopBody11
+    moveNumber 11 4
+    jump parse8ByteValueLoopBodyContinue
+parse8ByteValueLoopBody12
+    moveNumber 12 4
+    jump parse8ByteValueLoopBodyContinue
+parse8ByteValueLoopBody13
+    moveNumber 13 4
+    jump parse8ByteValueLoopBodyContinue
+parse8ByteValueLoopBody14
+    moveNumber 14 4
+    jump parse8ByteValueLoopBodyContinue
+parse8ByteValueLoopBody15
+    moveNumber 15 4
+    jump parse8ByteValueLoopBodyContinue
+parse8ByteValueLoopBodyContinue
+    shiftLeftByNumber 4 2
+    add 4 2
+    addNumber 8 0
+    jump parse8ByteValueLoop
+parse8ByteValueLoopExit
+    move 2 -4
+    return
+print8ByteValue
+    pushNumber 60
+    pushNumber 0
+    pushNumber 0
+    jump print8ByteValueLoop
+print8ByteValueLoop
+    compareToNumber 0 0
+    jumpIfGreater print8ByteValueLoopBody
+    compareToNumber 0 0
+    jumpIfEqual print8ByteValueLoopBody
+    jump print8ByteValueLoopExit
+print8ByteValueLoopBody
+    move -3 1
+    shiftRight 0 1
+    bitwiseAndWithNumber 15 1
+    moveNumber 48 2
+    compareToNumber 1 0
+    jumpIfEqual print8ByteValueLoopBody0
+    compareToNumber 1 1
+    jumpIfEqual print8ByteValueLoopBody1
+    compareToNumber 1 2
+    jumpIfEqual print8ByteValueLoopBody2
+    compareToNumber 1 3
+    jumpIfEqual print8ByteValueLoopBody3
+    compareToNumber 1 4
+    jumpIfEqual print8ByteValueLoopBody4
+    compareToNumber 1 5
+    jumpIfEqual print8ByteValueLoopBody5
+    compareToNumber 1 6
+    jumpIfEqual print8ByteValueLoopBody6
+    compareToNumber 1 7
+    jumpIfEqual print8ByteValueLoopBody7
+    compareToNumber 1 8
+    jumpIfEqual print8ByteValueLoopBody8
+    compareToNumber 1 9
+    jumpIfEqual print8ByteValueLoopBody9
+    compareToNumber 1 10
+    jumpIfEqual print8ByteValueLoopBody10
+    compareToNumber 1 11
+    jumpIfEqual print8ByteValueLoopBody11
+    compareToNumber 1 12
+    jumpIfEqual print8ByteValueLoopBody12
+    compareToNumber 1 13
+    jumpIfEqual print8ByteValueLoopBody13
+    compareToNumber 1 14
+    jumpIfEqual print8ByteValueLoopBody14
+    compareToNumber 1 15
+    jumpIfEqual print8ByteValueLoopBody15
+print8ByteValueLoopBody0
+    moveNumber 48 2
+    jump print8ByteValueLoopBodyContinue
+print8ByteValueLoopBody1
+    moveNumber 49 2
+    jump print8ByteValueLoopBodyContinue
+print8ByteValueLoopBody2
+    moveNumber 50 2
+    jump print8ByteValueLoopBodyContinue
+print8ByteValueLoopBody3
+    moveNumber 51 2
+    jump print8ByteValueLoopBodyContinue
+print8ByteValueLoopBody4
+    moveNumber 52 2
+    jump print8ByteValueLoopBodyContinue
+print8ByteValueLoopBody5
+    moveNumber 53 2
+    jump print8ByteValueLoopBodyContinue
+print8ByteValueLoopBody6
+    moveNumber 54 2
+    jump print8ByteValueLoopBodyContinue
+print8ByteValueLoopBody7
+    moveNumber 55 2
+    jump print8ByteValueLoopBodyContinue
+print8ByteValueLoopBody8
+    moveNumber 56 2
+    jump print8ByteValueLoopBodyContinue
+print8ByteValueLoopBody9
+    moveNumber 57 2
+    jump print8ByteValueLoopBodyContinue
+print8ByteValueLoopBody10
+    moveNumber 97 2
+    jump print8ByteValueLoopBodyContinue
+print8ByteValueLoopBody11
+    moveNumber 98 2
+    jump print8ByteValueLoopBodyContinue
+print8ByteValueLoopBody12
+    moveNumber 99 2
+    jump print8ByteValueLoopBodyContinue
+print8ByteValueLoopBody13
+    moveNumber 100 2
+    jump print8ByteValueLoopBodyContinue
+print8ByteValueLoopBody14
+    moveNumber 101 2
+    jump print8ByteValueLoopBodyContinue
+print8ByteValueLoopBody15
+    moveNumber 102 2
+    jump print8ByteValueLoopBodyContinue
+print8ByteValueLoopBodyContinue
+    call writeToTranscript
+    addNumber -4 0
+    jump print8ByteValueLoop
+print8ByteValueLoopExit
+    return
+"""
 
 
 class TkScreen:
@@ -911,18 +839,8 @@ def console_step(memory, screen):
 
 if __name__ == "__main__":
     # Memory and disk are byte arrays: every element is one integer from 0 to 255
-    disk = [0] * 4000000
+    disk = assemble(operating_system_source)
     memory = [0] * len(disk)
-
-    for address, value in [
-        (0, 24),
-        (8, 500000),
-        (16, 500000),
-    ]:
-        disk[address : address + 8] = as8(value)
-
-    operating_system = assemble(operating_system_source, 24)
-    disk[24 : 24 + len(operating_system)] = operating_system
 
     memory[:] = disk[:]
     equal_flag = 0

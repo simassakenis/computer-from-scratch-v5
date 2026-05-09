@@ -17,18 +17,48 @@ def slot(memory, index):
     return read8(memory, 8) + index * 8
 
 
-def label_addresses(source, start_address):
+def label_addresses(source):
+    opcodes = {
+        "move",
+        "moveNumber",
+        "moveFromPointer",
+        "moveToPointer",
+        "add",
+        "addNumber",
+        "subtract",
+        "shiftLeft",
+        "shiftLeftByNumber",
+        "shiftRight",
+        "shiftRightByNumber",
+        "bitwiseAnd",
+        "bitwiseAndWithNumber",
+        "pushNumber",
+        "pop",
+        "compare",
+        "compareToNumber",
+        "jumpIfEqual",
+        "jumpIfGreater",
+        "jump",
+        "call",
+        "return",
+    }
     labels = {}
-    address = start_address
-    i = 0
+    address = 0
 
-    while i < len(source):
-        if isinstance(source[i], str):
-            labels[source[i]] = address
-            i += 1
-        else:
+    for raw_line in source.splitlines():
+        line = raw_line.split("//")[0].rstrip()
+        if line == "":
+            continue
+
+        if not line[0].isspace():
+            labels[line.rstrip(":")] = address
+            continue
+
+        parts = line.split()
+        if parts[0] in opcodes:
             address += 24
-            i += 3
+        else:
+            address += 8 * len(parts)
 
     return labels
 
@@ -246,13 +276,8 @@ def test_call_and_return():
 
 
 def test_os_echoes_typed_character():
-    disk = [0] * 4000000
+    disk = computer.assemble(computer.operating_system_source)
     memory = [0] * len(disk)
-    write8(disk, 0, 24)
-    write8(disk, 8, 500000)
-    write8(disk, 16, 500000)
-    operating_system = computer.assemble(computer.operating_system_source, 24)
-    disk[24 : 24 + len(operating_system)] = operating_system
     memory[:] = disk[:]
     keys = [ord("a")]
     equal_flag = 0
@@ -269,16 +294,11 @@ def test_os_echoes_typed_character():
 
 
 def test_os_invokes_read_disk_program():
-    disk = [0] * 4000000
+    disk = computer.assemble(computer.operating_system_source)
     memory = [0] * len(disk)
-    write8(disk, 0, 24)
-    write8(disk, 8, 500000)
-    write8(disk, 16, 500000)
-    operating_system = computer.assemble(computer.operating_system_source, 24)
-    disk[24 : 24 + len(operating_system)] = operating_system
     memory[:] = disk[:]
 
-    labels = label_addresses(computer.operating_system_source, 24)
+    labels = label_addresses(computer.operating_system_source)
     program_start = labels["readFromDiskProgram"]
     program_length = labels["writeToDiskProgram"] - program_start
     command = (
