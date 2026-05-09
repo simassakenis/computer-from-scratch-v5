@@ -131,7 +131,8 @@ def keyboard_step(memory, tkinter_window):
 
 # Helper that performs pending memory-mapped disk reads and writes
 def disk_step(memory, disk):
-    # Assumes disk IO uses addresses 1000008 through 1000040
+    # Assumes disk IO uses 1000008 for disk address, 1000016 for memory address,
+    # 1000024 for byte count, 1000032 for read waiting, and 1000040 for write waiting
     is_waiting_for_disk_read = asint(memory[1000032 : 1000032 + 8])
     is_waiting_for_disk_write = asint(memory[1000040 : 1000040 + 8])
 
@@ -316,7 +317,13 @@ def cpu_step(memory, equal_flag, greater_flag):
 
 # Helper that renders console memory into the Tkinter window
 def console_step(memory, tkinter_window):
-    # Assumes console starts at 1000072 and has 128 by 32 cells
+    # Assumes 1000064 stores the next console write address and 1000072 starts a 128 by 32 console
+    console_write_address = asint(memory[1000064 : 1000064 + 8])
+    # Avoid redrawing the whole Tkinter console unless a console write changed it
+    if tkinter_window.get("last_console_write_address") == console_write_address:
+        return
+    tkinter_window["last_console_write_address"] = console_write_address
+
     rows = []
     for y in range(32):
         row = []
