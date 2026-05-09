@@ -67,10 +67,7 @@ def assemble(source):
             continue
 
         parts = line.split()
-        if parts[0] in opcodes:
-            address += 24
-        else:
-            address += 8 * len(parts)
+        address += 8 * len(parts)
         lines.append(parts)
 
     address = 0
@@ -79,7 +76,6 @@ def assemble(source):
 
         if parts[0] in opcodes:
             values = [opcodes[parts[0]], *parts[1:]]
-            values += [0] * (3 - len(values))
 
         for value in values:
             value = labels[value] if value in labels else int(value)

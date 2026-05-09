@@ -18,30 +18,6 @@ def slot(memory, index):
 
 
 def label_addresses(source):
-    opcodes = {
-        "move",
-        "moveNumber",
-        "moveFromPointer",
-        "moveToPointer",
-        "add",
-        "addNumber",
-        "subtract",
-        "shiftLeft",
-        "shiftLeftByNumber",
-        "shiftRight",
-        "shiftRightByNumber",
-        "bitwiseAnd",
-        "bitwiseAndWithNumber",
-        "pushNumber",
-        "pop",
-        "compare",
-        "compareToNumber",
-        "jumpIfEqual",
-        "jumpIfGreater",
-        "jump",
-        "call",
-        "return",
-    }
     labels = {}
     address = 0
 
@@ -55,10 +31,7 @@ def label_addresses(source):
             continue
 
         parts = line.split()
-        if parts[0] in opcodes:
-            address += 24
-        else:
-            address += 8 * len(parts)
+        address += 8 * len(parts)
 
     return labels
 
