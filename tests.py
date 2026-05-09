@@ -1,5 +1,3 @@
-from pathlib import Path
-
 import computer
 
 
@@ -73,7 +71,7 @@ def console(memory, length):
 
 
 def disk_source():
-    return Path(__file__).with_name("disk.txt").read_text()
+    return open("disk.txt").read()
 
 
 def test_idle():

@@ -1,11 +1,8 @@
-from pathlib import Path
 import tkinter as tk
 
 
-console_address = 1000072
-
+# Helper that turns one machine value into 8 memory bytes
 def as8(value):
-    # Store one machine value as 8 big-endian bytes
     value = value % (2**64)
     return [
         (value >> 56) & 255,
@@ -19,8 +16,8 @@ def as8(value):
     ]
 
 
+# Helper that turns 8 memory bytes into one signed machine value
 def asint(value):
-    # Read 8 memory bytes back into one signed 64-bit machine value
     result = 0
     for byte in value:
         result = result * 256 + byte
@@ -29,6 +26,7 @@ def asint(value):
     return result
 
 
+# Helper that turns disk source text into the initial disk bytes
 def assemble(source):
     opcodes = {
         "move": 1,
@@ -91,7 +89,9 @@ def assemble(source):
     return disk
 
 
+# Object that opens a minimal Tkinter-backed console window
 class TkScreen:
+    # Helper that initializes the Tkinter window
     def __init__(self):
         self.pending_key = None
         self.root = tk.Tk()
@@ -108,6 +108,7 @@ class TkScreen:
         self.label.pack()
         self.root.bind("<KeyPress>", self.on_key)
 
+    # Helper that records the latest Tkinter keypress
     def on_key(self, event):
         if event.keysym == "Return":
             self.pending_key = 10
@@ -116,6 +117,7 @@ class TkScreen:
         elif event.char:
             self.pending_key = ord(event.char)
 
+    # Helper that returns one pending keypress if any
     def read_key(self):
         self.root.update()
 
@@ -123,12 +125,13 @@ class TkScreen:
         self.pending_key = None
         return key
 
+    # Helper that renders console memory into Tkinter text
     def draw(self, memory):
         rows = []
         for y in range(32):
             row = []
             for x in range(128):
-                address = console_address + (y * 128 + x) * 8
+                address = 1000072 + (y * 128 + x) * 8
                 value = asint(memory[address : address + 8])
                 if value == 0:
                     value = ord(" ")
@@ -139,6 +142,7 @@ class TkScreen:
         self.root.update_idletasks()
 
 
+# Helper that copies a pending Tkinter keypress into keyboard IO memory
 def keyboard_step(memory, tkinter_window):
     key = tkinter_window.read_key()
 
@@ -150,6 +154,7 @@ def keyboard_step(memory, tkinter_window):
     return memory
 
 
+# Helper that performs pending memory-mapped disk reads and writes
 def disk_step(memory, disk):
     is_waiting_for_disk_read = asint(memory[1000032 : 1000032 + 8])
     is_waiting_for_disk_write = asint(memory[1000040 : 1000040 + 8])
@@ -171,6 +176,7 @@ def disk_step(memory, disk):
     return memory, disk
 
 
+# Helper that executes one CPU instruction
 def cpu_step(memory, equal_flag, greater_flag):
     # Fetch one 24-byte instruction: opcode, operand1, operand2
     instruction_pointer = asint(memory[0:8])
@@ -331,6 +337,7 @@ def cpu_step(memory, equal_flag, greater_flag):
     return memory, equal_flag, greater_flag
 
 
+# Helper that renders console memory into the Tkinter window
 def console_step(memory, tkinter_window):
     tkinter_window.draw(memory)
 
@@ -340,7 +347,7 @@ if __name__ == "__main__":
     tkinter_window = TkScreen()
 
     # Memory and disk are byte arrays: every element is one integer from 0 to 255
-    disk = assemble(Path(__file__).with_name("disk.txt").read_text())
+    disk = assemble(open("disk.txt").read())
     memory = [0] * 5000000
 
     # Power-on loads the plugged-in disk image into memory
