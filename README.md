@@ -1,8 +1,8 @@
 # computer-from-scratch-v5
 
-A minimal simulated computer with byte-addressed memory, a tiny CPU, memory-mapped IO, and a small terminal operating system loaded from `disk.txt`.
+A minimal simulated computer with memory, CPU, keyboard, disk, and console, and a small terminal operating system loaded from `disk.txt`.
 
-## Instructions
+## Instruction Set
 
 Each instruction is 24 bytes: 8 bytes for opcode, 8 bytes for operand 1, and 8 bytes for operand 2. Unused operands are `0`. When an instruction changes something, operand 2 is usually the destination.
 
@@ -31,7 +31,7 @@ Each instruction is 24 bytes: 8 bytes for opcode, 8 bytes for operand 1, and 8 b
 
 ## Startup
 
-When powered on, the computer copies the disk image into memory and then executes instructions forever. The first three 8-byte values on disk initialize the instruction pointer, base pointer, and stack top pointer.
+When powered on, the computer copies the 4,000,000-byte disk image into memory and then just executes instructions one by one until powered off. The first three 8-byte values on disk initialize the instruction pointer, base pointer, and stack top pointer.
 
 The preloaded program is a minimal terminal OS. It listens for keyboard input until Enter. Enter itself is not written to the transcript or console. The command before Enter is interpreted as:
 
@@ -49,38 +49,25 @@ First type this command and press Enter. It invokes `writeToDiskProgram` and wri
 00000000000012d8000000000000046800000000000186a0000000000000000e00000000000000680000000000000000000000000000001500000000000009480000000000000000000000000000000e00000000000000690000000000000000000000000000001500000000000009480000000000000000000000000000001600000000000000000000000000000000
 ```
 
-Broken into 16-hex-character values, that command is:
-
-```text
-00000000000012d8  address of writeToDiskProgram
-0000000000000468  length of writeToDiskProgram
-00000000000186a0  disk address to write the new program to
-000000000000000e  pushNumber opcode
-0000000000000068  ASCII h
-0000000000000000  unused operand
-0000000000000015  call opcode
-0000000000000948  address of writeToTranscript
-0000000000000000  unused operand
-000000000000000e  pushNumber opcode
-0000000000000069  ASCII i
-0000000000000000  unused operand
-0000000000000015  call opcode
-0000000000000948  address of writeToTranscript
-0000000000000000  unused operand
-0000000000000016  return opcode
-0000000000000000  unused operand
-0000000000000000  unused operand
-```
-
 Then type this command and press Enter. It runs the program at disk address `100000`, length `120` bytes:
 
 ```text
 00000000000186a00000000000000078
 ```
 
-Broken down:
+The values typed above are:
 
 ```text
+00000000000012d8  address of writeToDiskProgram
+0000000000000468  length of writeToDiskProgram
+00000000000186a0  disk address to write the new program to
+
+000000000000000e 0000000000000068 0000000000000000  pushNumber 104, ASCII h
+0000000000000015 0000000000000948 0000000000000000  call writeToTranscript
+000000000000000e 0000000000000069 0000000000000000  pushNumber 105, ASCII i
+0000000000000015 0000000000000948 0000000000000000  call writeToTranscript
+0000000000000016 0000000000000000 0000000000000000  return
+
 00000000000186a0  disk address of the new program
 0000000000000078  length of the new program
 ```
@@ -96,12 +83,6 @@ The disk currently includes two user programs:
 
 At the moment, `readFromDiskProgram` starts at disk address `3768` and is `1056` bytes long. `writeToDiskProgram` starts at disk address `4824`.
 
-Some OS functions are useful for user programs to call directly. In the current disk image:
-
-- `writeToTranscript` is at address `2376`
-- `readFromDisk` is at address `3048`
-- `writeToDisk` is at address `3408`
-
 For example, the `hi` program above calls `writeToTranscript` at the hard-coded address `2376`, encoded as `0000000000000948`.
 
 ## Memory Layout
@@ -111,6 +92,13 @@ For example, the `hi` program above calls `writeToTranscript` at the hard-coded 
 8: base pointer
 16: stack top pointer
 24..<500000: operating system program
+    2376: writeToTranscript
+    3048: readFromDisk
+    3408: writeToDisk
+    3768: readFromDiskProgram
+    4824: writeToDiskProgram
+    5952: parse8ByteValue
+    7968: print8ByteValue
 500000..<1000000: operating system stack
 1000000: next transcript write address
 1000008: disk IO disk address
@@ -126,15 +114,13 @@ For example, the `hi` program above calls `writeToTranscript` at the hard-coded 
 3000000..: loaded user program, then user program stack
 ```
 
-## IO Contracts
+## Conventions
 
 Keyboard IO: the program sets `1000048` to `1`. The keyboard hardware writes the pressed key to `1000056` and resets `1000048` to `0`.
 
-Disk IO: the program writes disk address to `1000008`, memory address to `1000016`, byte count to `1000024`, then sets either `1000032` for read or `1000040` for write. Disk hardware performs the copy and resets the waiting flag to `0`.
+Disk IO: the program writes disk address to `1000008`, memory address to `1000016`, and byte count to `1000024`. To read, it sets `1000032` to `1`; disk hardware copies from disk to memory and resets `1000032` to `0`. To write, it sets `1000040` to `1`; disk hardware copies from memory to disk and resets `1000040` to `0`.
 
 Console IO: console cells start at `1000072`; each cell is one 8-byte character value. `1000064` stores the next console write address.
-
-## Calling Convention
 
 Arguments are pushed before `call`. The call instruction pushes the return address and old base pointer, then sets the base pointer to the new frame.
 
