@@ -329,6 +329,53 @@ def test_write_to_disk_program():
     assert computer.asint(disk[disk_address + 8 : disk_address + 16]) == 0
 
 
+def test_readme_write_hi_program_example():
+    # Simulate the README flow: write a small program to disk, run it, and see hi
+    disk = computer.assemble(open("disk.txt").read())
+    memory = [0] * 10000000
+    memory[:500000] = disk[:500000]
+    write_command = (
+        "00000000000012d8"
+        "0000000000000468"
+        "000000000007a120"
+        "000000000000000e"
+        "0000000000000068"
+        "0000000000000000"
+        "0000000000000015"
+        "0000000000000948"
+        "0000000000000000"
+        "000000000000000e"
+        "0000000000000069"
+        "0000000000000000"
+        "0000000000000015"
+        "0000000000000948"
+        "0000000000000000"
+        "0000000000000016"
+        "0000000000000000"
+        "0000000000000000"
+    )
+    run_command = "000000000007a1200000000000000078"
+    keys = [ord(character) for character in write_command] + [10]
+    keys += [ord(character) for character in run_command] + [10]
+    expected = write_command + run_command + "hi"
+    equal_flag = 0
+    greater_flag = 0
+
+    for cycle in range(30000):
+        if cycle % 10 == 0 and keys and computer.asint(memory[1000048 : 1000048 + 8]) == 1:
+            memory[1000056 : 1000056 + 8] = computer.as8(keys.pop(0))
+            memory[1000048 : 1000048 + 8] = computer.as8(0)
+        memory, disk = computer.disk_step(memory, disk)
+        memory, equal_flag, greater_flag = computer.cpu_step(memory, equal_flag, greater_flag)
+
+    result = ""
+    for address in range(1000072, 1000072 + len(expected) * 8, 8):
+        result += chr(computer.asint(memory[address : address + 8]) & 255)
+
+    assert keys == []
+    assert result == expected
+
+
 if __name__ == "__main__":
     for test in [
         test_idle,
@@ -345,6 +392,7 @@ if __name__ == "__main__":
         test_os_echoes_typed_character,
         test_read_from_disk_program,
         test_write_to_disk_program,
+        test_readme_write_hi_program_example,
     ]:
         test()
         print(f"success: {test.__name__}")
