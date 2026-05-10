@@ -1,16 +1,13 @@
 import computer
 
 
-def instruction(opcode, operand1=0, operand2=0):
-    return computer.as8(opcode) + computer.as8(operand1) + computer.as8(operand2)
-
-
 def test_idle():
+    # An idle instruction leaves the instruction pointer and ALU flags unchanged
     memory = [0] * 10000000
     memory[0:8] = computer.as8(24)
     memory[8:16] = computer.as8(2000)
     memory[16:24] = computer.as8(2000)
-    memory[24 : 24 + 24] = instruction(0)
+    memory[24 : 24 + 24] = computer.as8(0) + computer.as8(0) + computer.as8(0)
 
     memory, equal_flag, greater_flag = computer.cpu_step(memory, 0, 0)
 
@@ -20,11 +17,18 @@ def test_idle():
 
 
 def test_move_and_move_number():
+    # Verifies moving an immediate number into one slot and then into another slot
+    # Program:
+    #   moveNumber 42 0
+    #   move 0 1
     memory = [0] * 10000000
     memory[0:8] = computer.as8(24)
     memory[8:16] = computer.as8(2000)
     memory[16:24] = computer.as8(2000)
-    program = instruction(2, 42, 0) + instruction(1, 0, 1)
+    program = (
+        computer.as8(2) + computer.as8(42) + computer.as8(0)
+        + computer.as8(1) + computer.as8(0) + computer.as8(1)
+    )
     memory[24 : 24 + len(program)] = program
     equal_flag = 0
     greater_flag = 0
@@ -36,15 +40,21 @@ def test_move_and_move_number():
 
 
 def test_pointer_moves():
+    # Verifies writing through a pointer and then reading back through that pointer
+    # Program:
+    #   moveNumber 3000 0
+    #   moveNumber 65 1
+    #   moveToPointer 1 0
+    #   moveFromPointer 0 2
     memory = [0] * 10000000
     memory[0:8] = computer.as8(24)
     memory[8:16] = computer.as8(2000)
     memory[16:24] = computer.as8(2000)
     program = (
-        instruction(2, 3000, 0)
-        + instruction(2, 65, 1)
-        + instruction(4, 1, 0)
-        + instruction(3, 0, 2)
+        computer.as8(2) + computer.as8(3000) + computer.as8(0)
+        + computer.as8(2) + computer.as8(65) + computer.as8(1)
+        + computer.as8(4) + computer.as8(1) + computer.as8(0)
+        + computer.as8(3) + computer.as8(0) + computer.as8(2)
     )
     memory[24 : 24 + len(program)] = program
     equal_flag = 0
@@ -58,16 +68,23 @@ def test_pointer_moves():
 
 
 def test_arithmetic():
+    # Verifies add, addNumber, and subtract update the destination slot
+    # Program:
+    #   slot(0) = 7
+    #   slot(1) = 5
+    #   slot(1) += slot(0)
+    #   slot(1) += -2
+    #   slot(1) -= slot(0)
     memory = [0] * 10000000
     memory[0:8] = computer.as8(24)
     memory[8:16] = computer.as8(2000)
     memory[16:24] = computer.as8(2000)
     program = (
-        instruction(2, 7, 0)
-        + instruction(2, 5, 1)
-        + instruction(5, 0, 1)
-        + instruction(6, -2, 1)
-        + instruction(7, 0, 1)
+        computer.as8(2) + computer.as8(7) + computer.as8(0)
+        + computer.as8(2) + computer.as8(5) + computer.as8(1)
+        + computer.as8(5) + computer.as8(0) + computer.as8(1)
+        + computer.as8(6) + computer.as8(-2) + computer.as8(1)
+        + computer.as8(7) + computer.as8(0) + computer.as8(1)
     )
     memory[24 : 24 + len(program)] = program
     equal_flag = 0
@@ -80,20 +97,21 @@ def test_arithmetic():
 
 
 def test_shift_and_bitwise():
+    # Program exercises both slot-based and immediate shifts, then bitwise AND
     memory = [0] * 10000000
     memory[0:8] = computer.as8(24)
     memory[8:16] = computer.as8(2000)
     memory[16:24] = computer.as8(2000)
     program = (
-        instruction(2, 1, 0)
-        + instruction(2, 3, 1)
-        + instruction(8, 0, 1)
-        + instruction(9, 2, 1)
-        + instruction(10, 0, 1)
-        + instruction(11, 1, 1)
-        + instruction(2, 7, 2)
-        + instruction(12, 2, 1)
-        + instruction(13, 2, 1)
+        computer.as8(2) + computer.as8(1) + computer.as8(0)
+        + computer.as8(2) + computer.as8(3) + computer.as8(1)
+        + computer.as8(8) + computer.as8(0) + computer.as8(1)
+        + computer.as8(9) + computer.as8(2) + computer.as8(1)
+        + computer.as8(10) + computer.as8(0) + computer.as8(1)
+        + computer.as8(11) + computer.as8(1) + computer.as8(1)
+        + computer.as8(2) + computer.as8(7) + computer.as8(2)
+        + computer.as8(12) + computer.as8(2) + computer.as8(1)
+        + computer.as8(13) + computer.as8(2) + computer.as8(1)
     )
     memory[24 : 24 + len(program)] = program
     equal_flag = 0
@@ -106,11 +124,19 @@ def test_shift_and_bitwise():
 
 
 def test_push_number_and_pop():
+    # Verifies push writes at stack top and pop moves stack top back
+    # Program:
+    #   pushNumber 55
+    #   pop
+    # The value remains in memory, but stack top moves back
     memory = [0] * 10000000
     memory[0:8] = computer.as8(24)
     memory[8:16] = computer.as8(2000)
     memory[16:24] = computer.as8(2000)
-    program = instruction(14, 55) + instruction(15)
+    program = (
+        computer.as8(14) + computer.as8(55) + computer.as8(0)
+        + computer.as8(15) + computer.as8(0) + computer.as8(0)
+    )
     memory[24 : 24 + len(program)] = program
     equal_flag = 0
     greater_flag = 0
@@ -125,16 +151,17 @@ def test_push_number_and_pop():
 
 
 def test_compare_to_number_and_jump_if_equal():
+    # Program jumps over slot(1) = 1 because slot(0) equals 5
     memory = [0] * 10000000
     memory[0:8] = computer.as8(24)
     memory[8:16] = computer.as8(2000)
     memory[16:24] = computer.as8(2000)
     program = (
-        instruction(2, 5, 0)
-        + instruction(17, 0, 5)
-        + instruction(18, 120)
-        + instruction(2, 1, 1)
-        + instruction(2, 9, 1)
+        computer.as8(2) + computer.as8(5) + computer.as8(0)
+        + computer.as8(17) + computer.as8(0) + computer.as8(5)
+        + computer.as8(18) + computer.as8(120) + computer.as8(0)
+        + computer.as8(2) + computer.as8(1) + computer.as8(1)
+        + computer.as8(2) + computer.as8(9) + computer.as8(1)
     )
     memory[24 : 24 + len(program)] = program
     equal_flag = 0
@@ -147,17 +174,18 @@ def test_compare_to_number_and_jump_if_equal():
 
 
 def test_compare_and_jump_if_greater():
+    # Program jumps over slot(2) = 1 because slot(0) is greater than slot(1)
     memory = [0] * 10000000
     memory[0:8] = computer.as8(24)
     memory[8:16] = computer.as8(2000)
     memory[16:24] = computer.as8(2000)
     program = (
-        instruction(2, 9, 0)
-        + instruction(2, 3, 1)
-        + instruction(16, 0, 1)
-        + instruction(19, 144)
-        + instruction(2, 1, 2)
-        + instruction(2, 8, 2)
+        computer.as8(2) + computer.as8(9) + computer.as8(0)
+        + computer.as8(2) + computer.as8(3) + computer.as8(1)
+        + computer.as8(16) + computer.as8(0) + computer.as8(1)
+        + computer.as8(19) + computer.as8(144) + computer.as8(0)
+        + computer.as8(2) + computer.as8(1) + computer.as8(2)
+        + computer.as8(2) + computer.as8(8) + computer.as8(2)
     )
     memory[24 : 24 + len(program)] = program
     equal_flag = 0
@@ -170,11 +198,16 @@ def test_compare_and_jump_if_greater():
 
 
 def test_jump():
+    # Program jumps over slot(0) = 1 and lands on slot(0) = 2
     memory = [0] * 10000000
     memory[0:8] = computer.as8(24)
     memory[8:16] = computer.as8(2000)
     memory[16:24] = computer.as8(2000)
-    program = instruction(20, 72) + instruction(2, 1, 0) + instruction(2, 2, 0)
+    program = (
+        computer.as8(20) + computer.as8(72) + computer.as8(0)
+        + computer.as8(2) + computer.as8(1) + computer.as8(0)
+        + computer.as8(2) + computer.as8(2) + computer.as8(0)
+    )
     memory[24 : 24 + len(program)] = program
     equal_flag = 0
     greater_flag = 0
@@ -186,17 +219,23 @@ def test_jump():
 
 
 def test_call_and_return():
+    # Verifies call creates a function frame and return restores the caller frame
+    # Program:
+    #   pushNumber 123
+    #   call function
+    #   move 0 1
+    # The function copies its argument from slot(-3) into slot(0), then returns
     memory = [0] * 10000000
     memory[0:8] = computer.as8(24)
     memory[8:16] = computer.as8(2000)
     memory[16:24] = computer.as8(2000)
     program = (
-        instruction(14, 123)
-        + instruction(21, 120)
-        + instruction(1, 0, 1)
-        + instruction(0)
-        + instruction(1, -3, 0)
-        + instruction(22)
+        computer.as8(14) + computer.as8(123) + computer.as8(0)
+        + computer.as8(21) + computer.as8(120) + computer.as8(0)
+        + computer.as8(1) + computer.as8(0) + computer.as8(1)
+        + computer.as8(0) + computer.as8(0) + computer.as8(0)
+        + computer.as8(1) + computer.as8(-3) + computer.as8(0)
+        + computer.as8(22) + computer.as8(0) + computer.as8(0)
     )
     memory[24 : 24 + len(program)] = program
     equal_flag = 0
@@ -211,6 +250,7 @@ def test_call_and_return():
 
 
 def test_power_on_copies_only_startup_bytes():
+    # Power-on copies only the first 500000 bytes, leaving later disk bytes unloaded
     disk = computer.assemble(open("disk.txt").read())
     disk[500000 : 500000 + 8] = computer.as8(123)
     memory = [0] * 10000000
@@ -221,6 +261,7 @@ def test_power_on_copies_only_startup_bytes():
 
 
 def test_os_echoes_typed_character():
+    # Simulate typing one key into the real terminal OS and verify it reaches console memory
     disk = computer.assemble(open("disk.txt").read())
     memory = [0] * 10000000
     memory[:500000] = disk[:500000]
@@ -239,6 +280,7 @@ def test_os_echoes_typed_character():
 
 
 def test_read_from_disk_program():
+    # Invoke readFromDiskProgram through the terminal and read the first 8 disk bytes
     disk = computer.assemble(open("disk.txt").read())
     memory = [0] * 10000000
     memory[:500000] = disk[:500000]
@@ -264,6 +306,7 @@ def test_read_from_disk_program():
 
 
 def test_write_to_disk_program():
+    # Invoke writeToDiskProgram through the terminal and verify disk memory changes
     disk = computer.assemble(open("disk.txt").read())
     memory = [0] * 10000000
     memory[:500000] = disk[:500000]
