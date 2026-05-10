@@ -90,7 +90,7 @@ def tkinter_window_init():
     tkinter_window = {}
     tkinter_window["pending_key"] = None
     tkinter_window["root"] = tk.Tk()
-    tkinter_window["root"].title("Computer")
+    tkinter_window["root"].title("")
 
     tkinter_window["label"] = tk.Label(
         tkinter_window["root"],
@@ -111,6 +111,8 @@ def tkinter_window_init():
             tkinter_window["pending_key"] = ord(event.char)
 
     tkinter_window["root"].bind("<KeyPress>", on_key)
+    tkinter_window["root"].lift()
+    tkinter_window["root"].after(0, tkinter_window["root"].focus_force)
     return tkinter_window
 
 
