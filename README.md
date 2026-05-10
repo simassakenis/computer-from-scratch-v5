@@ -1,6 +1,6 @@
 # computer-from-scratch-v5
 
-This is a minimal simulated computer with memory, CPU, keyboard, disk, console, and a small terminal operating system loaded from `disk.txt`.
+This is a minimal simulated computer with memory, CPU, keyboard, disk, console, and a small terminal operating system loaded from `os.txt`.
 
 When powered on (`python computer.py`), the computer copies the first `500000` sacred bytes from disk into memory and then executes instructions one by one forever, until the computer is powered off. The instruction pointer starts at `24`, so the CPU starts interpreting memory at address `24` as instructions.
 

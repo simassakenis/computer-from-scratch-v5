@@ -346,7 +346,7 @@ if __name__ == "__main__":
     tkinter_window = tkinter_window_init()
 
     # Memory and disk are byte arrays: every element is one integer from 0 to 255
-    disk = assemble(open("disk.txt").read())
+    disk = assemble(open("os.txt").read())
     memory = [0] * 10000000
 
     # Power-on loads the sacred startup and operating system bytes into memory

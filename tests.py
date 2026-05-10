@@ -251,7 +251,7 @@ def test_call_and_return():
 
 def test_power_on_copies_only_startup_bytes():
     # Power-on copies only the first 500000 bytes, leaving later disk bytes unloaded
-    disk = computer.assemble(open("disk.txt").read())
+    disk = computer.assemble(open("os.txt").read())
     disk[500000 : 500000 + 8] = computer.as8(123)
     memory = [0] * 10000000
 
@@ -262,7 +262,7 @@ def test_power_on_copies_only_startup_bytes():
 
 def test_os_echoes_typed_character():
     # Simulate typing one key into the real terminal OS and verify it reaches console memory
-    disk = computer.assemble(open("disk.txt").read())
+    disk = computer.assemble(open("os.txt").read())
     memory = [0] * 10000000
     memory[:500000] = disk[:500000]
     keys = [ord("a")]
@@ -281,7 +281,7 @@ def test_os_echoes_typed_character():
 
 def test_read_from_disk_program():
     # Invoke readFromDiskProgram through the terminal and read the first 8 disk bytes
-    disk = computer.assemble(open("disk.txt").read())
+    disk = computer.assemble(open("os.txt").read())
     memory = [0] * 10000000
     memory[:500000] = disk[:500000]
     command = f"{3768:016x}{1056:016x}{0:016x}{8:016x}"
@@ -307,7 +307,7 @@ def test_read_from_disk_program():
 
 def test_write_to_disk_program():
     # Invoke writeToDiskProgram through the terminal and verify disk memory changes
-    disk = computer.assemble(open("disk.txt").read())
+    disk = computer.assemble(open("os.txt").read())
     memory = [0] * 10000000
     memory[:500000] = disk[:500000]
     disk_address = 600000
@@ -331,7 +331,7 @@ def test_write_to_disk_program():
 
 def test_readme_write_hi_program_example():
     # Simulate the README flow: write a small program to disk, run it, and see hi
-    disk = computer.assemble(open("disk.txt").read())
+    disk = computer.assemble(open("os.txt").read())
     memory = [0] * 10000000
     memory[:500000] = disk[:500000]
     write_command = (
