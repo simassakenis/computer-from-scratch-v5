@@ -4,17 +4,22 @@ basePointerStartValue
     500000
 stackPointerStartValue
     500000
-terminal
+initializeConsoleCursor
     pushNumber 1000064 0
     pushNumber 1000072 0
     moveToPointer 1 0
+    jump initializeTranscriptCursor 0
+initializeTranscriptCursor
     moveNumber 1000000 0
     moveNumber 2000000 1
     moveToPointer 1 0
+    jump terminal 0
+terminal
+    call printTerminalPrefix 0
     moveFromPointer 0 1
-    pushNumber 0 0
     jump terminalLoop 0
 terminalLoop
+    pushNumber 0 0
     call listenForKeypress 0
     compareToNumber 2 8
     jumpIfEqual ifBackspace 0
@@ -25,15 +30,19 @@ ifBackspace
     compare 3 1
     jumpIfGreater ifNonEmptyInput 0
     pop 0 0
+    pop 0 0
     jump terminalLoop 0
 ifNonEmptyInput
     call removeLastCharacterFromTranscript 0
     pop 0 0
+    pop 0 0
     jump terminalLoop 0
 elseBackspace
+    call writeToTranscript 0
     compareToNumber 2 10
     jumpIfEqual ifEnter 0
-    jump elseBackspaceElseEnter 0
+    pop 0 0
+    jump terminalLoop 0
 ifEnter
     pushNumber 0 0
     pushNumber 0 0
@@ -48,6 +57,7 @@ ifEnter
     pushNumber 0 0
     moveFromPointer 0 6
     subtract 5 6
+    addNumber -8 6
     pushNumber 0 0
     move 3 7
     pushNumber 3000000 0
@@ -65,7 +75,6 @@ ifEnter
     moveToPointer 9 7
     call 3000000 0
     moveToPointer 8 7
-    moveFromPointer 0 1
     pop 0 0
     pop 0 0
     pop 0 0
@@ -73,10 +82,40 @@ ifEnter
     pop 0 0
     pop 0 0
     pop 0 0
-    jump terminalLoop 0
-elseBackspaceElseEnter
+    pop 0 0
+    pushNumber 10 0
     call writeToTranscript 0
-    jump terminalLoop 0
+    pop 0 0
+    jump terminal 0
+printTerminalPrefix
+    pushNumber 0 0
+    moveNumber 116 0
+    call writeToTranscript 0
+    moveNumber 101 0
+    call writeToTranscript 0
+    moveNumber 114 0
+    call writeToTranscript 0
+    moveNumber 109 0
+    call writeToTranscript 0
+    moveNumber 105 0
+    call writeToTranscript 0
+    moveNumber 110 0
+    call writeToTranscript 0
+    moveNumber 97 0
+    call writeToTranscript 0
+    moveNumber 108 0
+    call writeToTranscript 0
+    moveNumber 79 0
+    call writeToTranscript 0
+    moveNumber 83 0
+    call writeToTranscript 0
+    moveNumber 32 0
+    call writeToTranscript 0
+    moveNumber 37 0
+    call writeToTranscript 0
+    moveNumber 32 0
+    call writeToTranscript 0
+    return 0 0
 listenForKeypress
     pushNumber 1000048 0
     pushNumber 1 0

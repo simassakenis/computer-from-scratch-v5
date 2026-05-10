@@ -12,14 +12,14 @@ Using the computer means running one program, then another program, and so on. T
 
 `programDiskAddress` and `programLength` are each typed as 16 hex characters. The OS reads that program from disk into memory at `3000000`, calls it with `programInputStart` and `numProgramInputBytes`, then listens for the next command.
 
-The disk currently includes two user programs. `readFromDiskProgram` reads bytes from disk and prints each 8-byte value as 16 hex characters. `writeToDiskProgram` parses hex input and writes those 8-byte values to disk. At the moment, `readFromDiskProgram` starts at disk address `4680` and is `1056` bytes long. `writeToDiskProgram` starts at disk address `5736`.
+The disk currently includes two user programs. `readFromDiskProgram` reads bytes from disk and prints each 8-byte value as 16 hex characters. `writeToDiskProgram` parses hex input and writes those 8-byte values to disk. At the moment, `readFromDiskProgram` starts at disk address `5568` and is `1056` bytes long. `writeToDiskProgram` starts at disk address `6624`.
 
 For example, here is how to write a tiny program to disk address `500000` that prints `hi`, and then run it. This keeps the new program after the `0..<500000` disk space used for startup values and OS code.
 
 First type this command and press Enter. It invokes `writeToDiskProgram` and writes the new program bytes to disk:
 
 ```text
-00000000000016680000000000000468000000000007a120000000000000000e00000000000000680000000000000000000000000000001500000000000009780000000000000000000000000000000e00000000000000690000000000000000000000000000001500000000000009780000000000000000000000000000001600000000000000000000000000000000
+00000000000019e00000000000000468000000000007a120000000000000000e0000000000000068000000000000000000000000000000150000000000000cf00000000000000000000000000000000e0000000000000069000000000000000000000000000000150000000000000cf00000000000000000000000000000001600000000000000000000000000000000
 ```
 
 Then type this command and press Enter. It runs the program at disk address `500000`, length `120` bytes:
@@ -31,21 +31,21 @@ Then type this command and press Enter. It runs the program at disk address `500
 The values typed above are:
 
 ```text
-0000000000001668  address of writeToDiskProgram
+00000000000019e0  address of writeToDiskProgram
 0000000000000468  length of writeToDiskProgram
 000000000007a120  disk address to write the new program to
 
 000000000000000e 0000000000000068 0000000000000000  pushNumber 104, ASCII h
-0000000000000015 0000000000000978 0000000000000000  call writeToTranscript
+0000000000000015 0000000000000cf0 0000000000000000  call writeToTranscript
 000000000000000e 0000000000000069 0000000000000000  pushNumber 105, ASCII i
-0000000000000015 0000000000000978 0000000000000000  call writeToTranscript
+0000000000000015 0000000000000cf0 0000000000000000  call writeToTranscript
 0000000000000016 0000000000000000 0000000000000000  return
 
 000000000007a120  disk address of the new program
 0000000000000078  length of the new program
 ```
 
-After the second Enter, the console should show `hi` appended after the typed command. The program above calls `writeToTranscript` at the hard-coded address `2424`, encoded as `0000000000000978`.
+After the second Enter, the console should show `hi` on the program output line, then a fresh `terminalOS % ` prompt below it. The program above calls `writeToTranscript` at the hard-coded address `3312`, encoded as `0000000000000cf0`.
 
 Memory is byte-addressed and currently has `10000000` bytes. Machine values are 8 bytes. Most instructions operate on slots. A slot is an 8-byte value at an offset from the current base pointer: `slot(0)` is at the base pointer, `slot(1)` is 8 bytes after it, and `slot(-1)` is 8 bytes before it.
 
@@ -81,13 +81,13 @@ The current memory layout is:
 8: base pointer
 16: stack top pointer
 24..<500000: operating system program
-    2424: writeToTranscript
-    3960: readFromDisk
-    4320: writeToDisk
-    4680: readFromDiskProgram
-    5736: writeToDiskProgram
-    6864: parse8ByteValue
-    8880: print8ByteValue
+    3312: writeToTranscript
+    4848: readFromDisk
+    5208: writeToDisk
+    5568: readFromDiskProgram
+    6624: writeToDiskProgram
+    7752: parse8ByteValue
+    9768: print8ByteValue
 500000..<1000000: operating system stack
 1000000: next transcript write address
 1000008: disk IO disk address

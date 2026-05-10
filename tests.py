@@ -261,32 +261,11 @@ def test_power_on_copies_only_startup_bytes():
 
 
 def test_os_echoes_typed_character():
-    # Simulate typing one key into the real terminal OS and verify it reaches console memory
+    # Simulate typing one key into the real terminal OS and verify it appears after the prompt
     disk = computer.assemble(open("os.txt").read())
     memory = [0] * 10000000
     memory[:500000] = disk[:500000]
     keys = [ord("a")]
-    equal_flag = 0
-    greater_flag = 0
-
-    for cycle in range(2000):
-        if cycle % 10 == 0 and keys and computer.asint(memory[1000048 : 1000048 + 8]) == 1:
-            memory[1000056 : 1000056 + 8] = computer.as8(keys.pop(0))
-            memory[1000048 : 1000048 + 8] = computer.as8(0)
-        memory, disk = computer.disk_step(memory, disk)
-        memory, equal_flag, greater_flag = computer.cpu_step(memory, equal_flag, greater_flag)
-
-    assert computer.asint(memory[1000072 : 1000072 + 8]) == ord("a")
-
-
-def test_read_from_disk_program():
-    # Invoke readFromDiskProgram through the terminal and read the first 8 disk bytes
-    disk = computer.assemble(open("os.txt").read())
-    memory = [0] * 10000000
-    memory[:500000] = disk[:500000]
-    command = f"{4680:016x}{1056:016x}{0:016x}{8:016x}"
-    keys = [ord(character) for character in command] + [10]
-    expected = command + "0000000000000018"
     equal_flag = 0
     greater_flag = 0
 
@@ -298,11 +277,43 @@ def test_read_from_disk_program():
         memory, equal_flag, greater_flag = computer.cpu_step(memory, equal_flag, greater_flag)
 
     result = ""
-    for address in range(1000072, 1000072 + len(expected) * 8, 8):
+    for address in range(1000072, 1000072 + len("terminalOS % a") * 8, 8):
         result += chr(computer.asint(memory[address : address + 8]) & 255)
 
+    assert result == "terminalOS % a"
+
+
+def test_read_from_disk_program():
+    # Invoke readFromDiskProgram through the terminal and read the first 8 disk bytes
+    disk = computer.assemble(open("os.txt").read())
+    memory = [0] * 10000000
+    memory[:500000] = disk[:500000]
+    command = f"{5568:016x}{1056:016x}{0:016x}{8:016x}"
+    keys = [ord(character) for character in command] + [10]
+    equal_flag = 0
+    greater_flag = 0
+
+    for cycle in range(50000):
+        if cycle % 10 == 0 and keys and computer.asint(memory[1000048 : 1000048 + 8]) == 1:
+            memory[1000056 : 1000056 + 8] = computer.as8(keys.pop(0))
+            memory[1000048 : 1000048 + 8] = computer.as8(0)
+        memory, disk = computer.disk_step(memory, disk)
+        memory, equal_flag, greater_flag = computer.cpu_step(memory, equal_flag, greater_flag)
+
+    line1 = ""
+    for address in range(1000072, 1000072 + len("terminalOS % " + command) * 8, 8):
+        line1 += chr(computer.asint(memory[address : address + 8]) & 255)
+    line2 = ""
+    for address in range(1001096, 1001096 + 16 * 8, 8):
+        line2 += chr(computer.asint(memory[address : address + 8]) & 255)
+    line3 = ""
+    for address in range(1002120, 1002120 + len("terminalOS % ") * 8, 8):
+        line3 += chr(computer.asint(memory[address : address + 8]) & 255)
+
     assert keys == []
-    assert result == expected
+    assert line1 == "terminalOS % " + command
+    assert line2 == "0000000000000018"
+    assert line3 == "terminalOS % "
 
 
 def test_write_to_disk_program():
@@ -312,12 +323,12 @@ def test_write_to_disk_program():
     memory[:500000] = disk[:500000]
     disk_address = 600000
     value = 0x6869
-    command = f"{5736:016x}{1128:016x}{disk_address:016x}{value:016x}"
+    command = f"{6624:016x}{1128:016x}{disk_address:016x}{value:016x}"
     keys = [ord(character) for character in command] + [10]
     equal_flag = 0
     greater_flag = 0
 
-    for cycle in range(10000):
+    for cycle in range(20000):
         if cycle % 10 == 0 and keys and computer.asint(memory[1000048 : 1000048 + 8]) == 1:
             memory[1000056 : 1000056 + 8] = computer.as8(keys.pop(0))
             memory[1000048 : 1000048 + 8] = computer.as8(0)
@@ -335,20 +346,20 @@ def test_readme_write_hi_program_example():
     memory = [0] * 10000000
     memory[:500000] = disk[:500000]
     write_command = (
-        "0000000000001668"
+        "00000000000019e0"
         "0000000000000468"
         "000000000007a120"
         "000000000000000e"
         "0000000000000068"
         "0000000000000000"
         "0000000000000015"
-        "0000000000000978"
+        "0000000000000cf0"
         "0000000000000000"
         "000000000000000e"
         "0000000000000069"
         "0000000000000000"
         "0000000000000015"
-        "0000000000000978"
+        "0000000000000cf0"
         "0000000000000000"
         "0000000000000016"
         "0000000000000000"
@@ -357,23 +368,34 @@ def test_readme_write_hi_program_example():
     run_command = "000000000007a1200000000000000078"
     keys = [ord(character) for character in write_command] + [10]
     keys += [ord(character) for character in run_command] + [10]
-    expected = write_command + run_command + "hi"
     equal_flag = 0
     greater_flag = 0
 
-    for cycle in range(30000):
+    for cycle in range(120000):
         if cycle % 10 == 0 and keys and computer.asint(memory[1000048 : 1000048 + 8]) == 1:
             memory[1000056 : 1000056 + 8] = computer.as8(keys.pop(0))
             memory[1000048 : 1000048 + 8] = computer.as8(0)
         memory, disk = computer.disk_step(memory, disk)
         memory, equal_flag, greater_flag = computer.cpu_step(memory, equal_flag, greater_flag)
 
-    result = ""
-    for address in range(1000072, 1000072 + len(expected) * 8, 8):
-        result += chr(computer.asint(memory[address : address + 8]) & 255)
+    line1 = ""
+    for address in range(1000072, 1000072 + len("terminalOS % " + write_command) * 8, 8):
+        line1 += chr(computer.asint(memory[address : address + 8]) & 255)
+    line3 = ""
+    for address in range(1003144, 1003144 + len("terminalOS % " + run_command) * 8, 8):
+        line3 += chr(computer.asint(memory[address : address + 8]) & 255)
+    line4 = ""
+    for address in range(1004168, 1004168 + len("hi") * 8, 8):
+        line4 += chr(computer.asint(memory[address : address + 8]) & 255)
+    line5 = ""
+    for address in range(1005192, 1005192 + len("terminalOS % ") * 8, 8):
+        line5 += chr(computer.asint(memory[address : address + 8]) & 255)
 
     assert keys == []
-    assert result == expected
+    assert line1 == "terminalOS % " + write_command
+    assert line3 == "terminalOS % " + run_command
+    assert line4 == "hi"
+    assert line5 == "terminalOS % "
 
 
 def test_write_to_transcript_enter_moves_console_to_next_line():
@@ -388,11 +410,11 @@ def test_write_to_transcript_enter_moves_console_to_next_line():
     memory[1000064 : 1000064 + 8] = computer.as8(1000072)
     program = (
         computer.as8(14) + computer.as8(ord("a")) + computer.as8(0)
-        + computer.as8(21) + computer.as8(2424) + computer.as8(0)
+        + computer.as8(21) + computer.as8(3312) + computer.as8(0)
         + computer.as8(14) + computer.as8(10) + computer.as8(0)
-        + computer.as8(21) + computer.as8(2424) + computer.as8(0)
+        + computer.as8(21) + computer.as8(3312) + computer.as8(0)
         + computer.as8(14) + computer.as8(ord("b")) + computer.as8(0)
-        + computer.as8(21) + computer.as8(2424) + computer.as8(0)
+        + computer.as8(21) + computer.as8(3312) + computer.as8(0)
         + computer.as8(0) + computer.as8(0) + computer.as8(0)
     )
     memory[3000000 : 3000000 + len(program)] = program
@@ -426,7 +448,7 @@ def test_write_to_transcript_scrolls_when_console_is_full():
             memory[address : address + 8] = computer.as8(ord("A") + y)
     program = (
         computer.as8(14) + computer.as8(ord("z")) + computer.as8(0)
-        + computer.as8(21) + computer.as8(2424) + computer.as8(0)
+        + computer.as8(21) + computer.as8(3312) + computer.as8(0)
         + computer.as8(0) + computer.as8(0) + computer.as8(0)
     )
     memory[3000000 : 3000000 + len(program)] = program
