@@ -97,25 +97,26 @@ removeLastCharacterFromTranscript
     moveFromPointer 0 1
     compareToNumber 1 2000000
     jumpIfGreater regularRemoveLastCharacter 0
-    jump removeLastCharacterExit 0
+    return 0 0
 regularRemoveLastCharacter
     pushNumber 0 0
     addNumber -8 1
     moveToPointer 2 1
     moveToPointer 1 0
-    jump removeLastCharacterFromConsole 0
+    call removeLastCharacterFromConsole 0
+    return 0 0
 removeLastCharacterFromConsole
-    moveNumber 1000064 0
+    pushNumber 1000064 0
+    pushNumber 0 0
     moveFromPointer 0 1
     compareToNumber 1 1000072
     jumpIfGreater regularRemoveLastCharacterFromConsole 0
-    jump removeLastCharacterExit 0
+    return 0 0
 regularRemoveLastCharacterFromConsole
+    pushNumber 0 0
     addNumber -8 1
     moveToPointer 2 1
     moveToPointer 1 0
-    jump removeLastCharacterExit 0
-removeLastCharacterExit
     return 0 0
 writeToTranscript
     pushNumber 1000000 0
@@ -124,16 +125,61 @@ writeToTranscript
     moveToPointer -3 1
     addNumber 8 1
     moveToPointer 1 0
-    jump writeToConsole 0
+    compareToNumber -3 10
+    jumpIfEqual writeToTranscriptCharacterEnter 0
+    jump writeToTranscriptCharacterNotEnter 0
+writeToTranscriptCharacterEnter
+    pushNumber 0 0
+    jump writeToTranscriptWriteSpacesForEnterLoop 0
+writeToTranscriptWriteSpacesForEnterLoop
+    call isConsoleAtLineEnd 0
+    compareToNumber 2 1
+    jumpIfEqual writeToTranscriptWriteSpacesForEnterLoopExit 0
+    pushNumber 32 0
+    call writeToConsole 0
+    pop 0 0
+    jump writeToTranscriptWriteSpacesForEnterLoop 0
+writeToTranscriptWriteSpacesForEnterLoopExit
+    pushNumber 32 0
+    call writeToConsole 0
+    call removeLastCharacterFromConsole 0
+    return 0 0
+writeToTranscriptCharacterNotEnter
+    pushNumber 0 0
+    move -3 2
+    call writeToConsole 0
+    return 0 0
+isConsoleAtLineEnd
+    pushNumber 1000064 0
+    pushNumber 0 0
+    moveFromPointer 0 1
+    pushNumber 1001096 0
+    jump isConsoleAtLineEndLoop 0
+isConsoleAtLineEndLoop
+    compareToNumber 2 1032840
+    jumpIfGreater isConsoleAtLineEndReturnZero 0
+    jump isConsoleAtLineEndLoopBody 0
+isConsoleAtLineEndLoopBody
+    compare 1 2
+    jumpIfEqual isConsoleAtLineEndReturnOne 0
+    addNumber 1024 2
+    jump isConsoleAtLineEndLoop 0
+isConsoleAtLineEndReturnZero
+    moveNumber 0 -3
+    return 0 0
+isConsoleAtLineEndReturnOne
+    moveNumber 1 -3
+    return 0 0
 writeToConsole
-    moveNumber 1000064 0
+    pushNumber 1000064 0
+    pushNumber 0 0
     moveFromPointer 0 1
     compareToNumber 1 1032840
     jumpIfEqual shiftConsoleBack 0
     jump regularWriteToConsole 0
 shiftConsoleBack
-    addNumber -8 1
-    pushNumber 1000080 0
+    addNumber -1024 1
+    pushNumber 1001096 0
     pushNumber 1000072 0
     pushNumber 0 0
     jump shiftConsoleBackLoop 0
