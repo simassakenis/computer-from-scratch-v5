@@ -119,11 +119,14 @@ def tkinter_window_init():
 # Helper that copies a pending Tkinter keypress into keyboard IO memory
 def keyboard_step(memory, tkinter_window):
     # Assumes keyboard IO uses 1000048 for waiting and 1000056 for key value
+    waiting_for_keypress = asint(memory[1000048 : 1000048 + 8])
+    # Tkinter event processing is expensive, so only poll it when the OS is listening for input
+    if waiting_for_keypress != 1:
+        return memory
+
     tkinter_window["root"].update()
     key = tkinter_window["pending_key"]
     tkinter_window["pending_key"] = None
-
-    waiting_for_keypress = asint(memory[1000048 : 1000048 + 8])
 
     if waiting_for_keypress == 1 and key is not None:
         memory[1000056 : 1000056 + 8] = as8(key)
