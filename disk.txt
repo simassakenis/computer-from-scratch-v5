@@ -261,7 +261,7 @@ writeToDiskProgramValidInput
     pushNumber 0 0
     move -4 6
     add -3 6
-    addNumber -16 6
+    addNumber -128 6
     moveNumber 16 2
     jump writeToDiskProgramReadLoop 0
 writeToDiskProgramReadLoop
@@ -270,9 +270,9 @@ writeToDiskProgramReadLoop
     jump writeToDiskProgramReadLoopBody 0
 writeToDiskProgramReadLoopBody
     moveToPointer 1 4
-    moveToPointer 5 1
+    moveToPointer 5 2
     call parse8ByteValue 0
-    addNumber 16 1
+    addNumber 128 1
     addNumber 8 4
     addNumber 8 5
     jump writeToDiskProgramReadLoop 0

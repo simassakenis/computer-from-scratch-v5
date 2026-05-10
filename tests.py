@@ -53,6 +53,21 @@ def power_on(disk):
     return memory
 
 
+def run_with_keys(disk, keys, cycles):
+    memory = power_on(disk)
+    equal_flag = 0
+    greater_flag = 0
+
+    for cycle in range(cycles):
+        if cycle % 10 == 0 and keys and read8(memory, 1000048) == 1:
+            write8(memory, 1000056, keys.pop(0))
+            write8(memory, 1000048, 0)
+        memory, disk = computer.disk_step(memory, disk)
+        memory, equal_flag, greater_flag = computer.cpu_step(memory, equal_flag, greater_flag)
+
+    return memory, disk, keys
+
+
 def test_idle():
     memory = [0] * 4000000
     write8(memory, 0, 24)
@@ -269,25 +284,16 @@ def test_power_on_copies_only_startup_bytes():
 
 def test_os_echoes_typed_character():
     disk = computer.assemble(disk_source())
-    memory = power_on(disk)
     keys = [ord("a")]
-    equal_flag = 0
-    greater_flag = 0
 
-    for cycle in range(2000):
-        if cycle % 10 == 0 and keys and read8(memory, 1000048) == 1:
-            write8(memory, 1000056, keys.pop(0))
-            write8(memory, 1000048, 0)
-        memory, disk = computer.disk_step(memory, disk)
-        memory, equal_flag, greater_flag = computer.cpu_step(memory, equal_flag, greater_flag)
+    memory, disk, keys = run_with_keys(disk, keys, 2000)
 
     assert console(memory, 1) == "a"
 
 
-def test_os_invokes_read_disk_program():
+def test_read_from_disk_program():
     source = disk_source()
     disk = computer.assemble(source)
-    memory = power_on(disk)
 
     labels = label_addresses(source)
     program_start = labels["readFromDiskProgram"]
@@ -300,18 +306,35 @@ def test_os_invokes_read_disk_program():
     )
     keys = [ord(character) for character in command] + [10]
     expected = command + "0000000000000018"
-    equal_flag = 0
-    greater_flag = 0
 
-    for cycle in range(5000):
-        if cycle % 10 == 0 and keys and read8(memory, 1000048) == 1:
-            write8(memory, 1000056, keys.pop(0))
-            write8(memory, 1000048, 0)
-        memory, disk = computer.disk_step(memory, disk)
-        memory, equal_flag, greater_flag = computer.cpu_step(memory, equal_flag, greater_flag)
+    memory, disk, keys = run_with_keys(disk, keys, 5000)
 
     assert keys == []
     assert console(memory, len(expected)) == expected
+
+
+def test_write_to_disk_program():
+    source = disk_source()
+    disk = computer.assemble(source)
+
+    labels = label_addresses(source)
+    program_start = labels["writeToDiskProgram"]
+    program_length = labels["parse8ByteValue"] - program_start
+    disk_address = 600000
+    value = 0x6869
+    command = (
+        f"{program_start:016x}"
+        f"{program_length:016x}"
+        f"{disk_address:016x}"
+        f"{value:016x}"
+    )
+    keys = [ord(character) for character in command] + [10]
+
+    memory, disk, keys = run_with_keys(disk, keys, 10000)
+
+    assert keys == []
+    assert read8(disk, disk_address) == value
+    assert read8(disk, disk_address + 8) == 0
 
 
 def run(test):
@@ -332,4 +355,5 @@ if __name__ == "__main__":
     run(test_call_and_return)
     run(test_power_on_copies_only_startup_bytes)
     run(test_os_echoes_typed_character)
-    run(test_os_invokes_read_disk_program)
+    run(test_read_from_disk_program)
+    run(test_write_to_disk_program)
