@@ -47,7 +47,7 @@ The values typed above are:
 
 After the second Enter, the console should show `hi` appended after the typed command. The program above calls `writeToTranscript` at the hard-coded address `2376`, encoded as `0000000000000948`.
 
-Memory is byte-addressed, but machine values are 8 bytes. Most instructions operate on slots. A slot is an 8-byte value at an offset from the current base pointer: `slot(0)` is at the base pointer, `slot(1)` is 8 bytes after it, and `slot(-1)` is 8 bytes before it.
+Memory is byte-addressed and currently has `10000000` bytes. Machine values are 8 bytes. Most instructions operate on slots. A slot is an 8-byte value at an offset from the current base pointer: `slot(0)` is at the base pointer, `slot(1)` is 8 bytes after it, and `slot(-1)` is 8 bytes before it.
 
 Each instruction is 24 bytes: 8 bytes for opcode, 8 bytes for operand 1, and 8 bytes for operand 2. Unused operands are `0`. When an instruction changes something, operand 2 is usually the destination.
 
@@ -100,7 +100,7 @@ The current memory layout is:
 1000064: next console write address
 1000072..<1032840: console, 128 by 32 cells, 8 bytes per cell
 2000000..<3000000: transcript
-3000000..: loaded user program, then user program stack
+3000000..<10000000: loaded user program, then user program stack
 ```
 
 Keyboard IO works by setting `1000048` to `1`. The keyboard hardware writes the pressed key to `1000056` and resets `1000048` to `0`.

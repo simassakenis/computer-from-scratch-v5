@@ -345,7 +345,7 @@ if __name__ == "__main__":
 
     # Memory and disk are byte arrays: every element is one integer from 0 to 255
     disk = assemble(open("disk.txt").read())
-    memory = [0] * 5000000
+    memory = [0] * 10000000
 
     # Power-on loads the sacred startup and operating system bytes into memory
     memory[:500000] = disk[:500000]

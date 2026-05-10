@@ -1,92 +1,29 @@
 import computer
 
 
-def read8(memory, address):
-    return computer.asint(memory[address : address + 8])
-
-
-def write8(memory, address, value):
-    memory[address : address + 8] = computer.as8(value)
-
-
 def instruction(opcode, operand1=0, operand2=0):
     return computer.as8(opcode) + computer.as8(operand1) + computer.as8(operand2)
 
 
-def slot(memory, index):
-    return read8(memory, 8) + index * 8
-
-
-def label_addresses(source):
-    labels = {}
-    address = 0
-
-    for raw_line in source.splitlines():
-        line = raw_line.rstrip()
-        if line == "":
-            continue
-
-        if not line[0].isspace():
-            labels[line.rstrip(":")] = address
-            continue
-
-        parts = line.split()
-        address += 8 * len(parts)
-
-    return labels
-
-
-def console(memory, length):
-    result = []
-    for address in range(1000072, 1000072 + length * 8, 8):
-        result.append(chr(read8(memory, address) & 255))
-    return "".join(result)
-
-
-def disk_source():
-    return open("disk.txt").read()
-
-
-def power_on(disk):
-    memory = [0] * len(disk)
-    memory[:500000] = disk[:500000]
-    return memory
-
-
-def run_with_keys(disk, keys, cycles):
-    memory = power_on(disk)
-    equal_flag = 0
-    greater_flag = 0
-
-    for cycle in range(cycles):
-        if cycle % 10 == 0 and keys and read8(memory, 1000048) == 1:
-            write8(memory, 1000056, keys.pop(0))
-            write8(memory, 1000048, 0)
-        memory, disk = computer.disk_step(memory, disk)
-        memory, equal_flag, greater_flag = computer.cpu_step(memory, equal_flag, greater_flag)
-
-    return memory, disk, keys
-
-
 def test_idle():
-    memory = [0] * 4000000
-    write8(memory, 0, 24)
-    write8(memory, 8, 2000)
-    write8(memory, 16, 2000)
+    memory = [0] * 10000000
+    memory[0:8] = computer.as8(24)
+    memory[8:16] = computer.as8(2000)
+    memory[16:24] = computer.as8(2000)
     memory[24 : 24 + 24] = instruction(0)
 
     memory, equal_flag, greater_flag = computer.cpu_step(memory, 0, 0)
 
-    assert read8(memory, 0) == 24
+    assert computer.asint(memory[0:8]) == 24
     assert equal_flag == 0
     assert greater_flag == 0
 
 
 def test_move_and_move_number():
-    memory = [0] * 4000000
-    write8(memory, 0, 24)
-    write8(memory, 8, 2000)
-    write8(memory, 16, 2000)
+    memory = [0] * 10000000
+    memory[0:8] = computer.as8(24)
+    memory[8:16] = computer.as8(2000)
+    memory[16:24] = computer.as8(2000)
     program = instruction(2, 42, 0) + instruction(1, 0, 1)
     memory[24 : 24 + len(program)] = program
     equal_flag = 0
@@ -95,14 +32,14 @@ def test_move_and_move_number():
     for _ in range(2):
         memory, equal_flag, greater_flag = computer.cpu_step(memory, equal_flag, greater_flag)
 
-    assert read8(memory, slot(memory, 1)) == 42
+    assert computer.asint(memory[2008:2016]) == 42
 
 
 def test_pointer_moves():
-    memory = [0] * 4000000
-    write8(memory, 0, 24)
-    write8(memory, 8, 2000)
-    write8(memory, 16, 2000)
+    memory = [0] * 10000000
+    memory[0:8] = computer.as8(24)
+    memory[8:16] = computer.as8(2000)
+    memory[16:24] = computer.as8(2000)
     program = (
         instruction(2, 3000, 0)
         + instruction(2, 65, 1)
@@ -116,15 +53,15 @@ def test_pointer_moves():
     for _ in range(4):
         memory, equal_flag, greater_flag = computer.cpu_step(memory, equal_flag, greater_flag)
 
-    assert read8(memory, 3000) == 65
-    assert read8(memory, slot(memory, 2)) == 65
+    assert computer.asint(memory[3000:3008]) == 65
+    assert computer.asint(memory[2016:2024]) == 65
 
 
 def test_arithmetic():
-    memory = [0] * 4000000
-    write8(memory, 0, 24)
-    write8(memory, 8, 2000)
-    write8(memory, 16, 2000)
+    memory = [0] * 10000000
+    memory[0:8] = computer.as8(24)
+    memory[8:16] = computer.as8(2000)
+    memory[16:24] = computer.as8(2000)
     program = (
         instruction(2, 7, 0)
         + instruction(2, 5, 1)
@@ -139,14 +76,14 @@ def test_arithmetic():
     for _ in range(5):
         memory, equal_flag, greater_flag = computer.cpu_step(memory, equal_flag, greater_flag)
 
-    assert read8(memory, slot(memory, 1)) == 3
+    assert computer.asint(memory[2008:2016]) == 3
 
 
 def test_shift_and_bitwise():
-    memory = [0] * 4000000
-    write8(memory, 0, 24)
-    write8(memory, 8, 2000)
-    write8(memory, 16, 2000)
+    memory = [0] * 10000000
+    memory[0:8] = computer.as8(24)
+    memory[8:16] = computer.as8(2000)
+    memory[16:24] = computer.as8(2000)
     program = (
         instruction(2, 1, 0)
         + instruction(2, 3, 1)
@@ -165,14 +102,14 @@ def test_shift_and_bitwise():
     for _ in range(9):
         memory, equal_flag, greater_flag = computer.cpu_step(memory, equal_flag, greater_flag)
 
-    assert read8(memory, slot(memory, 1)) == 2
+    assert computer.asint(memory[2008:2016]) == 2
 
 
 def test_push_number_and_pop():
-    memory = [0] * 4000000
-    write8(memory, 0, 24)
-    write8(memory, 8, 2000)
-    write8(memory, 16, 2000)
+    memory = [0] * 10000000
+    memory[0:8] = computer.as8(24)
+    memory[8:16] = computer.as8(2000)
+    memory[16:24] = computer.as8(2000)
     program = instruction(14, 55) + instruction(15)
     memory[24 : 24 + len(program)] = program
     equal_flag = 0
@@ -181,17 +118,17 @@ def test_push_number_and_pop():
     for _ in range(2):
         memory, equal_flag, greater_flag = computer.cpu_step(memory, equal_flag, greater_flag)
 
-    assert read8(memory, 2000) == 55
-    assert read8(memory, 16) == 2000
+    assert computer.asint(memory[2000:2008]) == 55
+    assert computer.asint(memory[16:24]) == 2000
     assert equal_flag == 0
     assert greater_flag == 0
 
 
 def test_compare_to_number_and_jump_if_equal():
-    memory = [0] * 4000000
-    write8(memory, 0, 24)
-    write8(memory, 8, 2000)
-    write8(memory, 16, 2000)
+    memory = [0] * 10000000
+    memory[0:8] = computer.as8(24)
+    memory[8:16] = computer.as8(2000)
+    memory[16:24] = computer.as8(2000)
     program = (
         instruction(2, 5, 0)
         + instruction(17, 0, 5)
@@ -206,14 +143,14 @@ def test_compare_to_number_and_jump_if_equal():
     for _ in range(4):
         memory, equal_flag, greater_flag = computer.cpu_step(memory, equal_flag, greater_flag)
 
-    assert read8(memory, slot(memory, 1)) == 9
+    assert computer.asint(memory[2008:2016]) == 9
 
 
 def test_compare_and_jump_if_greater():
-    memory = [0] * 4000000
-    write8(memory, 0, 24)
-    write8(memory, 8, 2000)
-    write8(memory, 16, 2000)
+    memory = [0] * 10000000
+    memory[0:8] = computer.as8(24)
+    memory[8:16] = computer.as8(2000)
+    memory[16:24] = computer.as8(2000)
     program = (
         instruction(2, 9, 0)
         + instruction(2, 3, 1)
@@ -229,14 +166,14 @@ def test_compare_and_jump_if_greater():
     for _ in range(5):
         memory, equal_flag, greater_flag = computer.cpu_step(memory, equal_flag, greater_flag)
 
-    assert read8(memory, slot(memory, 2)) == 8
+    assert computer.asint(memory[2016:2024]) == 8
 
 
 def test_jump():
-    memory = [0] * 4000000
-    write8(memory, 0, 24)
-    write8(memory, 8, 2000)
-    write8(memory, 16, 2000)
+    memory = [0] * 10000000
+    memory[0:8] = computer.as8(24)
+    memory[8:16] = computer.as8(2000)
+    memory[16:24] = computer.as8(2000)
     program = instruction(20, 72) + instruction(2, 1, 0) + instruction(2, 2, 0)
     memory[24 : 24 + len(program)] = program
     equal_flag = 0
@@ -245,14 +182,14 @@ def test_jump():
     for _ in range(2):
         memory, equal_flag, greater_flag = computer.cpu_step(memory, equal_flag, greater_flag)
 
-    assert read8(memory, slot(memory, 0)) == 2
+    assert computer.asint(memory[2000:2008]) == 2
 
 
 def test_call_and_return():
-    memory = [0] * 4000000
-    write8(memory, 0, 24)
-    write8(memory, 8, 2000)
-    write8(memory, 16, 2000)
+    memory = [0] * 10000000
+    memory[0:8] = computer.as8(24)
+    memory[8:16] = computer.as8(2000)
+    memory[16:24] = computer.as8(2000)
     program = (
         instruction(14, 123)
         + instruction(21, 120)
@@ -268,92 +205,103 @@ def test_call_and_return():
     for _ in range(5):
         memory, equal_flag, greater_flag = computer.cpu_step(memory, equal_flag, greater_flag)
 
-    assert read8(memory, 8) == 2000
-    assert read8(memory, 16) == 2008
-    assert read8(memory, slot(memory, 1)) == 123
+    assert computer.asint(memory[8:16]) == 2000
+    assert computer.asint(memory[16:24]) == 2008
+    assert computer.asint(memory[2008:2016]) == 123
 
 
 def test_power_on_copies_only_startup_bytes():
-    disk = computer.assemble(disk_source())
-    write8(disk, 500000, 123)
+    disk = computer.assemble(open("disk.txt").read())
+    disk[500000 : 500000 + 8] = computer.as8(123)
+    memory = [0] * 10000000
 
-    memory = power_on(disk)
+    memory[:500000] = disk[:500000]
 
-    assert read8(memory, 500000) == 0
+    assert computer.asint(memory[500000 : 500000 + 8]) == 0
 
 
 def test_os_echoes_typed_character():
-    disk = computer.assemble(disk_source())
+    disk = computer.assemble(open("disk.txt").read())
+    memory = [0] * 10000000
+    memory[:500000] = disk[:500000]
     keys = [ord("a")]
+    equal_flag = 0
+    greater_flag = 0
 
-    memory, disk, keys = run_with_keys(disk, keys, 2000)
+    for cycle in range(2000):
+        if cycle % 10 == 0 and keys and computer.asint(memory[1000048 : 1000048 + 8]) == 1:
+            memory[1000056 : 1000056 + 8] = computer.as8(keys.pop(0))
+            memory[1000048 : 1000048 + 8] = computer.as8(0)
+        memory, disk = computer.disk_step(memory, disk)
+        memory, equal_flag, greater_flag = computer.cpu_step(memory, equal_flag, greater_flag)
 
-    assert console(memory, 1) == "a"
+    assert computer.asint(memory[1000072 : 1000072 + 8]) == ord("a")
 
 
 def test_read_from_disk_program():
-    source = disk_source()
-    disk = computer.assemble(source)
-
-    labels = label_addresses(source)
-    program_start = labels["readFromDiskProgram"]
-    program_length = labels["writeToDiskProgram"] - program_start
-    command = (
-        f"{program_start:016x}"
-        f"{program_length:016x}"
-        f"{0:016x}"
-        f"{8:016x}"
-    )
+    disk = computer.assemble(open("disk.txt").read())
+    memory = [0] * 10000000
+    memory[:500000] = disk[:500000]
+    command = f"{3768:016x}{1056:016x}{0:016x}{8:016x}"
     keys = [ord(character) for character in command] + [10]
     expected = command + "0000000000000018"
+    equal_flag = 0
+    greater_flag = 0
 
-    memory, disk, keys = run_with_keys(disk, keys, 5000)
+    for cycle in range(5000):
+        if cycle % 10 == 0 and keys and computer.asint(memory[1000048 : 1000048 + 8]) == 1:
+            memory[1000056 : 1000056 + 8] = computer.as8(keys.pop(0))
+            memory[1000048 : 1000048 + 8] = computer.as8(0)
+        memory, disk = computer.disk_step(memory, disk)
+        memory, equal_flag, greater_flag = computer.cpu_step(memory, equal_flag, greater_flag)
+
+    result = ""
+    for address in range(1000072, 1000072 + len(expected) * 8, 8):
+        result += chr(computer.asint(memory[address : address + 8]) & 255)
 
     assert keys == []
-    assert console(memory, len(expected)) == expected
+    assert result == expected
 
 
 def test_write_to_disk_program():
-    source = disk_source()
-    disk = computer.assemble(source)
-
-    labels = label_addresses(source)
-    program_start = labels["writeToDiskProgram"]
-    program_length = labels["parse8ByteValue"] - program_start
+    disk = computer.assemble(open("disk.txt").read())
+    memory = [0] * 10000000
+    memory[:500000] = disk[:500000]
     disk_address = 600000
     value = 0x6869
-    command = (
-        f"{program_start:016x}"
-        f"{program_length:016x}"
-        f"{disk_address:016x}"
-        f"{value:016x}"
-    )
+    command = f"{4824:016x}{1128:016x}{disk_address:016x}{value:016x}"
     keys = [ord(character) for character in command] + [10]
+    equal_flag = 0
+    greater_flag = 0
 
-    memory, disk, keys = run_with_keys(disk, keys, 10000)
+    for cycle in range(10000):
+        if cycle % 10 == 0 and keys and computer.asint(memory[1000048 : 1000048 + 8]) == 1:
+            memory[1000056 : 1000056 + 8] = computer.as8(keys.pop(0))
+            memory[1000048 : 1000048 + 8] = computer.as8(0)
+        memory, disk = computer.disk_step(memory, disk)
+        memory, equal_flag, greater_flag = computer.cpu_step(memory, equal_flag, greater_flag)
 
     assert keys == []
-    assert read8(disk, disk_address) == value
-    assert read8(disk, disk_address + 8) == 0
-
-
-def run(test):
-    test()
-    print(f"success: {test.__name__}")
+    assert computer.asint(disk[disk_address : disk_address + 8]) == value
+    assert computer.asint(disk[disk_address + 8 : disk_address + 16]) == 0
 
 
 if __name__ == "__main__":
-    run(test_idle)
-    run(test_move_and_move_number)
-    run(test_pointer_moves)
-    run(test_arithmetic)
-    run(test_shift_and_bitwise)
-    run(test_push_number_and_pop)
-    run(test_compare_to_number_and_jump_if_equal)
-    run(test_compare_and_jump_if_greater)
-    run(test_jump)
-    run(test_call_and_return)
-    run(test_power_on_copies_only_startup_bytes)
-    run(test_os_echoes_typed_character)
-    run(test_read_from_disk_program)
-    run(test_write_to_disk_program)
+    for test in [
+        test_idle,
+        test_move_and_move_number,
+        test_pointer_moves,
+        test_arithmetic,
+        test_shift_and_bitwise,
+        test_push_number_and_pop,
+        test_compare_to_number_and_jump_if_equal,
+        test_compare_and_jump_if_greater,
+        test_jump,
+        test_call_and_return,
+        test_power_on_copies_only_startup_bytes,
+        test_os_echoes_typed_character,
+        test_read_from_disk_program,
+        test_write_to_disk_program,
+    ]:
+        test()
+        print(f"success: {test.__name__}")
