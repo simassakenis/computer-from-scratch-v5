@@ -7,45 +7,45 @@ When powered on (`python computer.py`), the computer copies the first `500000` s
 Using the computer means running one program, then another program, and so on. The preloaded terminal OS listens for keyboard input until Enter, interprets the input as a program invocation, and executes it. A program is just an arbitrary number of bytes read from any arbitrary address on disk. A program can print characters to the console. The command before Enter is interpreted as:
 
 ```text
-<programDiskAddress><programLength><programInput>
+<programDiskAddress> <programLength> <programInput>
 ```
 
-`programDiskAddress` and `programLength` are each typed as 16 hex characters. The OS reads that program from disk into memory at `3000000`, calls it with `programInputStart` and `numProgramInputBytes`, then listens for the next command.
+Values are typed as hex numbers and can omit leading zeros. Values are separated by spaces, and the final value is ended by Enter. The OS reads the program from disk into memory at `3000000`, calls it with `programInputStart` and `numProgramInputBytes`, then listens for the next command.
 
-The disk currently includes two user programs. `readFromDiskProgram` reads bytes from disk and prints each 8-byte value as 16 hex characters. `writeToDiskProgram` parses hex input and writes those 8-byte values to disk. At the moment, `readFromDiskProgram` starts at disk address `5568` and is `1056` bytes long. `writeToDiskProgram` starts at disk address `6624`.
+The disk currently includes two user programs. `readFromDiskProgram` reads bytes from disk and prints each 8-byte value as 16 hex characters. `writeToDiskProgram` parses hex input and writes those 8-byte values to disk. At the moment, `readFromDiskProgram` starts at disk address `5592` and is `984` bytes long. `writeToDiskProgram` starts at disk address `6576` and is `1584` bytes long.
 
 For example, here is how to write a tiny program to disk address `500000` that prints `hi`, and then run it. This keeps the new program after the `0..<500000` disk space used for startup values and OS code.
 
 First type this command and press Enter. It invokes `writeToDiskProgram` and writes the new program bytes to disk:
 
 ```text
-00000000000019e00000000000000468000000000007a120000000000000000e0000000000000068000000000000000000000000000000150000000000000cf00000000000000000000000000000000e0000000000000069000000000000000000000000000000150000000000000cf00000000000000000000000000000001600000000000000000000000000000000
+19b0 630 7a120 e 68 0 15 d08 0 e 69 0 15 d08 0 16 0 0
 ```
 
 Then type this command and press Enter. It runs the program at disk address `500000`, length `120` bytes:
 
 ```text
-000000000007a1200000000000000078
+7a120 78
 ```
 
 The values typed above are:
 
 ```text
-00000000000019e0  address of writeToDiskProgram
-0000000000000468  length of writeToDiskProgram
-000000000007a120  disk address to write the new program to
+19b0  address of writeToDiskProgram
+630   length of writeToDiskProgram
+7a120 disk address to write the new program to
 
-000000000000000e 0000000000000068 0000000000000000  pushNumber 104, ASCII h
-0000000000000015 0000000000000cf0 0000000000000000  call writeToTranscript
-000000000000000e 0000000000000069 0000000000000000  pushNumber 105, ASCII i
-0000000000000015 0000000000000cf0 0000000000000000  call writeToTranscript
-0000000000000016 0000000000000000 0000000000000000  return
+e 68 0   pushNumber 104, ASCII h
+15 d08 0 call writeToTranscript
+e 69 0   pushNumber 105, ASCII i
+15 d08 0 call writeToTranscript
+16 0 0   return
 
-000000000007a120  disk address of the new program
-0000000000000078  length of the new program
+7a120 disk address of the new program
+78    length of the new program
 ```
 
-After the second Enter, the console should show `hi` on the program output line, then a fresh `terminalOS % ` prompt below it. The program above calls `writeToTranscript` at the hard-coded address `3312`, encoded as `0000000000000cf0`.
+After the second Enter, the console should show `hi` on the program output line, then a fresh `terminalOS % ` prompt below it. The program above calls `writeToTranscript` at the hard-coded address `3336`, encoded as `d08`.
 
 Memory is byte-addressed and currently has `10000000` bytes. Machine values are 8 bytes. Most instructions operate on slots. A slot is an 8-byte value at an offset from the current base pointer: `slot(0)` is at the base pointer, `slot(1)` is 8 bytes after it, and `slot(-1)` is 8 bytes before it.
 
@@ -81,13 +81,13 @@ The current memory layout is:
 8: base pointer
 16: stack top pointer
 24..<500000: operating system program
-    3312: writeToTranscript
-    4848: readFromDisk
-    5208: writeToDisk
-    5568: readFromDiskProgram
-    6624: writeToDiskProgram
-    7752: parse8ByteValue
-    9768: print8ByteValue
+    3336: writeToTranscript
+    4872: readFromDisk
+    5232: writeToDisk
+    5592: readFromDiskProgram
+    6576: writeToDiskProgram
+    8160: parse8ByteValue
+    10992: print8ByteValue
 500000..<1000000: operating system stack
 1000000: next transcript write address
 1000008: disk IO disk address
