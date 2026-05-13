@@ -4,14 +4,14 @@ import computer
 def test_idle():
     # An idle instruction leaves the instruction pointer and ALU flags unchanged
     memory = [0] * 10000000
-    memory[0:8] = computer.as8(24)
-    memory[8:16] = computer.as8(2000)
-    memory[16:24] = computer.as8(2000)
+    memory[500000:500008] = computer.as8(24)
+    memory[500008:500016] = computer.as8(2000)
+    memory[500016:500024] = computer.as8(2000)
     memory[24 : 24 + 24] = computer.as8(0) + computer.as8(0) + computer.as8(0)
 
     memory, equal_flag, greater_flag = computer.cpu_step(memory, 0, 0)
 
-    assert computer.asint(memory[0:8]) == 24
+    assert computer.asint(memory[500000:500008]) == 24
     assert equal_flag == 0
     assert greater_flag == 0
 
@@ -22,12 +22,12 @@ def test_move_and_move_number():
     #   moveNumber 42 0
     #   move 0 1
     memory = [0] * 10000000
-    memory[0:8] = computer.as8(24)
-    memory[8:16] = computer.as8(2000)
-    memory[16:24] = computer.as8(2000)
+    memory[500000:500008] = computer.as8(24)
+    memory[500008:500016] = computer.as8(2000)
+    memory[500016:500024] = computer.as8(2000)
     program = (
-        computer.as8(2) + computer.as8(42) + computer.as8(0)
-        + computer.as8(1) + computer.as8(0) + computer.as8(1)
+        computer.as8(3) + computer.as8(42) + computer.as8(0)
+        + computer.as8(2) + computer.as8(0) + computer.as8(1)
     )
     memory[24 : 24 + len(program)] = program
     equal_flag = 0
@@ -47,14 +47,14 @@ def test_pointer_moves():
     #   moveToPointer 1 0
     #   moveFromPointer 0 2
     memory = [0] * 10000000
-    memory[0:8] = computer.as8(24)
-    memory[8:16] = computer.as8(2000)
-    memory[16:24] = computer.as8(2000)
+    memory[500000:500008] = computer.as8(24)
+    memory[500008:500016] = computer.as8(2000)
+    memory[500016:500024] = computer.as8(2000)
     program = (
-        computer.as8(2) + computer.as8(3000) + computer.as8(0)
-        + computer.as8(2) + computer.as8(65) + computer.as8(1)
-        + computer.as8(4) + computer.as8(1) + computer.as8(0)
-        + computer.as8(3) + computer.as8(0) + computer.as8(2)
+        computer.as8(3) + computer.as8(3000) + computer.as8(0)
+        + computer.as8(3) + computer.as8(65) + computer.as8(1)
+        + computer.as8(5) + computer.as8(1) + computer.as8(0)
+        + computer.as8(4) + computer.as8(0) + computer.as8(2)
     )
     memory[24 : 24 + len(program)] = program
     equal_flag = 0
@@ -76,15 +76,15 @@ def test_arithmetic():
     #   slot(1) += -2
     #   slot(1) -= slot(0)
     memory = [0] * 10000000
-    memory[0:8] = computer.as8(24)
-    memory[8:16] = computer.as8(2000)
-    memory[16:24] = computer.as8(2000)
+    memory[500000:500008] = computer.as8(24)
+    memory[500008:500016] = computer.as8(2000)
+    memory[500016:500024] = computer.as8(2000)
     program = (
-        computer.as8(2) + computer.as8(7) + computer.as8(0)
-        + computer.as8(2) + computer.as8(5) + computer.as8(1)
-        + computer.as8(5) + computer.as8(0) + computer.as8(1)
-        + computer.as8(6) + computer.as8(-2) + computer.as8(1)
-        + computer.as8(7) + computer.as8(0) + computer.as8(1)
+        computer.as8(3) + computer.as8(7) + computer.as8(0)
+        + computer.as8(3) + computer.as8(5) + computer.as8(1)
+        + computer.as8(6) + computer.as8(0) + computer.as8(1)
+        + computer.as8(7) + computer.as8(-2) + computer.as8(1)
+        + computer.as8(8) + computer.as8(0) + computer.as8(1)
     )
     memory[24 : 24 + len(program)] = program
     equal_flag = 0
@@ -99,19 +99,19 @@ def test_arithmetic():
 def test_shift_and_bitwise():
     # Program exercises both slot-based and immediate shifts, then bitwise AND
     memory = [0] * 10000000
-    memory[0:8] = computer.as8(24)
-    memory[8:16] = computer.as8(2000)
-    memory[16:24] = computer.as8(2000)
+    memory[500000:500008] = computer.as8(24)
+    memory[500008:500016] = computer.as8(2000)
+    memory[500016:500024] = computer.as8(2000)
     program = (
-        computer.as8(2) + computer.as8(1) + computer.as8(0)
-        + computer.as8(2) + computer.as8(3) + computer.as8(1)
-        + computer.as8(8) + computer.as8(0) + computer.as8(1)
-        + computer.as8(9) + computer.as8(2) + computer.as8(1)
-        + computer.as8(10) + computer.as8(0) + computer.as8(1)
-        + computer.as8(11) + computer.as8(1) + computer.as8(1)
-        + computer.as8(2) + computer.as8(7) + computer.as8(2)
-        + computer.as8(12) + computer.as8(2) + computer.as8(1)
+        computer.as8(3) + computer.as8(1) + computer.as8(0)
+        + computer.as8(3) + computer.as8(3) + computer.as8(1)
+        + computer.as8(9) + computer.as8(0) + computer.as8(1)
+        + computer.as8(10) + computer.as8(2) + computer.as8(1)
+        + computer.as8(11) + computer.as8(0) + computer.as8(1)
+        + computer.as8(12) + computer.as8(1) + computer.as8(1)
+        + computer.as8(3) + computer.as8(7) + computer.as8(2)
         + computer.as8(13) + computer.as8(2) + computer.as8(1)
+        + computer.as8(14) + computer.as8(2) + computer.as8(1)
     )
     memory[24 : 24 + len(program)] = program
     equal_flag = 0
@@ -130,12 +130,12 @@ def test_push_number_and_pop():
     #   pop
     # The value remains in memory, but stack top moves back
     memory = [0] * 10000000
-    memory[0:8] = computer.as8(24)
-    memory[8:16] = computer.as8(2000)
-    memory[16:24] = computer.as8(2000)
+    memory[500000:500008] = computer.as8(24)
+    memory[500008:500016] = computer.as8(2000)
+    memory[500016:500024] = computer.as8(2000)
     program = (
-        computer.as8(14) + computer.as8(55) + computer.as8(0)
-        + computer.as8(15) + computer.as8(0) + computer.as8(0)
+        computer.as8(15) + computer.as8(55) + computer.as8(0)
+        + computer.as8(16) + computer.as8(0) + computer.as8(0)
     )
     memory[24 : 24 + len(program)] = program
     equal_flag = 0
@@ -145,7 +145,7 @@ def test_push_number_and_pop():
         memory, equal_flag, greater_flag = computer.cpu_step(memory, equal_flag, greater_flag)
 
     assert computer.asint(memory[2000:2008]) == 55
-    assert computer.asint(memory[16:24]) == 2000
+    assert computer.asint(memory[500016:500024]) == 2000
     assert equal_flag == 0
     assert greater_flag == 0
 
@@ -153,15 +153,15 @@ def test_push_number_and_pop():
 def test_compare_to_number_and_jump_if_equal():
     # Program jumps over slot(1) = 1 because slot(0) equals 5
     memory = [0] * 10000000
-    memory[0:8] = computer.as8(24)
-    memory[8:16] = computer.as8(2000)
-    memory[16:24] = computer.as8(2000)
+    memory[500000:500008] = computer.as8(24)
+    memory[500008:500016] = computer.as8(2000)
+    memory[500016:500024] = computer.as8(2000)
     program = (
-        computer.as8(2) + computer.as8(5) + computer.as8(0)
-        + computer.as8(17) + computer.as8(0) + computer.as8(5)
-        + computer.as8(18) + computer.as8(120) + computer.as8(0)
-        + computer.as8(2) + computer.as8(1) + computer.as8(1)
-        + computer.as8(2) + computer.as8(9) + computer.as8(1)
+        computer.as8(3) + computer.as8(5) + computer.as8(0)
+        + computer.as8(18) + computer.as8(0) + computer.as8(5)
+        + computer.as8(19) + computer.as8(120) + computer.as8(0)
+        + computer.as8(3) + computer.as8(1) + computer.as8(1)
+        + computer.as8(3) + computer.as8(9) + computer.as8(1)
     )
     memory[24 : 24 + len(program)] = program
     equal_flag = 0
@@ -176,16 +176,16 @@ def test_compare_to_number_and_jump_if_equal():
 def test_compare_and_jump_if_greater():
     # Program jumps over slot(2) = 1 because slot(0) is greater than slot(1)
     memory = [0] * 10000000
-    memory[0:8] = computer.as8(24)
-    memory[8:16] = computer.as8(2000)
-    memory[16:24] = computer.as8(2000)
+    memory[500000:500008] = computer.as8(24)
+    memory[500008:500016] = computer.as8(2000)
+    memory[500016:500024] = computer.as8(2000)
     program = (
-        computer.as8(2) + computer.as8(9) + computer.as8(0)
-        + computer.as8(2) + computer.as8(3) + computer.as8(1)
-        + computer.as8(16) + computer.as8(0) + computer.as8(1)
-        + computer.as8(19) + computer.as8(144) + computer.as8(0)
-        + computer.as8(2) + computer.as8(1) + computer.as8(2)
-        + computer.as8(2) + computer.as8(8) + computer.as8(2)
+        computer.as8(3) + computer.as8(9) + computer.as8(0)
+        + computer.as8(3) + computer.as8(3) + computer.as8(1)
+        + computer.as8(17) + computer.as8(0) + computer.as8(1)
+        + computer.as8(20) + computer.as8(144) + computer.as8(0)
+        + computer.as8(3) + computer.as8(1) + computer.as8(2)
+        + computer.as8(3) + computer.as8(8) + computer.as8(2)
     )
     memory[24 : 24 + len(program)] = program
     equal_flag = 0
@@ -200,13 +200,13 @@ def test_compare_and_jump_if_greater():
 def test_jump():
     # Program jumps over slot(0) = 1 and lands on slot(0) = 2
     memory = [0] * 10000000
-    memory[0:8] = computer.as8(24)
-    memory[8:16] = computer.as8(2000)
-    memory[16:24] = computer.as8(2000)
+    memory[500000:500008] = computer.as8(24)
+    memory[500008:500016] = computer.as8(2000)
+    memory[500016:500024] = computer.as8(2000)
     program = (
-        computer.as8(20) + computer.as8(72) + computer.as8(0)
-        + computer.as8(2) + computer.as8(1) + computer.as8(0)
-        + computer.as8(2) + computer.as8(2) + computer.as8(0)
+        computer.as8(21) + computer.as8(72) + computer.as8(0)
+        + computer.as8(3) + computer.as8(1) + computer.as8(0)
+        + computer.as8(3) + computer.as8(2) + computer.as8(0)
     )
     memory[24 : 24 + len(program)] = program
     equal_flag = 0
@@ -226,16 +226,16 @@ def test_call_and_return():
     #   move 0 1
     # The function copies its argument from slot(-3) into slot(0), then returns
     memory = [0] * 10000000
-    memory[0:8] = computer.as8(24)
-    memory[8:16] = computer.as8(2000)
-    memory[16:24] = computer.as8(2000)
+    memory[500000:500008] = computer.as8(24)
+    memory[500008:500016] = computer.as8(2000)
+    memory[500016:500024] = computer.as8(2000)
     program = (
-        computer.as8(14) + computer.as8(123) + computer.as8(0)
-        + computer.as8(21) + computer.as8(120) + computer.as8(0)
-        + computer.as8(1) + computer.as8(0) + computer.as8(1)
+        computer.as8(15) + computer.as8(123) + computer.as8(0)
+        + computer.as8(22) + computer.as8(120) + computer.as8(0)
+        + computer.as8(2) + computer.as8(0) + computer.as8(1)
         + computer.as8(0) + computer.as8(0) + computer.as8(0)
-        + computer.as8(1) + computer.as8(-3) + computer.as8(0)
-        + computer.as8(22) + computer.as8(0) + computer.as8(0)
+        + computer.as8(2) + computer.as8(-3) + computer.as8(0)
+        + computer.as8(23) + computer.as8(0) + computer.as8(0)
     )
     memory[24 : 24 + len(program)] = program
     equal_flag = 0
@@ -244,8 +244,8 @@ def test_call_and_return():
     for _ in range(5):
         memory, equal_flag, greater_flag = computer.cpu_step(memory, equal_flag, greater_flag)
 
-    assert computer.asint(memory[8:16]) == 2000
-    assert computer.asint(memory[16:24]) == 2008
+    assert computer.asint(memory[500008:500016]) == 2000
+    assert computer.asint(memory[500016:500024]) == 2008
     assert computer.asint(memory[2008:2016]) == 123
 
 
@@ -265,18 +265,18 @@ def test_parse_8_byte_value_accepts_short_delimited_input():
     disk = computer.assemble(open("os.txt").read())
     memory = [0] * 10000000
     memory[:500000] = disk[:500000]
-    memory[0:8] = computer.as8(3000000)
-    memory[8:16] = computer.as8(500000)
-    memory[16:24] = computer.as8(500000)
+    memory[500000:500008] = computer.as8(3000000)
+    memory[500008:500016] = computer.as8(500024)
+    memory[500016:500024] = computer.as8(500024)
     input_address = 3500000
     for index, character in enumerate("15c0 "):
         address = input_address + index * 8
         memory[address : address + 8] = computer.as8(ord(character))
     program = (
-        computer.as8(14) + computer.as8(0) + computer.as8(0)
-        + computer.as8(14) + computer.as8(0) + computer.as8(0)
-        + computer.as8(14) + computer.as8(input_address) + computer.as8(0)
-        + computer.as8(21) + computer.as8(5592) + computer.as8(0)
+        computer.as8(15) + computer.as8(0) + computer.as8(0)
+        + computer.as8(15) + computer.as8(0) + computer.as8(0)
+        + computer.as8(15) + computer.as8(input_address) + computer.as8(0)
+        + computer.as8(22) + computer.as8(5616) + computer.as8(0)
         + computer.as8(0) + computer.as8(0) + computer.as8(0)
     )
     memory[3000000 : 3000000 + len(program)] = program
@@ -286,8 +286,8 @@ def test_parse_8_byte_value_accepts_short_delimited_input():
     for _ in range(5000):
         memory, equal_flag, greater_flag = computer.cpu_step(memory, equal_flag, greater_flag)
 
-    assert computer.asint(memory[500000 : 500000 + 8]) == 0x15C0
-    assert computer.asint(memory[500008 : 500008 + 8]) == 40
+    assert computer.asint(memory[500024 : 500024 + 8]) == 0x15C0
+    assert computer.asint(memory[500032 : 500032 + 8]) == 40
 
 
 def test_os_echoes_typed_character():
@@ -318,7 +318,7 @@ def test_read_from_disk_program():
     disk = computer.assemble(open("os.txt").read())
     memory = [0] * 10000000
     memory[:500000] = disk[:500000]
-    command = f"{10368:x} {984:x} 0 8"
+    command = f"{10392:x} {984:x} 0 8"
     keys = [ord(character) for character in command] + [10]
     equal_flag = 0
     greater_flag = 0
@@ -342,7 +342,7 @@ def test_read_from_disk_program():
 
     assert keys == []
     assert line1 == "terminalOS % " + command
-    assert line2 == "0000000000000018"
+    assert line2 == "0000000000000001"
     assert line3 == "terminalOS % "
 
 
@@ -353,7 +353,7 @@ def test_write_to_disk_program():
     memory[:500000] = disk[:500000]
     disk_address = 600000
     value = 0x6869
-    command = f"{11352:x} {1584:x} {disk_address:x} {value:x}"
+    command = f"{11376:x} {1584:x} {disk_address:x} {value:x}"
     keys = [ord(character) for character in command] + [10]
     equal_flag = 0
     greater_flag = 0
@@ -376,12 +376,12 @@ def test_readme_write_hi_program_example():
     memory = [0] * 10000000
     memory[:500000] = disk[:500000]
     write_command = (
-        "2c58 630 7a120 "
-        "e 68 0 "
-        "15 d08 0 "
-        "e 69 0 "
-        "15 d08 0 "
-        "16 0 0"
+        "2c70 630 7a120 "
+        "f 68 0 "
+        "16 d20 0 "
+        "f 69 0 "
+        "16 d20 0 "
+        "17 0 0"
     )
     run_command = "7a120 78"
     keys = [ord(character) for character in write_command] + [10]
@@ -421,18 +421,18 @@ def test_write_to_transcript_enter_moves_console_to_next_line():
     disk = computer.assemble(open("os.txt").read())
     memory = [0] * 10000000
     memory[:500000] = disk[:500000]
-    memory[0:8] = computer.as8(3000000)
-    memory[8:16] = computer.as8(500000)
-    memory[16:24] = computer.as8(500000)
+    memory[500000:500008] = computer.as8(3000000)
+    memory[500008:500016] = computer.as8(500024)
+    memory[500016:500024] = computer.as8(500024)
     memory[1000000 : 1000000 + 8] = computer.as8(2000000)
     memory[1000064 : 1000064 + 8] = computer.as8(1000072)
     program = (
-        computer.as8(14) + computer.as8(ord("a")) + computer.as8(0)
-        + computer.as8(21) + computer.as8(3336) + computer.as8(0)
-        + computer.as8(14) + computer.as8(10) + computer.as8(0)
-        + computer.as8(21) + computer.as8(3336) + computer.as8(0)
-        + computer.as8(14) + computer.as8(ord("b")) + computer.as8(0)
-        + computer.as8(21) + computer.as8(3336) + computer.as8(0)
+        computer.as8(15) + computer.as8(ord("a")) + computer.as8(0)
+        + computer.as8(22) + computer.as8(3360) + computer.as8(0)
+        + computer.as8(15) + computer.as8(10) + computer.as8(0)
+        + computer.as8(22) + computer.as8(3360) + computer.as8(0)
+        + computer.as8(15) + computer.as8(ord("b")) + computer.as8(0)
+        + computer.as8(22) + computer.as8(3360) + computer.as8(0)
         + computer.as8(0) + computer.as8(0) + computer.as8(0)
     )
     memory[3000000 : 3000000 + len(program)] = program
@@ -455,9 +455,9 @@ def test_write_to_transcript_scrolls_when_console_is_full():
     disk = computer.assemble(open("os.txt").read())
     memory = [0] * 10000000
     memory[:500000] = disk[:500000]
-    memory[0:8] = computer.as8(3000000)
-    memory[8:16] = computer.as8(500000)
-    memory[16:24] = computer.as8(500000)
+    memory[500000:500008] = computer.as8(3000000)
+    memory[500008:500016] = computer.as8(500024)
+    memory[500016:500024] = computer.as8(500024)
     memory[1000000 : 1000000 + 8] = computer.as8(2000000)
     memory[1000064 : 1000064 + 8] = computer.as8(1032840)
     for y in range(32):
@@ -465,8 +465,8 @@ def test_write_to_transcript_scrolls_when_console_is_full():
             address = 1000072 + (y * 128 + x) * 8
             memory[address : address + 8] = computer.as8(ord("A") + y)
     program = (
-        computer.as8(14) + computer.as8(ord("z")) + computer.as8(0)
-        + computer.as8(21) + computer.as8(3336) + computer.as8(0)
+        computer.as8(15) + computer.as8(ord("z")) + computer.as8(0)
+        + computer.as8(22) + computer.as8(3360) + computer.as8(0)
         + computer.as8(0) + computer.as8(0) + computer.as8(0)
     )
     memory[3000000 : 3000000 + len(program)] = program

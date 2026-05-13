@@ -29,28 +29,29 @@ def asint(value):
 # Helper that turns disk source text into the initial disk bytes
 def assemble(source):
     opcodes = {
-        "move": 1,
-        "moveNumber": 2,
-        "moveFromPointer": 3,
-        "moveToPointer": 4,
-        "add": 5,
-        "addNumber": 6,
-        "subtract": 7,
-        "shiftLeft": 8,
-        "shiftLeftByNumber": 9,
-        "shiftRight": 10,
-        "shiftRightByNumber": 11,
-        "bitwiseAnd": 12,
-        "bitwiseAndWithNumber": 13,
-        "pushNumber": 14,
-        "pop": 15,
-        "compare": 16,
-        "compareToNumber": 17,
-        "jumpIfEqual": 18,
-        "jumpIfGreater": 19,
-        "jump": 20,
-        "call": 21,
-        "return": 22,
+        "moveNumberToAddress": 1,
+        "move": 2,
+        "moveNumber": 3,
+        "moveFromPointer": 4,
+        "moveToPointer": 5,
+        "add": 6,
+        "addNumber": 7,
+        "subtract": 8,
+        "shiftLeft": 9,
+        "shiftLeftByNumber": 10,
+        "shiftRight": 11,
+        "shiftRightByNumber": 12,
+        "bitwiseAnd": 13,
+        "bitwiseAndWithNumber": 14,
+        "pushNumber": 15,
+        "pop": 16,
+        "compare": 17,
+        "compareToNumber": 18,
+        "jumpIfEqual": 19,
+        "jumpIfGreater": 20,
+        "jump": 21,
+        "call": 22,
+        "return": 23,
     }
     disk = [0] * 4000000
     labels = {}
@@ -160,139 +161,143 @@ def disk_step(memory, disk):
 
 # Helper that executes one CPU instruction
 def cpu_step(memory, equal_flag, greater_flag):
-    # Assumes control registers live at 0, 8, and 16
+    # Assumes control registers live at 500000, 500008, and 500016
     # Fetch one 24-byte instruction: opcode, operand1, operand2
-    instruction_pointer = asint(memory[0:8])
+    instruction_pointer = asint(memory[500000 : 500000 + 8])
     opcode = asint(memory[instruction_pointer : instruction_pointer + 8])
     operand1 = asint(memory[instruction_pointer + 8 : instruction_pointer + 16])
     operand2 = asint(memory[instruction_pointer + 16 : instruction_pointer + 24])
 
     # Slots are addressed relative to the current base pointer
-    base_pointer = asint(memory[8:16])
-    stack_top_pointer = asint(memory[16:24])
+    base_pointer = asint(memory[500008 : 500008 + 8])
+    stack_top_pointer = asint(memory[500016 : 500016 + 8])
 
     if opcode == 0:
         # idle: do nothing and keep pointing at this instruction
-        memory[0:8] = as8(instruction_pointer)
+        memory[500000 : 500000 + 8] = as8(instruction_pointer)
     elif opcode == 1:
+        # moveNumberToAddress: value at address operand2 = operand1
+        memory[operand2 : operand2 + 8] = as8(operand1)
+        memory[500000 : 500000 + 8] = as8(instruction_pointer + 24)
+    elif opcode == 2:
         # move: slot(operand2) = slot(operand1)
         memory[base_pointer + operand2 * 8 : base_pointer + operand2 * 8 + 8] = memory[
             base_pointer + operand1 * 8 : base_pointer + operand1 * 8 + 8
         ]
-        memory[0:8] = as8(instruction_pointer + 24)
-    elif opcode == 2:
+        memory[500000 : 500000 + 8] = as8(instruction_pointer + 24)
+    elif opcode == 3:
         # moveNumber: slot(operand2) = operand1
         memory[base_pointer + operand2 * 8 : base_pointer + operand2 * 8 + 8] = as8(operand1)
-        memory[0:8] = as8(instruction_pointer + 24)
-    elif opcode == 3:
+        memory[500000 : 500000 + 8] = as8(instruction_pointer + 24)
+    elif opcode == 4:
         # moveFromPointer: slot(operand2) = value at address slot(operand1)
         address = asint(memory[base_pointer + operand1 * 8 : base_pointer + operand1 * 8 + 8])
         memory[base_pointer + operand2 * 8 : base_pointer + operand2 * 8 + 8] = memory[address : address + 8]
-        memory[0:8] = as8(instruction_pointer + 24)
-    elif opcode == 4:
+        memory[500000 : 500000 + 8] = as8(instruction_pointer + 24)
+    elif opcode == 5:
         # moveToPointer: value at address slot(operand2) = slot(operand1)
         address = asint(memory[base_pointer + operand2 * 8 : base_pointer + operand2 * 8 + 8])
         memory[address : address + 8] = memory[base_pointer + operand1 * 8 : base_pointer + operand1 * 8 + 8]
-        memory[0:8] = as8(instruction_pointer + 24)
-    elif opcode == 5:
+        memory[500000 : 500000 + 8] = as8(instruction_pointer + 24)
+    elif opcode == 6:
         # add: slot(operand2) = slot(operand2) + slot(operand1)
         a = asint(memory[base_pointer + operand1 * 8 : base_pointer + operand1 * 8 + 8])
         b = asint(memory[base_pointer + operand2 * 8 : base_pointer + operand2 * 8 + 8])
         value = (a + b) % (2**64)
         memory[base_pointer + operand2 * 8 : base_pointer + operand2 * 8 + 8] = as8(value)
-        memory[0:8] = as8(instruction_pointer + 24)
-    elif opcode == 6:
+        memory[500000 : 500000 + 8] = as8(instruction_pointer + 24)
+    elif opcode == 7:
         # addNumber: slot(operand2) = slot(operand2) + operand1
         value = asint(memory[base_pointer + operand2 * 8 : base_pointer + operand2 * 8 + 8])
         value = (value + operand1) % (2**64)
         memory[base_pointer + operand2 * 8 : base_pointer + operand2 * 8 + 8] = as8(value)
-        memory[0:8] = as8(instruction_pointer + 24)
-    elif opcode == 7:
+        memory[500000 : 500000 + 8] = as8(instruction_pointer + 24)
+    elif opcode == 8:
         # subtract: slot(operand2) = slot(operand2) - slot(operand1)
         a = asint(memory[base_pointer + operand1 * 8 : base_pointer + operand1 * 8 + 8])
         b = asint(memory[base_pointer + operand2 * 8 : base_pointer + operand2 * 8 + 8])
         value = (b - a) % (2**64)
         memory[base_pointer + operand2 * 8 : base_pointer + operand2 * 8 + 8] = as8(value)
-        memory[0:8] = as8(instruction_pointer + 24)
-    elif opcode == 8:
+        memory[500000 : 500000 + 8] = as8(instruction_pointer + 24)
+    elif opcode == 9:
         # shiftLeft: slot(operand2) = slot(operand2) << slot(operand1)
         a = asint(memory[base_pointer + operand1 * 8 : base_pointer + operand1 * 8 + 8])
         b = asint(memory[base_pointer + operand2 * 8 : base_pointer + operand2 * 8 + 8])
         value = (b << a) % (2**64)
         memory[base_pointer + operand2 * 8 : base_pointer + operand2 * 8 + 8] = as8(value)
-        memory[0:8] = as8(instruction_pointer + 24)
-    elif opcode == 9:
+        memory[500000 : 500000 + 8] = as8(instruction_pointer + 24)
+    elif opcode == 10:
         # shiftLeftByNumber: slot(operand2) = slot(operand2) << operand1
         value = asint(memory[base_pointer + operand2 * 8 : base_pointer + operand2 * 8 + 8])
         value = (value << operand1) % (2**64)
         memory[base_pointer + operand2 * 8 : base_pointer + operand2 * 8 + 8] = as8(value)
-        memory[0:8] = as8(instruction_pointer + 24)
-    elif opcode == 10:
+        memory[500000 : 500000 + 8] = as8(instruction_pointer + 24)
+    elif opcode == 11:
         # shiftRight: slot(operand2) = slot(operand2) >> slot(operand1)
         a = asint(memory[base_pointer + operand1 * 8 : base_pointer + operand1 * 8 + 8])
         b = asint(memory[base_pointer + operand2 * 8 : base_pointer + operand2 * 8 + 8])
         value = (b % (2**64)) >> a
         memory[base_pointer + operand2 * 8 : base_pointer + operand2 * 8 + 8] = as8(value)
-        memory[0:8] = as8(instruction_pointer + 24)
-    elif opcode == 11:
+        memory[500000 : 500000 + 8] = as8(instruction_pointer + 24)
+    elif opcode == 12:
         # shiftRightByNumber: slot(operand2) = slot(operand2) >> operand1
         value = asint(memory[base_pointer + operand2 * 8 : base_pointer + operand2 * 8 + 8])
         value = (value % (2**64)) >> operand1
         memory[base_pointer + operand2 * 8 : base_pointer + operand2 * 8 + 8] = as8(value)
-        memory[0:8] = as8(instruction_pointer + 24)
-    elif opcode == 12:
+        memory[500000 : 500000 + 8] = as8(instruction_pointer + 24)
+    elif opcode == 13:
         # bitwiseAnd: slot(operand2) = slot(operand2) & slot(operand1)
         a = asint(memory[base_pointer + operand1 * 8 : base_pointer + operand1 * 8 + 8])
         b = asint(memory[base_pointer + operand2 * 8 : base_pointer + operand2 * 8 + 8])
         value = a & b
         memory[base_pointer + operand2 * 8 : base_pointer + operand2 * 8 + 8] = as8(value)
-        memory[0:8] = as8(instruction_pointer + 24)
-    elif opcode == 13:
+        memory[500000 : 500000 + 8] = as8(instruction_pointer + 24)
+    elif opcode == 14:
         # bitwiseAndWithNumber: slot(operand2) = slot(operand2) & operand1
         value = asint(memory[base_pointer + operand2 * 8 : base_pointer + operand2 * 8 + 8])
         value = value & operand1
         memory[base_pointer + operand2 * 8 : base_pointer + operand2 * 8 + 8] = as8(value)
-        memory[0:8] = as8(instruction_pointer + 24)
-    elif opcode == 14:
+        memory[500000 : 500000 + 8] = as8(instruction_pointer + 24)
+    elif opcode == 15:
         # pushNumber: write operand1 at stack top, then advance stack top
         memory[stack_top_pointer : stack_top_pointer + 8] = as8(operand1)
         stack_top_pointer += 8
-        memory[16:24] = as8(stack_top_pointer)
-        memory[0:8] = as8(instruction_pointer + 24)
-    elif opcode == 15:
+        memory[500016 : 500016 + 8] = as8(stack_top_pointer)
+        memory[500000 : 500000 + 8] = as8(instruction_pointer + 24)
+    elif opcode == 16:
         # pop: move stack top back by one slot
         stack_top_pointer -= 8
-        memory[16:24] = as8(stack_top_pointer)
-        memory[0:8] = as8(instruction_pointer + 24)
-    elif opcode == 16:
+        memory[500016 : 500016 + 8] = as8(stack_top_pointer)
+        memory[500000 : 500000 + 8] = as8(instruction_pointer + 24)
+    elif opcode == 17:
         # compare: set ALU flags by comparing slot(operand1) to slot(operand2)
         a = asint(memory[base_pointer + operand1 * 8 : base_pointer + operand1 * 8 + 8])
         b = asint(memory[base_pointer + operand2 * 8 : base_pointer + operand2 * 8 + 8])
         equal_flag = 1 if a == b else 0
         greater_flag = 1 if a > b else 0
-        memory[0:8] = as8(instruction_pointer + 24)
-    elif opcode == 17:
+        memory[500000 : 500000 + 8] = as8(instruction_pointer + 24)
+    elif opcode == 18:
         # compareToNumber: set ALU flags by comparing slot(operand1) to operand2
         value = asint(memory[base_pointer + operand1 * 8 : base_pointer + operand1 * 8 + 8])
         equal_flag = 1 if value == operand2 else 0
         greater_flag = 1 if value > operand2 else 0
-        memory[0:8] = as8(instruction_pointer + 24)
-    elif opcode == 18:
+        memory[500000 : 500000 + 8] = as8(instruction_pointer + 24)
+    elif opcode == 19:
         # jumpIfEqual: jump to operand1 if the equal flag is set
         if equal_flag == 1:
-            memory[0:8] = as8(operand1)
+            memory[500000 : 500000 + 8] = as8(operand1)
         else:
-            memory[0:8] = as8(instruction_pointer + 24)
-    elif opcode == 19:
+            memory[500000 : 500000 + 8] = as8(instruction_pointer + 24)
+    elif opcode == 20:
         # jumpIfGreater: jump to operand1 if the greater flag is set
         if greater_flag == 1:
-            memory[0:8] = as8(operand1)
+            memory[500000 : 500000 + 8] = as8(operand1)
         else:
-            memory[0:8] = as8(instruction_pointer + 24)
-    elif opcode == 20:
-        # jump: set instruction pointer to operand1
-        memory[0:8] = as8(operand1)
+            memory[500000 : 500000 + 8] = as8(instruction_pointer + 24)
     elif opcode == 21:
+        # jump: set instruction pointer to operand1
+        memory[500000 : 500000 + 8] = as8(operand1)
+    elif opcode == 22:
         # call: push return address and old base, set new base, then jump
         return_address = instruction_pointer + 24
         old_base_pointer = base_pointer
@@ -301,22 +306,22 @@ def cpu_step(memory, equal_flag, greater_flag):
         # Push old base pointer
         memory[stack_top_pointer + 8 : stack_top_pointer + 16] = as8(old_base_pointer)
         # Set base pointer to the callee frame
-        memory[8:16] = as8(stack_top_pointer + 16)
+        memory[500008 : 500008 + 8] = as8(stack_top_pointer + 16)
         # Set stack top to the callee frame
-        memory[16:24] = as8(stack_top_pointer + 16)
+        memory[500016 : 500016 + 8] = as8(stack_top_pointer + 16)
         # Jump to callee
-        memory[0:8] = as8(operand1)
-    elif opcode == 22:
+        memory[500000 : 500000 + 8] = as8(operand1)
+    elif opcode == 23:
         # return: restore return address, base pointer, and stack top
         return_address = asint(memory[base_pointer - 16 : base_pointer - 8])
         old_base_pointer = asint(memory[base_pointer - 8 : base_pointer])
         new_stack_top_pointer = base_pointer - 16
         # Restore old base pointer
-        memory[8:16] = as8(old_base_pointer)
+        memory[500008 : 500008 + 8] = as8(old_base_pointer)
         # Restore stack top to before return address
-        memory[16:24] = as8(new_stack_top_pointer)
+        memory[500016 : 500016 + 8] = as8(new_stack_top_pointer)
         # Jump back to caller
-        memory[0:8] = as8(return_address)
+        memory[500000 : 500000 + 8] = as8(return_address)
     return memory, equal_flag, greater_flag
 
 
