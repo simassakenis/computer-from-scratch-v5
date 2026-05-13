@@ -112,3 +112,304 @@ To write to disk, write disk address to `1000008`, memory address to `1000016`, 
 Console IO uses the memory region starting at `1000072`. Each console cell is one 8-byte character value. `1000064` stores the next console write address.
 
 Function calling works as follows. Arguments are pushed before `call`. The call instruction pushes the return address and old base pointer, then sets the base pointer to the new frame. Inside a function, non-negative slots are local variables. Negative slots refer to caller-provided values and call metadata: `slot(-1)` is old base pointer, `slot(-2)` is return address, and arguments live below those slots.
+
+**OS Pseudocode**
+
+This is the operating system source from `os.txt`, written as compact pseudocode.
+
+```text
+initialize:
+    consoleCursor = 1000072
+    transcriptCursor = 2000000
+    jump terminal
+
+terminal:
+    printTerminalPrefix()
+    inputStart = transcriptCursor
+
+    while True:
+        character = listenForKeypress()
+
+        if character == Backspace:
+            if transcriptCursor > inputStart:
+                removeLastCharacterFromTranscript()
+            continue
+
+        writeToTranscript(character)
+
+        if character != Enter:
+            continue
+
+        programDiskAddress, bytesRead1 = parse8ByteValue(inputStart)
+        programLength, bytesRead2 = parse8ByteValue(inputStart + bytesRead1)
+
+        programInputStart = inputStart + bytesRead1 + bytesRead2
+        programInputLength = transcriptCursor - programInputStart
+
+        readFromDisk(programDiskAddress, 3000000, programLength)
+        program(programInputStart, programInputLength)
+
+        writeToTranscript(Enter)
+        jump terminal
+
+printTerminalPrefix() -> nothing:
+    writeToTranscript("t")
+    writeToTranscript("e")
+    writeToTranscript("r")
+    writeToTranscript("m")
+    writeToTranscript("i")
+    writeToTranscript("n")
+    writeToTranscript("a")
+    writeToTranscript("l")
+    writeToTranscript("O")
+    writeToTranscript("S")
+    writeToTranscript(" ")
+    writeToTranscript("%")
+    writeToTranscript(" ")
+    return
+
+listenForKeypress() -> character:
+    valueAt(1000048) = 1
+
+    while valueAt(1000048) != 0:
+        continue
+
+    return valueAt(1000056)
+
+removeLastCharacterFromTranscript() -> nothing:
+    if transcriptCursor <= 2000000:
+        return
+
+    transcriptCursor -= 8
+    valueAt(transcriptCursor) = 0
+    removeLastCharacterFromConsole()
+    return
+
+removeLastCharacterFromConsole() -> nothing:
+    if consoleCursor <= 1000072:
+        return
+
+    consoleCursor -= 8
+    valueAt(consoleCursor) = 0
+    return
+
+writeToTranscript(character) -> nothing:
+    valueAt(transcriptCursor) = character
+    transcriptCursor += 8
+
+    if character != Enter:
+        writeToConsole(character)
+        return
+
+    while isConsoleAtLineEnd() == 0:
+        writeToConsole(Space)
+
+    writeToConsole(Space)
+    removeLastCharacterFromConsole()
+    return
+
+isConsoleAtLineEnd() -> 0 or 1:
+    lineEnd = 1001096
+
+    while lineEnd <= 1032840:
+        if consoleCursor == lineEnd:
+            return 1
+        lineEnd += 1024
+
+    return 0
+
+writeToConsole(character) -> nothing:
+    if consoleCursor == 1032840:
+        consoleCursor -= 1024
+        readAddress = 1001096
+        writeAddress = 1000072
+
+        while readAddress != 1032840:
+            valueAt(writeAddress) = valueAt(readAddress)
+            readAddress += 8
+            writeAddress += 8
+
+    valueAt(consoleCursor) = character
+    consoleCursor += 8
+    return
+
+readFromDisk(diskAddress, memoryAddress, numBytes) -> nothing:
+    valueAt(1000008) = diskAddress
+    valueAt(1000016) = memoryAddress
+    valueAt(1000024) = numBytes
+    valueAt(1000032) = 1
+
+    while valueAt(1000032) != 0:
+        continue
+    return
+
+writeToDisk(diskAddress, memoryAddress, numBytes) -> nothing:
+    valueAt(1000008) = diskAddress
+    valueAt(1000016) = memoryAddress
+    valueAt(1000024) = numBytes
+    valueAt(1000040) = 1
+
+    while valueAt(1000040) != 0:
+        continue
+    return
+
+readFromDiskProgram(programInputStart, numProgramInputBytes) -> nothing:
+    diskAddress, bytesRead1 = parse8ByteValue(programInputStart)
+    numBytes, bytesRead2 = parse8ByteValue(programInputStart + bytesRead1)
+
+    bufferStart = base + 56
+    bufferEnd = bufferStart + numBytes
+
+    readFromDisk(diskAddress, bufferStart, numBytes)
+
+    printAddress = bufferStart
+    highestPrintAddress = bufferEnd - 8
+
+    while printAddress <= highestPrintAddress:
+        print8ByteValue(valueAt(printAddress))
+        printAddress += 8
+    return
+
+writeToDiskProgram(programInputStart, numProgramInputBytes) -> nothing:
+    diskAddress, bytesRead = parse8ByteValue(programInputStart)
+    writeContentInputStart = programInputStart + bytesRead
+    programInputEnd = programInputStart + numProgramInputBytes
+
+    readAddress = writeContentInputStart
+    bufferSize = 0
+
+    while readAddress < programInputEnd:
+        character = valueAt(readAddress)
+        readAddress += 8
+        if character == Space or character == Enter:
+            bufferSize += 8
+
+    bufferStart = base + 128
+    writeAddress = bufferStart
+    readAddress = writeContentInputStart
+
+    while readAddress < programInputEnd:
+        value, bytesRead = parse8ByteValue(readAddress)
+        valueAt(writeAddress) = value
+        writeAddress += 8
+        readAddress += bytesRead
+
+    writeToDisk(diskAddress, bufferStart, bufferSize)
+    return
+
+parse8ByteValue(inputStart) -> value, numberOfBytesRead:
+    readAddress = inputStart
+    numberOfCharacters = 0
+    numberOfBytesRead = 0
+
+    while numberOfCharacters < 16:
+        numberOfBytesRead += 8
+        character = valueAt(readAddress)
+
+        if character == Space or character == Enter:
+            break
+
+        numberOfCharacters += 1
+        readAddress += 8
+
+    if numberOfCharacters == 16:
+        character = valueAt(readAddress)
+        if character == Space or character == Enter:
+            numberOfBytesRead += 8
+
+    readAddress = inputStart
+    numberOfMissingCharacters = 16 - numberOfCharacters
+    result = 0
+    i = 0
+
+    while i < 16:
+        value = 0
+
+        if i >= numberOfMissingCharacters:
+            character = valueAt(readAddress)
+
+            if character == "0":
+                value = 0
+            if character == "1":
+                value = 1
+            if character == "2":
+                value = 2
+            if character == "3":
+                value = 3
+            if character == "4":
+                value = 4
+            if character == "5":
+                value = 5
+            if character == "6":
+                value = 6
+            if character == "7":
+                value = 7
+            if character == "8":
+                value = 8
+            if character == "9":
+                value = 9
+            if character == "a":
+                value = 10
+            if character == "b":
+                value = 11
+            if character == "c":
+                value = 12
+            if character == "d":
+                value = 13
+            if character == "e":
+                value = 14
+            if character == "f":
+                value = 15
+
+            readAddress += 8
+
+        result = result << 4
+        result += value
+        i += 1
+
+    return result, numberOfBytesRead
+
+print8ByteValue(value) -> nothing:
+    shiftAmount = 60
+
+    while shiftAmount >= 0:
+        digit = (value >> shiftAmount) & 15
+        character = "0"
+
+        if digit == 0:
+            character = "0"
+        if digit == 1:
+            character = "1"
+        if digit == 2:
+            character = "2"
+        if digit == 3:
+            character = "3"
+        if digit == 4:
+            character = "4"
+        if digit == 5:
+            character = "5"
+        if digit == 6:
+            character = "6"
+        if digit == 7:
+            character = "7"
+        if digit == 8:
+            character = "8"
+        if digit == 9:
+            character = "9"
+        if digit == 10:
+            character = "a"
+        if digit == 11:
+            character = "b"
+        if digit == 12:
+            character = "c"
+        if digit == 13:
+            character = "d"
+        if digit == 14:
+            character = "e"
+        if digit == 15:
+            character = "f"
+
+        writeToTranscript(character)
+        shiftAmount -= 4
+    return
+```
