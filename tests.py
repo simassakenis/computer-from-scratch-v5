@@ -276,7 +276,7 @@ def test_parse_8_byte_value_accepts_short_delimited_input():
         computer.as8(14) + computer.as8(0) + computer.as8(0)
         + computer.as8(14) + computer.as8(0) + computer.as8(0)
         + computer.as8(14) + computer.as8(input_address) + computer.as8(0)
-        + computer.as8(21) + computer.as8(8160) + computer.as8(0)
+        + computer.as8(21) + computer.as8(5592) + computer.as8(0)
         + computer.as8(0) + computer.as8(0) + computer.as8(0)
     )
     memory[3000000 : 3000000 + len(program)] = program
@@ -318,7 +318,7 @@ def test_read_from_disk_program():
     disk = computer.assemble(open("os.txt").read())
     memory = [0] * 10000000
     memory[:500000] = disk[:500000]
-    command = f"{5592:x} {984:x} 0 8"
+    command = f"{10368:x} {984:x} 0 8"
     keys = [ord(character) for character in command] + [10]
     equal_flag = 0
     greater_flag = 0
@@ -353,7 +353,7 @@ def test_write_to_disk_program():
     memory[:500000] = disk[:500000]
     disk_address = 600000
     value = 0x6869
-    command = f"{6576:x} {1584:x} {disk_address:x} {value:x}"
+    command = f"{11352:x} {1584:x} {disk_address:x} {value:x}"
     keys = [ord(character) for character in command] + [10]
     equal_flag = 0
     greater_flag = 0
@@ -376,7 +376,7 @@ def test_readme_write_hi_program_example():
     memory = [0] * 10000000
     memory[:500000] = disk[:500000]
     write_command = (
-        "19b0 630 7a120 "
+        "2c58 630 7a120 "
         "e 68 0 "
         "15 d08 0 "
         "e 69 0 "

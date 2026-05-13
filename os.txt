@@ -272,123 +272,6 @@ writeToDiskLoop
     jump writeToDiskLoop 0
 writeToDiskLoopExit
     return 0 0
-readFromDiskProgram
-    pushNumber 0 0
-    pushNumber 0 0
-    pushNumber 0 0
-    move -4 2
-    call parse8ByteValue 0
-    pushNumber 0 0
-    move -4 3
-    add 1 3
-    call parse8ByteValue 0
-    moveNumber 8 2
-    moveNumber 0 3
-    moveFromPointer 2 3
-    addNumber 56 3
-    pushNumber 0 0
-    move 3 4
-    add 1 4
-    pushNumber 0 0
-    move 4 5
-    moveToPointer 0 5
-    addNumber 8 5
-    moveToPointer 3 5
-    addNumber 8 5
-    moveToPointer 1 5
-    addNumber 8 5
-    pushNumber 16 0
-    moveToPointer 5 6
-    call readFromDisk 0
-    addNumber -8 5
-    move 3 0
-    move 4 1
-    addNumber -8 1
-    jump readFromDiskProgramPrintLoop 0
-readFromDiskProgramPrintLoop
-    compare 0 1
-    jumpIfGreater readFromDiskProgramPrintLoopExit 0
-    jump readFromDiskProgramPrintLoopBody 0
-readFromDiskProgramPrintLoopBody
-    moveFromPointer 0 2
-    moveToPointer 2 5
-    call print8ByteValue 0
-    addNumber 8 0
-    jump readFromDiskProgramPrintLoop 0
-readFromDiskProgramPrintLoopExit
-    return 0 0
-writeToDiskProgram
-    pushNumber 0 0
-    pushNumber 0 0
-    pushNumber 0 0
-    move -4 2
-    call parse8ByteValue 0
-    add -4 1
-    move 1 2
-    pushNumber 0 0
-    move -4 3
-    add -3 3
-    pushNumber 0 0
-    pushNumber 0 0
-    jump writeToDiskProgramBufferSizeLoop 0
-writeToDiskProgramBufferSizeLoop
-    compare 2 3
-    jumpIfGreater writeToDiskProgramBufferSizeLoopExit 0
-    compare 2 3
-    jumpIfEqual writeToDiskProgramBufferSizeLoopExit 0
-    moveFromPointer 2 5
-    addNumber 8 2
-    compareToNumber 5 32
-    jumpIfEqual writeToDiskProgramBufferSizeLoopAdvanceBufferSize 0
-    compareToNumber 5 10
-    jumpIfEqual writeToDiskProgramBufferSizeLoopAdvanceBufferSize 0
-    jump writeToDiskProgramBufferSizeLoop 0
-writeToDiskProgramBufferSizeLoopAdvanceBufferSize
-    addNumber 8 4
-    jump writeToDiskProgramBufferSizeLoop 0
-writeToDiskProgramBufferSizeLoopExit
-    move 1 2
-    moveNumber 8 5
-    pushNumber 0 0
-    moveFromPointer 5 6
-    addNumber 128 6
-    pushNumber 0 0
-    move 6 7
-    add 4 7
-    pushNumber 0 0
-    move 6 8
-    pushNumber 0 0
-    add 7 9
-    pushNumber 8 0
-    add 7 10
-    pushNumber 16 0
-    add 7 11
-    pushNumber 0 0
-    pushNumber 0 0
-    pushNumber 16 0
-    pushNumber 24 0
-    add 7 15
-    moveToPointer 15 14
-    jump writeToDiskProgramParseLoop 0
-writeToDiskProgramParseLoop
-    compare 2 3
-    jumpIfGreater writeToDiskProgramParseLoopExit 0
-    compare 2 3
-    jumpIfEqual writeToDiskProgramParseLoopExit 0
-    moveToPointer 2 11
-    call parse8ByteValue 0
-    moveFromPointer 9 12
-    moveFromPointer 10 13
-    moveToPointer 12 8
-    addNumber 8 8
-    add 13 2
-    jump writeToDiskProgramParseLoop 0
-writeToDiskProgramParseLoopExit
-    moveToPointer 0 9
-    moveToPointer 6 10
-    moveToPointer 4 11
-    call writeToDisk 0
-    return 0 0
 parse8ByteValue
     pushNumber 0 0
     move -3 0
@@ -634,4 +517,121 @@ print8ByteValueLoopBodyContinue
     addNumber -4 0
     jump print8ByteValueLoop 0
 print8ByteValueLoopExit
+    return 0 0
+readFromDiskProgram
+    pushNumber 0 0
+    pushNumber 0 0
+    pushNumber 0 0
+    move -4 2
+    call parse8ByteValue 0
+    pushNumber 0 0
+    move -4 3
+    add 1 3
+    call parse8ByteValue 0
+    moveNumber 8 2
+    moveNumber 0 3
+    moveFromPointer 2 3
+    addNumber 56 3
+    pushNumber 0 0
+    move 3 4
+    add 1 4
+    pushNumber 0 0
+    move 4 5
+    moveToPointer 0 5
+    addNumber 8 5
+    moveToPointer 3 5
+    addNumber 8 5
+    moveToPointer 1 5
+    addNumber 8 5
+    pushNumber 16 0
+    moveToPointer 5 6
+    call readFromDisk 0
+    addNumber -8 5
+    move 3 0
+    move 4 1
+    addNumber -8 1
+    jump readFromDiskProgramPrintLoop 0
+readFromDiskProgramPrintLoop
+    compare 0 1
+    jumpIfGreater readFromDiskProgramPrintLoopExit 0
+    jump readFromDiskProgramPrintLoopBody 0
+readFromDiskProgramPrintLoopBody
+    moveFromPointer 0 2
+    moveToPointer 2 5
+    call print8ByteValue 0
+    addNumber 8 0
+    jump readFromDiskProgramPrintLoop 0
+readFromDiskProgramPrintLoopExit
+    return 0 0
+writeToDiskProgram
+    pushNumber 0 0
+    pushNumber 0 0
+    pushNumber 0 0
+    move -4 2
+    call parse8ByteValue 0
+    add -4 1
+    move 1 2
+    pushNumber 0 0
+    move -4 3
+    add -3 3
+    pushNumber 0 0
+    pushNumber 0 0
+    jump writeToDiskProgramBufferSizeLoop 0
+writeToDiskProgramBufferSizeLoop
+    compare 2 3
+    jumpIfGreater writeToDiskProgramBufferSizeLoopExit 0
+    compare 2 3
+    jumpIfEqual writeToDiskProgramBufferSizeLoopExit 0
+    moveFromPointer 2 5
+    addNumber 8 2
+    compareToNumber 5 32
+    jumpIfEqual writeToDiskProgramBufferSizeLoopAdvanceBufferSize 0
+    compareToNumber 5 10
+    jumpIfEqual writeToDiskProgramBufferSizeLoopAdvanceBufferSize 0
+    jump writeToDiskProgramBufferSizeLoop 0
+writeToDiskProgramBufferSizeLoopAdvanceBufferSize
+    addNumber 8 4
+    jump writeToDiskProgramBufferSizeLoop 0
+writeToDiskProgramBufferSizeLoopExit
+    move 1 2
+    moveNumber 8 5
+    pushNumber 0 0
+    moveFromPointer 5 6
+    addNumber 128 6
+    pushNumber 0 0
+    move 6 7
+    add 4 7
+    pushNumber 0 0
+    move 6 8
+    pushNumber 0 0
+    add 7 9
+    pushNumber 8 0
+    add 7 10
+    pushNumber 16 0
+    add 7 11
+    pushNumber 0 0
+    pushNumber 0 0
+    pushNumber 16 0
+    pushNumber 24 0
+    add 7 15
+    moveToPointer 15 14
+    jump writeToDiskProgramParseLoop 0
+writeToDiskProgramParseLoop
+    compare 2 3
+    jumpIfGreater writeToDiskProgramParseLoopExit 0
+    compare 2 3
+    jumpIfEqual writeToDiskProgramParseLoopExit 0
+    moveToPointer 2 11
+    call parse8ByteValue 0
+    moveFromPointer 9 12
+    moveFromPointer 10 13
+    moveToPointer 12 8
+    addNumber 8 8
+    add 13 2
+    jump writeToDiskProgramParseLoop 0
+writeToDiskProgramParseLoopExit
+    moveToPointer 0 9
+    moveToPointer 6 10
+    moveToPointer 4 11
+    call writeToDisk 0
     return 0 0

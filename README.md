@@ -12,14 +12,14 @@ Using the computer means running one program, then another program, and so on. T
 
 Values are typed as hex numbers and can omit leading zeros. Values are separated by spaces, and the final value is ended by Enter. The OS reads the program from disk into memory at `3000000`, calls it with `programInputStart` and `numProgramInputBytes`, then listens for the next command.
 
-The disk currently includes two user programs. `readFromDiskProgram` reads bytes from disk and prints each 8-byte value as 16 hex characters. `writeToDiskProgram` parses hex input and writes those 8-byte values to disk. At the moment, `readFromDiskProgram` starts at disk address `5592` and is `984` bytes long. `writeToDiskProgram` starts at disk address `6576` and is `1584` bytes long.
+The disk currently includes two user programs. `readFromDiskProgram` reads bytes from disk and prints each 8-byte value as 16 hex characters. `writeToDiskProgram` parses hex input and writes those 8-byte values to disk. At the moment, `readFromDiskProgram` starts at disk address `10368` and is `984` bytes long. `writeToDiskProgram` starts at disk address `11352` and is `1584` bytes long.
 
 For example, here is how to write a tiny program to disk address `500000` that prints `hi`, and then run it. This keeps the new program after the `0..<500000` disk space used for startup values and OS code.
 
 First type this command and press Enter. It invokes `writeToDiskProgram` and writes the new program bytes to disk:
 
 ```text
-19b0 630 7a120 e 68 0 15 d08 0 e 69 0 15 d08 0 16 0 0
+2c58 630 7a120 e 68 0 15 d08 0 e 69 0 15 d08 0 16 0 0
 ```
 
 Then type this command and press Enter. It runs the program at disk address `500000`, length `120` bytes:
@@ -31,7 +31,7 @@ Then type this command and press Enter. It runs the program at disk address `500
 The values typed above are:
 
 ```text
-19b0  address of writeToDiskProgram
+2c58  address of writeToDiskProgram
 630   length of writeToDiskProgram
 7a120 disk address to write the new program to
 
@@ -84,10 +84,10 @@ The current memory layout is:
     3336: writeToTranscript
     4872: readFromDisk
     5232: writeToDisk
-    5592: readFromDiskProgram
-    6576: writeToDiskProgram
-    8160: parse8ByteValue
-    10992: print8ByteValue
+    5592: parse8ByteValue
+    8424: print8ByteValue
+    10368: readFromDiskProgram
+    11352: writeToDiskProgram
 500000..<1000000: operating system stack
 1000000: next transcript write address
 1000008: disk IO disk address
@@ -253,50 +253,6 @@ writeToDisk(diskAddress, memoryAddress, numBytes) -> nothing:
         continue
     return
 
-readFromDiskProgram(programInputStart, numProgramInputBytes) -> nothing:
-    diskAddress, bytesRead1 = parse8ByteValue(programInputStart)
-    numBytes, bytesRead2 = parse8ByteValue(programInputStart + bytesRead1)
-
-    bufferStart = base + 56
-    bufferEnd = bufferStart + numBytes
-
-    readFromDisk(diskAddress, bufferStart, numBytes)
-
-    printAddress = bufferStart
-    highestPrintAddress = bufferEnd - 8
-
-    while printAddress <= highestPrintAddress:
-        print8ByteValue(valueAt(printAddress))
-        printAddress += 8
-    return
-
-writeToDiskProgram(programInputStart, numProgramInputBytes) -> nothing:
-    diskAddress, bytesRead = parse8ByteValue(programInputStart)
-    writeContentInputStart = programInputStart + bytesRead
-    programInputEnd = programInputStart + numProgramInputBytes
-
-    readAddress = writeContentInputStart
-    bufferSize = 0
-
-    while readAddress < programInputEnd:
-        character = valueAt(readAddress)
-        readAddress += 8
-        if character == Space or character == Enter:
-            bufferSize += 8
-
-    bufferStart = base + 128
-    writeAddress = bufferStart
-    readAddress = writeContentInputStart
-
-    while readAddress < programInputEnd:
-        value, bytesRead = parse8ByteValue(readAddress)
-        valueAt(writeAddress) = value
-        writeAddress += 8
-        readAddress += bytesRead
-
-    writeToDisk(diskAddress, bufferStart, bufferSize)
-    return
-
 parse8ByteValue(inputStart) -> value, numberOfBytesRead:
     readAddress = inputStart
     numberOfCharacters = 0
@@ -411,5 +367,49 @@ print8ByteValue(value) -> nothing:
 
         writeToTranscript(character)
         shiftAmount -= 4
+    return
+
+readFromDiskProgram(programInputStart, numProgramInputBytes) -> nothing:
+    diskAddress, bytesRead1 = parse8ByteValue(programInputStart)
+    numBytes, bytesRead2 = parse8ByteValue(programInputStart + bytesRead1)
+
+    bufferStart = base + 56
+    bufferEnd = bufferStart + numBytes
+
+    readFromDisk(diskAddress, bufferStart, numBytes)
+
+    printAddress = bufferStart
+    highestPrintAddress = bufferEnd - 8
+
+    while printAddress <= highestPrintAddress:
+        print8ByteValue(valueAt(printAddress))
+        printAddress += 8
+    return
+
+writeToDiskProgram(programInputStart, numProgramInputBytes) -> nothing:
+    diskAddress, bytesRead = parse8ByteValue(programInputStart)
+    writeContentInputStart = programInputStart + bytesRead
+    programInputEnd = programInputStart + numProgramInputBytes
+
+    readAddress = writeContentInputStart
+    bufferSize = 0
+
+    while readAddress < programInputEnd:
+        character = valueAt(readAddress)
+        readAddress += 8
+        if character == Space or character == Enter:
+            bufferSize += 8
+
+    bufferStart = base + 128
+    writeAddress = bufferStart
+    readAddress = writeContentInputStart
+
+    while readAddress < programInputEnd:
+        value, bytesRead = parse8ByteValue(readAddress)
+        valueAt(writeAddress) = value
+        writeAddress += 8
+        readAddress += bytesRead
+
+    writeToDisk(diskAddress, bufferStart, bufferSize)
     return
 ```
