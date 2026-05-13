@@ -325,8 +325,15 @@ def console_step(memory, tkinter_window):
     # Assumes 1000064 stores the next console write address and 1000072 starts a 128 by 32 console
     console_write_address = asint(memory[1000064 : 1000064 + 8])
     # Avoid redrawing the whole Tkinter console unless a console write changed it
-    if tkinter_window.get("last_console_write_address") == console_write_address:
+    previous_console_write_address = tkinter_window.get("last_console_write_address")
+    if previous_console_write_address == console_write_address:
         return
+    # Avoid redrawing when the new printed character is Space
+    if previous_console_write_address is not None and previous_console_write_address < console_write_address:
+        last_added_character = asint(memory[console_write_address - 8 : console_write_address])
+        if last_added_character == 32:
+            tkinter_window["last_console_write_address"] = console_write_address
+            return
     tkinter_window["last_console_write_address"] = console_write_address
 
     rows = []
