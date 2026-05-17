@@ -2,35 +2,23 @@
 
 ![Computer diagram](diagram.jpeg)
 
-This is a minimal simulated computer with memory, CPU, keyboard, disk, console, and a small terminal operating system loaded from `terminalOS.txt`.
+This project is an implementation of a basic simulated computer with a minimal operating system, terminalOS, from scratch in Python. When you run `python computer.py`, you will see a new window pop up that simulates the console screen of this computer, and you can use your keyboard to simulate keyboard input.
 
-When powered on (`python computer.py`), the computer copies the first `500000` sacred bytes from disk into memory and then executes instructions one by one forever, until the computer is powered off. The instruction pointer starts at `0`, so the CPU starts interpreting memory at address `0` as instructions.
+The terminalOS operating system is just a basic terminal loop allowing you to run programs one at a time. Programs are identified by their address on disk and length, so for example typing `2850 3d8 0 8` and pressing Enter will make the computer run a program starting at address `2850` on disk and spanning `3d8` bytes, and with two input values: `0` and `8`. Values are space-separated hex numbers and can omit leading zeros.
 
-Using the computer means running one program, then another program, and so on. The preloaded terminal OS listens for keyboard input until Enter, interprets the input as a program invocation, and executes it. A program is just an arbitrary number of bytes read from any arbitrary address on disk. A program can print characters to the console. The command before Enter is interpreted as:
-
-```text
-<programDiskAddress> <programLength> <programInput>
-```
-
-Values are typed as hex numbers and can omit leading zeros. Values are separated by spaces, and the final value is ended by Enter. The OS reads the program from disk into memory at `2000000`, calls it with `programInputStart` and `numProgramInputBytes`, then listens for the next command.
-
-The disk currently includes two user programs. `readFromDiskProgram` reads bytes from disk and prints each 8-byte value as 16 hex characters. `writeToDiskProgram` parses hex input and writes those 8-byte values to disk. At the moment, `readFromDiskProgram` starts at disk address `10320` and is `984` bytes long. `writeToDiskProgram` starts at disk address `11304` and is `1584` bytes long.
-
-For example, here is how to write a tiny program to disk address `500000` that prints `hi`, and then run it. This keeps the new program after the `0..<500000` disk space used for OS code.
-
-First type this command and press Enter. It invokes `writeToDiskProgram` and writes the new program bytes to disk:
+There are only two programs at first, `readFromDiskProgram` and `writeToDiskProgram`, but you can use `writeToDiskProgram` to write your own program to somewhere disk and then invoke it by its starting address and length. For example, to write a program that prints `hi`, type this into the terminal and press Enter:
 
 ```text
 2c28 630 7a120 f 68 0 16 cd8 0 f 69 0 16 cd8 0 17 0 0
 ```
 
-Then type this command and press Enter. It runs the program at disk address `500000`, length `120` bytes:
+Then type this and press Enter to run it:
 
 ```text
 7a120 78
 ```
 
-The values typed above are:
+The first command means:
 
 ```text
 2c28  address of writeToDiskProgram
@@ -42,12 +30,26 @@ f 68 0    pushNumber 104, ASCII h
 f 69 0    pushNumber 105, ASCII i
 16 cd8 0 call writeToTranscript
 17 0 0    return
+```
 
+The second command means:
+
+```text
 7a120 disk address of the new program
 78    length of the new program
 ```
 
 After the second Enter, the console should show `hi` on the program output line, then a fresh `terminalOS % ` prompt below it. The program above calls `writeToTranscript` at the hard-coded address `3288`, encoded as `cd8`.
+
+At the moment, `readFromDiskProgram` starts at disk address `10320` and is `984` bytes long, and `writeToDiskProgram` starts at disk address `11304` and is `1584` bytes long.
+
+When powered on, the computer copies the first `500000` sacred bytes from disk into memory and executes instructions one by one forever, until the computer is powered off. The instruction pointer starts at `0`, so the CPU starts interpreting memory at address `0` as instructions. The command before Enter is interpreted as:
+
+```text
+<programDiskAddress> <programLength> <programInput>
+```
+
+The OS reads the program from disk into memory at `2000000`, calls it with `programInputStart` and `numProgramInputBytes`, then listens for the next command.
 
 Memory is byte-addressed and currently has `10000000` bytes. Machine values are 8 bytes. Most instructions operate on slots. A slot is an 8-byte value at an offset from the current base pointer: `slot(0)` is at the base pointer, `slot(1)` is 8 bytes after it, and `slot(-1)` is 8 bytes before it.
 

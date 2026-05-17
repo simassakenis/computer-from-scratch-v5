@@ -1,7 +1,7 @@
 import tkinter as tk
 
 
-# Runs the simulated computer until the process is stopped
+# Runs the simulated computer until stopped
 def run_computer():
     # Tkinter receives keypresses and renders the memory-mapped console
     tkinter_window = tkinter_window_init()
@@ -16,9 +16,9 @@ def run_computer():
     greater_flag = 0
 
     while True:
-        memory = keyboard_step(memory, tkinter_window)
         memory, equal_flag, greater_flag = cpu_step(memory, equal_flag, greater_flag)
         memory, disk = disk_step(memory, disk)
+        memory = keyboard_step(memory, tkinter_window)
         console_step(memory, tkinter_window)
 
 
@@ -188,24 +188,6 @@ def cpu_step(memory, equal_flag, greater_flag):
     return memory, equal_flag, greater_flag
 
 
-# Helper that copies a pending Tkinter keypress into keyboard IO memory
-def keyboard_step(memory, tkinter_window):
-    # Assumes keyboard IO uses 1000072 for waiting and 1000080 for key value
-    waiting_for_keypress = asint(memory[1000072 : 1000072 + 8])
-    # Tkinter event processing is expensive, so only poll it when the OS is listening for input
-    if waiting_for_keypress != 1:
-        return memory
-
-    tkinter_window["root"].update()
-    key = tkinter_window["pending_key"]
-    tkinter_window["pending_key"] = None
-
-    if waiting_for_keypress == 1 and key is not None:
-        memory[1000080 : 1000080 + 8] = as8(key)
-        memory[1000072 : 1000072 + 8] = [0] * 8
-    return memory
-
-
 # Helper that performs pending memory-mapped disk reads and writes
 def disk_step(memory, disk):
     # Assumes disk IO uses 1000032 for disk address, 1000040 for memory address,
@@ -228,6 +210,24 @@ def disk_step(memory, disk):
         memory[1000064 : 1000064 + 8] = as8(0)
 
     return memory, disk
+
+
+# Helper that copies a pending Tkinter keypress into keyboard IO memory
+def keyboard_step(memory, tkinter_window):
+    # Assumes keyboard IO uses 1000072 for waiting and 1000080 for key value
+    waiting_for_keypress = asint(memory[1000072 : 1000072 + 8])
+    # Tkinter event processing is expensive, so only poll it when the OS is listening for input
+    if waiting_for_keypress != 1:
+        return memory
+
+    tkinter_window["root"].update()
+    key = tkinter_window["pending_key"]
+    tkinter_window["pending_key"] = None
+
+    if waiting_for_keypress == 1 and key is not None:
+        memory[1000080 : 1000080 + 8] = as8(key)
+        memory[1000072 : 1000072 + 8] = [0] * 8
+    return memory
 
 
 # Helper that renders console memory into the Tkinter window
