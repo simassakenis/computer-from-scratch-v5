@@ -481,26 +481,25 @@ def test_write_to_transcript_scrolls_when_console_is_full():
     assert computer.asint(memory[1000064 : 1000064 + 8]) == 1031824
 
 
-if __name__ == "__main__":
-    for test in [
-        test_idle,
-        test_move_and_move_number,
-        test_pointer_moves,
-        test_arithmetic,
-        test_shift_and_bitwise,
-        test_push_number_and_pop,
-        test_compare_to_number_and_jump_if_equal,
-        test_compare_and_jump_if_greater,
-        test_jump,
-        test_call_and_return,
-        test_power_on_copies_only_startup_bytes,
-        test_parse_8_byte_value_accepts_short_delimited_input,
-        test_os_echoes_typed_character,
-        test_read_from_disk_program,
-        test_write_to_disk_program,
-        test_readme_write_hi_program_example,
-        test_write_to_transcript_enter_moves_console_to_next_line,
-        test_write_to_transcript_scrolls_when_console_is_full,
-    ]:
-        test()
-        print(f"success: {test.__name__}")
+for test in [
+    test_idle,
+    test_move_and_move_number,
+    test_pointer_moves,
+    test_arithmetic,
+    test_shift_and_bitwise,
+    test_push_number_and_pop,
+    test_compare_to_number_and_jump_if_equal,
+    test_compare_and_jump_if_greater,
+    test_jump,
+    test_call_and_return,
+    test_power_on_copies_only_startup_bytes,
+    test_parse_8_byte_value_accepts_short_delimited_input,
+    test_os_echoes_typed_character,
+    test_read_from_disk_program,
+    test_write_to_disk_program,
+    test_readme_write_hi_program_example,
+    test_write_to_transcript_enter_moves_console_to_next_line,
+    test_write_to_transcript_scrolls_when_console_is_full,
+]:
+    test()
+    print(f"success: {test.__name__}")

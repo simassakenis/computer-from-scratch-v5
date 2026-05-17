@@ -1,162 +1,25 @@
 import tkinter as tk
 
 
-# Helper that turns one machine value into 8 memory bytes
-def as8(value):
-    value = value % (2**64)
-    return [
-        (value >> 56) & 255,
-        (value >> 48) & 255,
-        (value >> 40) & 255,
-        (value >> 32) & 255,
-        (value >> 24) & 255,
-        (value >> 16) & 255,
-        (value >> 8) & 255,
-        value & 255,
-    ]
+# Runs the simulated computer until the process is stopped
+def run_computer():
+    # Tkinter receives keypresses and renders the memory-mapped console
+    tkinter_window = tkinter_window_init()
 
+    # Memory and disk are byte arrays: every element is one integer from 0 to 255
+    disk = assemble(open("os.txt").read())
+    memory = [0] * 10000000
 
-# Helper that turns 8 memory bytes into one signed machine value
-def asint(value):
-    result = 0
-    for byte in value:
-        result = result * 256 + byte
-    if result >= 2**63:
-        result -= 2**64
-    return result
+    # Power-on loads the sacred startup and operating system bytes into memory
+    memory[:500000] = disk[:500000]
+    equal_flag = 0
+    greater_flag = 0
 
-
-# Helper that turns disk source text into the initial disk bytes
-def assemble(source):
-    opcodes = {
-        "moveNumberToAddress": 1,
-        "move": 2,
-        "moveNumber": 3,
-        "moveFromPointer": 4,
-        "moveToPointer": 5,
-        "add": 6,
-        "addNumber": 7,
-        "subtract": 8,
-        "shiftLeft": 9,
-        "shiftLeftByNumber": 10,
-        "shiftRight": 11,
-        "shiftRightByNumber": 12,
-        "bitwiseAnd": 13,
-        "bitwiseAndWithNumber": 14,
-        "pushNumber": 15,
-        "pop": 16,
-        "compare": 17,
-        "compareToNumber": 18,
-        "jumpIfEqual": 19,
-        "jumpIfGreater": 20,
-        "jump": 21,
-        "call": 22,
-        "return": 23,
-    }
-    disk = [0] * 4000000
-    labels = {}
-    lines = []
-    address = 0
-
-    for raw_line in source.splitlines():
-        line = raw_line.rstrip()
-        if line == "":
-            continue
-
-        if not line[0].isspace():
-            labels[line.rstrip(":")] = address
-            continue
-
-        parts = line.split()
-        address += 8 * len(parts)
-        lines.append(parts)
-
-    address = 0
-    for parts in lines:
-        values = parts
-
-        if parts[0] in opcodes:
-            values = [opcodes[parts[0]], *parts[1:]]
-
-        for value in values:
-            value = labels[value] if value in labels else int(value)
-            disk[address : address + 8] = as8(value)
-            address += 8
-
-    return disk
-
-
-# Helper that initializes a minimal Tkinter-backed console window
-def tkinter_window_init():
-    tkinter_window = {}
-    tkinter_window["pending_key"] = None
-    tkinter_window["root"] = tk.Tk()
-    tkinter_window["root"].title("")
-
-    tkinter_window["label"] = tk.Label(
-        tkinter_window["root"],
-        bg="white",
-        fg="black",
-        font=("Menlo", 14),
-        justify="left",
-        anchor="nw",
-    )
-    tkinter_window["label"].pack()
-
-    def on_key(event):
-        if event.keysym == "Return":
-            tkinter_window["pending_key"] = 10
-        elif event.keysym == "BackSpace":
-            tkinter_window["pending_key"] = 8
-        elif event.char:
-            tkinter_window["pending_key"] = ord(event.char)
-
-    tkinter_window["root"].bind("<KeyPress>", on_key)
-    tkinter_window["root"].lift()
-    tkinter_window["root"].after(0, tkinter_window["root"].focus_force)
-    return tkinter_window
-
-
-# Helper that copies a pending Tkinter keypress into keyboard IO memory
-def keyboard_step(memory, tkinter_window):
-    # Assumes keyboard IO uses 1000048 for waiting and 1000056 for key value
-    waiting_for_keypress = asint(memory[1000048 : 1000048 + 8])
-    # Tkinter event processing is expensive, so only poll it when the OS is listening for input
-    if waiting_for_keypress != 1:
-        return memory
-
-    tkinter_window["root"].update()
-    key = tkinter_window["pending_key"]
-    tkinter_window["pending_key"] = None
-
-    if waiting_for_keypress == 1 and key is not None:
-        memory[1000056 : 1000056 + 8] = as8(key)
-        memory[1000048 : 1000048 + 8] = [0] * 8
-    return memory
-
-
-# Helper that performs pending memory-mapped disk reads and writes
-def disk_step(memory, disk):
-    # Assumes disk IO uses 1000008 for disk address, 1000016 for memory address,
-    # 1000024 for byte count, 1000032 for read waiting, and 1000040 for write waiting
-    is_waiting_for_disk_read = asint(memory[1000032 : 1000032 + 8])
-    is_waiting_for_disk_write = asint(memory[1000040 : 1000040 + 8])
-
-    if is_waiting_for_disk_read == 1:
-        disk_address = asint(memory[1000008 : 1000008 + 8])
-        memory_address = asint(memory[1000016 : 1000016 + 8])
-        num_bytes = asint(memory[1000024 : 1000024 + 8])
-        memory[memory_address : memory_address + num_bytes] = disk[disk_address : disk_address + num_bytes]
-        memory[1000032 : 1000032 + 8] = as8(0)
-
-    if is_waiting_for_disk_write == 1:
-        disk_address = asint(memory[1000008 : 1000008 + 8])
-        memory_address = asint(memory[1000016 : 1000016 + 8])
-        num_bytes = asint(memory[1000024 : 1000024 + 8])
-        disk[disk_address : disk_address + num_bytes] = memory[memory_address : memory_address + num_bytes]
-        memory[1000040 : 1000040 + 8] = as8(0)
-
-    return memory, disk
+    while True:
+        memory = keyboard_step(memory, tkinter_window)
+        memory, equal_flag, greater_flag = cpu_step(memory, equal_flag, greater_flag)
+        memory, disk = disk_step(memory, disk)
+        console_step(memory, tkinter_window)
 
 
 # Helper that executes one CPU instruction
@@ -325,6 +188,48 @@ def cpu_step(memory, equal_flag, greater_flag):
     return memory, equal_flag, greater_flag
 
 
+# Helper that copies a pending Tkinter keypress into keyboard IO memory
+def keyboard_step(memory, tkinter_window):
+    # Assumes keyboard IO uses 1000048 for waiting and 1000056 for key value
+    waiting_for_keypress = asint(memory[1000048 : 1000048 + 8])
+    # Tkinter event processing is expensive, so only poll it when the OS is listening for input
+    if waiting_for_keypress != 1:
+        return memory
+
+    tkinter_window["root"].update()
+    key = tkinter_window["pending_key"]
+    tkinter_window["pending_key"] = None
+
+    if waiting_for_keypress == 1 and key is not None:
+        memory[1000056 : 1000056 + 8] = as8(key)
+        memory[1000048 : 1000048 + 8] = [0] * 8
+    return memory
+
+
+# Helper that performs pending memory-mapped disk reads and writes
+def disk_step(memory, disk):
+    # Assumes disk IO uses 1000008 for disk address, 1000016 for memory address,
+    # 1000024 for byte count, 1000032 for read waiting, and 1000040 for write waiting
+    is_waiting_for_disk_read = asint(memory[1000032 : 1000032 + 8])
+    is_waiting_for_disk_write = asint(memory[1000040 : 1000040 + 8])
+
+    if is_waiting_for_disk_read == 1:
+        disk_address = asint(memory[1000008 : 1000008 + 8])
+        memory_address = asint(memory[1000016 : 1000016 + 8])
+        num_bytes = asint(memory[1000024 : 1000024 + 8])
+        memory[memory_address : memory_address + num_bytes] = disk[disk_address : disk_address + num_bytes]
+        memory[1000032 : 1000032 + 8] = as8(0)
+
+    if is_waiting_for_disk_write == 1:
+        disk_address = asint(memory[1000008 : 1000008 + 8])
+        memory_address = asint(memory[1000016 : 1000016 + 8])
+        num_bytes = asint(memory[1000024 : 1000024 + 8])
+        disk[disk_address : disk_address + num_bytes] = memory[memory_address : memory_address + num_bytes]
+        memory[1000040 : 1000040 + 8] = as8(0)
+
+    return memory, disk
+
+
 # Helper that renders console memory into the Tkinter window
 def console_step(memory, tkinter_window):
     # Assumes 1000064 stores the next console write address and 1000072 starts a 128 by 32 console
@@ -356,21 +261,121 @@ def console_step(memory, tkinter_window):
     tkinter_window["root"].update_idletasks()
 
 
+# Helper that initializes a minimal Tkinter-backed console window
+def tkinter_window_init():
+    tkinter_window = {}
+    tkinter_window["pending_key"] = None
+    tkinter_window["root"] = tk.Tk()
+    tkinter_window["root"].title("")
+
+    tkinter_window["label"] = tk.Label(
+        tkinter_window["root"],
+        bg="white",
+        fg="black",
+        font=("Menlo", 14),
+        justify="left",
+        anchor="nw",
+    )
+    tkinter_window["label"].pack()
+
+    def on_key(event):
+        if event.keysym == "Return":
+            tkinter_window["pending_key"] = 10
+        elif event.keysym == "BackSpace":
+            tkinter_window["pending_key"] = 8
+        elif event.char:
+            tkinter_window["pending_key"] = ord(event.char)
+
+    tkinter_window["root"].bind("<KeyPress>", on_key)
+    tkinter_window["root"].lift()
+    tkinter_window["root"].after(0, tkinter_window["root"].focus_force)
+    return tkinter_window
+
+
+# Helper that turns disk source text into the initial disk bytes
+def assemble(source):
+    opcodes = {
+        "moveNumberToAddress": 1,
+        "move": 2,
+        "moveNumber": 3,
+        "moveFromPointer": 4,
+        "moveToPointer": 5,
+        "add": 6,
+        "addNumber": 7,
+        "subtract": 8,
+        "shiftLeft": 9,
+        "shiftLeftByNumber": 10,
+        "shiftRight": 11,
+        "shiftRightByNumber": 12,
+        "bitwiseAnd": 13,
+        "bitwiseAndWithNumber": 14,
+        "pushNumber": 15,
+        "pop": 16,
+        "compare": 17,
+        "compareToNumber": 18,
+        "jumpIfEqual": 19,
+        "jumpIfGreater": 20,
+        "jump": 21,
+        "call": 22,
+        "return": 23,
+    }
+    disk = [0] * 4000000
+    labels = {}
+    lines = []
+    address = 0
+
+    for raw_line in source.splitlines():
+        line = raw_line.rstrip()
+        if line == "":
+            continue
+
+        if not line[0].isspace():
+            labels[line.rstrip(":")] = address
+            continue
+
+        parts = line.split()
+        address += 8 * len(parts)
+        lines.append(parts)
+
+    address = 0
+    for parts in lines:
+        values = parts
+
+        if parts[0] in opcodes:
+            values = [opcodes[parts[0]], *parts[1:]]
+
+        for value in values:
+            value = labels[value] if value in labels else int(value)
+            disk[address : address + 8] = as8(value)
+            address += 8
+
+    return disk
+
+
+# Helper that turns one machine value into 8 memory bytes
+def as8(value):
+    value = value % (2**64)
+    return [
+        (value >> 56) & 255,
+        (value >> 48) & 255,
+        (value >> 40) & 255,
+        (value >> 32) & 255,
+        (value >> 24) & 255,
+        (value >> 16) & 255,
+        (value >> 8) & 255,
+        value & 255,
+    ]
+
+
+# Helper that turns 8 memory bytes into one signed machine value
+def asint(value):
+    result = 0
+    for byte in value:
+        result = result * 256 + byte
+    if result >= 2**63:
+        result -= 2**64
+    return result
+
+
 if __name__ == "__main__":
-    # Tkinter receives keypresses and renders the memory-mapped console
-    tkinter_window = tkinter_window_init()
-
-    # Memory and disk are byte arrays: every element is one integer from 0 to 255
-    disk = assemble(open("os.txt").read())
-    memory = [0] * 10000000
-
-    # Power-on loads the sacred startup and operating system bytes into memory
-    memory[:500000] = disk[:500000]
-    equal_flag = 0
-    greater_flag = 0
-
-    while True:
-        memory = keyboard_step(memory, tkinter_window)
-        memory, equal_flag, greater_flag = cpu_step(memory, equal_flag, greater_flag)
-        memory, disk = disk_step(memory, disk)
-        console_step(memory, tkinter_window)
+    run_computer()
