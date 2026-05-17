@@ -1,6 +1,6 @@
 # computer-from-scratch-v5
 
-This is a minimal simulated computer with memory, CPU, keyboard, disk, console, and a small terminal operating system loaded from `os.txt`.
+This is a minimal simulated computer with memory, CPU, keyboard, disk, console, and a small terminal operating system loaded from `terminalOS.txt`.
 
 When powered on (`python computer.py`), the computer copies the first `500000` sacred bytes from disk into memory and then executes instructions one by one forever, until the computer is powered off. The instruction pointer starts at `0`, so the CPU starts interpreting memory at address `0` as instructions.
 
@@ -116,7 +116,7 @@ Function calling works as follows. Arguments are pushed before `call`. The call 
 
 **OS Pseudocode**
 
-This is the operating system source from `os.txt`, written as compact pseudocode.
+This is the operating system source from `terminalOS.txt`, written as compact pseudocode.
 
 ```text
 initialize:
