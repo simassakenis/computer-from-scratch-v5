@@ -1,14 +1,14 @@
 initializeControlRegisters
-    moveNumberToAddress 500024 500008
-    moveNumberToAddress 500024 500016
+    moveNumberToAddress 500000 1000008
+    moveNumberToAddress 500000 1000016
 initializeConsoleCursor
-    pushNumber 1000064 0
-    pushNumber 1000072 0
+    pushNumber 1000088 0
+    pushNumber 1000096 0
     moveToPointer 1 0
     jump initializeTranscriptCursor 0
 initializeTranscriptCursor
-    moveNumber 1000000 0
-    moveNumber 2000000 1
+    moveNumber 1000024 0
+    moveNumber 1032864 1
     moveToPointer 1 0
     jump terminal 0
 terminal
@@ -58,20 +58,20 @@ ifEnter
     subtract 5 6
     pushNumber 0 0
     move 3 7
-    pushNumber 3000000 0
+    pushNumber 2000000 0
     pushNumber 0 0
     move 4 9
     call readFromDisk 0
-    moveNumber 500016 7
+    moveNumber 1000016 7
     moveFromPointer 7 8
-    moveNumber 3000000 9
+    moveNumber 2000000 9
     add 4 9
     moveToPointer 5 9
     addNumber 8 9
     moveToPointer 6 9
     addNumber 8 9
     moveToPointer 9 7
-    call 3000000 0
+    call 2000000 0
     moveToPointer 8 7
     pop 0 0
     pop 0 0
@@ -115,7 +115,7 @@ printTerminalPrefix
     call writeToTranscript 0
     return 0 0
 listenForKeypress
-    pushNumber 1000048 0
+    pushNumber 1000072 0
     pushNumber 1 0
     moveToPointer 1 0
     jump listenForKeypressLoop 0
@@ -125,14 +125,14 @@ listenForKeypressLoop
     jumpIfEqual listenForKeypressLoopExit 0
     jump listenForKeypressLoop 0
 listenForKeypressLoopExit
-    moveNumber 1000056 1
+    moveNumber 1000080 1
     moveFromPointer 1 -3
     return 0 0
 removeLastCharacterFromTranscript
-    pushNumber 1000000 0
+    pushNumber 1000024 0
     pushNumber 0 0
     moveFromPointer 0 1
-    compareToNumber 1 2000000
+    compareToNumber 1 1032864
     jumpIfGreater regularRemoveLastCharacter 0
     return 0 0
 regularRemoveLastCharacter
@@ -143,10 +143,10 @@ regularRemoveLastCharacter
     call removeLastCharacterFromConsole 0
     return 0 0
 removeLastCharacterFromConsole
-    pushNumber 1000064 0
+    pushNumber 1000088 0
     pushNumber 0 0
     moveFromPointer 0 1
-    compareToNumber 1 1000072
+    compareToNumber 1 1000096
     jumpIfGreater regularRemoveLastCharacterFromConsole 0
     return 0 0
 regularRemoveLastCharacterFromConsole
@@ -156,7 +156,7 @@ regularRemoveLastCharacterFromConsole
     moveToPointer 1 0
     return 0 0
 writeToTranscript
-    pushNumber 1000000 0
+    pushNumber 1000024 0
     pushNumber 0 0
     moveFromPointer 0 1
     moveToPointer -3 1
@@ -187,13 +187,13 @@ writeToTranscriptCharacterNotEnter
     call writeToConsole 0
     return 0 0
 isConsoleAtLineEnd
-    pushNumber 1000064 0
+    pushNumber 1000088 0
     pushNumber 0 0
     moveFromPointer 0 1
-    pushNumber 1001096 0
+    pushNumber 1001120 0
     jump isConsoleAtLineEndLoop 0
 isConsoleAtLineEndLoop
-    compareToNumber 2 1032840
+    compareToNumber 2 1032864
     jumpIfGreater isConsoleAtLineEndReturnZero 0
     jump isConsoleAtLineEndLoopBody 0
 isConsoleAtLineEndLoopBody
@@ -208,16 +208,16 @@ isConsoleAtLineEndReturnOne
     moveNumber 1 -3
     return 0 0
 writeToConsole
-    pushNumber 1000064 0
+    pushNumber 1000088 0
     pushNumber 0 0
     moveFromPointer 0 1
-    compareToNumber 1 1032840
+    compareToNumber 1 1032864
     jumpIfEqual shiftConsoleBack 0
     jump regularWriteToConsole 0
 shiftConsoleBack
     addNumber -1024 1
-    pushNumber 1001096 0
-    pushNumber 1000072 0
+    pushNumber 1001120 0
+    pushNumber 1000096 0
     pushNumber 0 0
     jump shiftConsoleBackLoop 0
 shiftConsoleBackLoop
@@ -225,7 +225,7 @@ shiftConsoleBackLoop
     moveToPointer 4 3
     addNumber 8 2
     addNumber 8 3
-    compareToNumber 2 1032840
+    compareToNumber 2 1032864
     jumpIfEqual regularWriteToConsole 0
     jump shiftConsoleBackLoop 0
 regularWriteToConsole
@@ -234,13 +234,13 @@ regularWriteToConsole
     moveToPointer 1 0
     return 0 0
 readFromDisk
-    pushNumber 1000008 0
+    pushNumber 1000032 0
     moveToPointer -5 0
-    moveNumber 1000016 0
+    moveNumber 1000040 0
     moveToPointer -4 0
-    moveNumber 1000024 0
+    moveNumber 1000048 0
     moveToPointer -3 0
-    moveNumber 1000032 0
+    moveNumber 1000056 0
     pushNumber 1 0
     moveToPointer 1 0
     jump readFromDiskLoop 0
@@ -252,13 +252,13 @@ readFromDiskLoop
 readFromDiskLoopExit
     return 0 0
 writeToDisk
-    pushNumber 1000008 0
+    pushNumber 1000032 0
     moveToPointer -5 0
-    moveNumber 1000016 0
-    moveToPointer -4 0
-    moveNumber 1000024 0
-    moveToPointer -3 0
     moveNumber 1000040 0
+    moveToPointer -4 0
+    moveNumber 1000048 0
+    moveToPointer -3 0
+    moveNumber 1000064 0
     pushNumber 1 0
     moveToPointer 1 0
     jump writeToDiskLoop 0
@@ -525,7 +525,7 @@ readFromDiskProgram
     move -4 3
     add 1 3
     call parse8ByteValue 0
-    moveNumber 500008 2
+    moveNumber 1000008 2
     moveNumber 0 3
     moveFromPointer 2 3
     addNumber 56 3
@@ -540,7 +540,7 @@ readFromDiskProgram
     addNumber 8 5
     moveToPointer 1 5
     addNumber 8 5
-    pushNumber 500016 0
+    pushNumber 1000016 0
     moveToPointer 5 6
     call readFromDisk 0
     addNumber -8 5
@@ -591,7 +591,7 @@ writeToDiskProgramBufferSizeLoopAdvanceBufferSize
     jump writeToDiskProgramBufferSizeLoop 0
 writeToDiskProgramBufferSizeLoopExit
     move 1 2
-    moveNumber 500008 5
+    moveNumber 1000008 5
     pushNumber 0 0
     moveFromPointer 5 6
     addNumber 128 6
@@ -608,7 +608,7 @@ writeToDiskProgramBufferSizeLoopExit
     add 7 11
     pushNumber 0 0
     pushNumber 0 0
-    pushNumber 500016 0
+    pushNumber 1000016 0
     pushNumber 24 0
     add 7 15
     moveToPointer 15 14

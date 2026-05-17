@@ -10,7 +10,7 @@ Using the computer means running one program, then another program, and so on. T
 <programDiskAddress> <programLength> <programInput>
 ```
 
-Values are typed as hex numbers and can omit leading zeros. Values are separated by spaces, and the final value is ended by Enter. The OS reads the program from disk into memory at `3000000`, calls it with `programInputStart` and `numProgramInputBytes`, then listens for the next command.
+Values are typed as hex numbers and can omit leading zeros. Values are separated by spaces, and the final value is ended by Enter. The OS reads the program from disk into memory at `2000000`, calls it with `programInputStart` and `numProgramInputBytes`, then listens for the next command.
 
 The disk currently includes two user programs. `readFromDiskProgram` reads bytes from disk and prints each 8-byte value as 16 hex characters. `writeToDiskProgram` parses hex input and writes those 8-byte values to disk. At the moment, `readFromDiskProgram` starts at disk address `10392` and is `984` bytes long. `writeToDiskProgram` starts at disk address `11376` and is `1584` bytes long.
 
@@ -51,7 +51,7 @@ Memory is byte-addressed and currently has `10000000` bytes. Machine values are 
 
 Each instruction is 24 bytes: 8 bytes for opcode, 8 bytes for operand 1, and 8 bytes for operand 2. Unused operands are `0`. When an instruction changes something, operand 2 is usually the destination.
 
-- `moveNumberToAddress 27 500000`: `memory[500000] = 27`
+- `moveNumberToAddress 27 123456`: `memory[123456] = 27`
 - `move 4 5`: `slot(5) = slot(4)`
 - `moveNumber 27 3`: `slot(3) = 27`
 - `moveFromPointer 3 4`: `slot(4) = memory[slot(3)]`
@@ -86,31 +86,31 @@ The current memory layout is:
     8448: print8ByteValue
     10392: readFromDiskProgram
     11376: writeToDiskProgram
-500000: instruction pointer
-500008: base pointer
-500016: stack top pointer
-500024..<1000000: operating system stack
-1000000: next transcript write address
-1000008: disk IO disk address
-1000016: disk IO memory address
-1000024: disk IO byte count
-1000032: disk IO read waiting flag
-1000040: disk IO write waiting flag
-1000048: keyboard waiting flag
-1000056: keyboard value
-1000064: next console write address
-1000072..<1032840: console, 128 by 32 cells, 8 bytes per cell
-2000000..<3000000: transcript
-3000000..<10000000: loaded user program, then user program stack
+500000..<1000000: operating system stack
+1000000: instruction pointer
+1000008: base pointer
+1000016: stack top pointer
+1000024: next transcript write address
+1000032: disk IO disk address
+1000040: disk IO memory address
+1000048: disk IO byte count
+1000056: disk IO read waiting flag
+1000064: disk IO write waiting flag
+1000072: keyboard waiting flag
+1000080: keyboard value
+1000088: next console write address
+1000096..<1032864: console, 128 by 32 cells, 8 bytes per cell
+1032864..<2000000: transcript
+2000000..<10000000: loaded user program, then user program stack
 ```
 
-Keyboard IO works by setting `1000048` to `1`. The keyboard hardware writes the pressed key to `1000056` and resets `1000048` to `0`.
+Keyboard IO works by setting `1000072` to `1`. The keyboard hardware writes the pressed key to `1000080` and resets `1000072` to `0`.
 
-To read from disk, write disk address to `1000008`, memory address to `1000016`, byte count to `1000024`, and set `1000032` to `1`. Disk hardware copies from disk to memory and resets `1000032` to `0`.
+To read from disk, write disk address to `1000032`, memory address to `1000040`, byte count to `1000048`, and set `1000056` to `1`. Disk hardware copies from disk to memory and resets `1000056` to `0`.
 
-To write to disk, write disk address to `1000008`, memory address to `1000016`, byte count to `1000024`, and set `1000040` to `1`. Disk hardware copies from memory to disk and resets `1000040` to `0`.
+To write to disk, write disk address to `1000032`, memory address to `1000040`, byte count to `1000048`, and set `1000064` to `1`. Disk hardware copies from memory to disk and resets `1000064` to `0`.
 
-Console IO uses the memory region starting at `1000072`. Each console cell is one 8-byte character value. `1000064` stores the next console write address.
+Console IO uses the memory region starting at `1000096`. Each console cell is one 8-byte character value. `1000088` stores the next console write address.
 
 Function calling works as follows. Arguments are pushed before `call`. The call instruction pushes the return address and old base pointer, then sets the base pointer to the new frame. Inside a function, non-negative slots are local variables. Negative slots refer to caller-provided values and call metadata: `slot(-1)` is old base pointer, `slot(-2)` is return address, and arguments live below those slots.
 
@@ -120,10 +120,10 @@ This is the operating system source from `os.txt`, written as compact pseudocode
 
 ```text
 initialize:
-    basePointer = 500024
-    stackPointer = 500024
-    consoleCursor = 1000072
-    transcriptCursor = 2000000
+    basePointer = 500000
+    stackPointer = 500000
+    consoleCursor = 1000096
+    transcriptCursor = 1032864
     jump terminal
 
 terminal:
@@ -149,7 +149,7 @@ terminal:
         programInputStart = inputStart + bytesRead1 + bytesRead2
         programInputLength = transcriptCursor - programInputStart
 
-        readFromDisk(programDiskAddress, 3000000, programLength)
+        readFromDisk(programDiskAddress, 2000000, programLength)
         program(programInputStart, programInputLength)
 
         writeToTranscript(Enter)
@@ -172,15 +172,15 @@ printTerminalPrefix() -> nothing:
     return
 
 listenForKeypress() -> character:
-    valueAt(1000048) = 1
+    valueAt(1000072) = 1
 
-    while valueAt(1000048) != 0:
+    while valueAt(1000072) != 0:
         continue
 
-    return valueAt(1000056)
+    return valueAt(1000080)
 
 removeLastCharacterFromTranscript() -> nothing:
-    if transcriptCursor <= 2000000:
+    if transcriptCursor <= 1032864:
         return
 
     transcriptCursor -= 8
@@ -189,7 +189,7 @@ removeLastCharacterFromTranscript() -> nothing:
     return
 
 removeLastCharacterFromConsole() -> nothing:
-    if consoleCursor <= 1000072:
+    if consoleCursor <= 1000096:
         return
 
     consoleCursor -= 8
@@ -212,9 +212,9 @@ writeToTranscript(character) -> nothing:
     return
 
 isConsoleAtLineEnd() -> 0 or 1:
-    lineEnd = 1001096
+    lineEnd = 1001120
 
-    while lineEnd <= 1032840:
+    while lineEnd <= 1032864:
         if consoleCursor == lineEnd:
             return 1
         lineEnd += 1024
@@ -222,12 +222,12 @@ isConsoleAtLineEnd() -> 0 or 1:
     return 0
 
 writeToConsole(character) -> nothing:
-    if consoleCursor == 1032840:
+    if consoleCursor == 1032864:
         consoleCursor -= 1024
-        readAddress = 1001096
-        writeAddress = 1000072
+        readAddress = 1001120
+        writeAddress = 1000096
 
-        while readAddress != 1032840:
+        while readAddress != 1032864:
             valueAt(writeAddress) = valueAt(readAddress)
             readAddress += 8
             writeAddress += 8
@@ -237,22 +237,22 @@ writeToConsole(character) -> nothing:
     return
 
 readFromDisk(diskAddress, memoryAddress, numBytes) -> nothing:
-    valueAt(1000008) = diskAddress
-    valueAt(1000016) = memoryAddress
-    valueAt(1000024) = numBytes
-    valueAt(1000032) = 1
+    valueAt(1000032) = diskAddress
+    valueAt(1000040) = memoryAddress
+    valueAt(1000048) = numBytes
+    valueAt(1000056) = 1
 
-    while valueAt(1000032) != 0:
+    while valueAt(1000056) != 0:
         continue
     return
 
 writeToDisk(diskAddress, memoryAddress, numBytes) -> nothing:
-    valueAt(1000008) = diskAddress
-    valueAt(1000016) = memoryAddress
-    valueAt(1000024) = numBytes
-    valueAt(1000040) = 1
+    valueAt(1000032) = diskAddress
+    valueAt(1000040) = memoryAddress
+    valueAt(1000048) = numBytes
+    valueAt(1000064) = 1
 
-    while valueAt(1000040) != 0:
+    while valueAt(1000064) != 0:
         continue
     return
 

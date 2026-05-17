@@ -24,142 +24,142 @@ def run_computer():
 
 # Helper that executes one CPU instruction
 def cpu_step(memory, equal_flag, greater_flag):
-    # Assumes control registers live at 500000, 500008, and 500016
+    # Assumes control registers live at 1000000, 1000008, and 1000016
     # Fetch one 24-byte instruction: opcode, operand1, operand2
-    instruction_pointer = asint(memory[500000 : 500000 + 8])
+    instruction_pointer = asint(memory[1000000 : 1000000 + 8])
     opcode = asint(memory[instruction_pointer : instruction_pointer + 8])
     operand1 = asint(memory[instruction_pointer + 8 : instruction_pointer + 16])
     operand2 = asint(memory[instruction_pointer + 16 : instruction_pointer + 24])
 
     # Slots are addressed relative to the current base pointer
-    base_pointer = asint(memory[500008 : 500008 + 8])
-    stack_top_pointer = asint(memory[500016 : 500016 + 8])
+    base_pointer = asint(memory[1000008 : 1000008 + 8])
+    stack_top_pointer = asint(memory[1000016 : 1000016 + 8])
 
     if opcode == 0:
         # idle: do nothing and keep pointing at this instruction
-        memory[500000 : 500000 + 8] = as8(instruction_pointer)
+        memory[1000000 : 1000000 + 8] = as8(instruction_pointer)
     elif opcode == 1:
         # moveNumberToAddress: value at address operand2 = operand1
         memory[operand2 : operand2 + 8] = as8(operand1)
-        memory[500000 : 500000 + 8] = as8(instruction_pointer + 24)
+        memory[1000000 : 1000000 + 8] = as8(instruction_pointer + 24)
     elif opcode == 2:
         # move: slot(operand2) = slot(operand1)
         memory[base_pointer + operand2 * 8 : base_pointer + operand2 * 8 + 8] = memory[
             base_pointer + operand1 * 8 : base_pointer + operand1 * 8 + 8
         ]
-        memory[500000 : 500000 + 8] = as8(instruction_pointer + 24)
+        memory[1000000 : 1000000 + 8] = as8(instruction_pointer + 24)
     elif opcode == 3:
         # moveNumber: slot(operand2) = operand1
         memory[base_pointer + operand2 * 8 : base_pointer + operand2 * 8 + 8] = as8(operand1)
-        memory[500000 : 500000 + 8] = as8(instruction_pointer + 24)
+        memory[1000000 : 1000000 + 8] = as8(instruction_pointer + 24)
     elif opcode == 4:
         # moveFromPointer: slot(operand2) = value at address slot(operand1)
         address = asint(memory[base_pointer + operand1 * 8 : base_pointer + operand1 * 8 + 8])
         memory[base_pointer + operand2 * 8 : base_pointer + operand2 * 8 + 8] = memory[address : address + 8]
-        memory[500000 : 500000 + 8] = as8(instruction_pointer + 24)
+        memory[1000000 : 1000000 + 8] = as8(instruction_pointer + 24)
     elif opcode == 5:
         # moveToPointer: value at address slot(operand2) = slot(operand1)
         address = asint(memory[base_pointer + operand2 * 8 : base_pointer + operand2 * 8 + 8])
         memory[address : address + 8] = memory[base_pointer + operand1 * 8 : base_pointer + operand1 * 8 + 8]
-        memory[500000 : 500000 + 8] = as8(instruction_pointer + 24)
+        memory[1000000 : 1000000 + 8] = as8(instruction_pointer + 24)
     elif opcode == 6:
         # add: slot(operand2) = slot(operand2) + slot(operand1)
         a = asint(memory[base_pointer + operand1 * 8 : base_pointer + operand1 * 8 + 8])
         b = asint(memory[base_pointer + operand2 * 8 : base_pointer + operand2 * 8 + 8])
         value = (a + b) % (2**64)
         memory[base_pointer + operand2 * 8 : base_pointer + operand2 * 8 + 8] = as8(value)
-        memory[500000 : 500000 + 8] = as8(instruction_pointer + 24)
+        memory[1000000 : 1000000 + 8] = as8(instruction_pointer + 24)
     elif opcode == 7:
         # addNumber: slot(operand2) = slot(operand2) + operand1
         value = asint(memory[base_pointer + operand2 * 8 : base_pointer + operand2 * 8 + 8])
         value = (value + operand1) % (2**64)
         memory[base_pointer + operand2 * 8 : base_pointer + operand2 * 8 + 8] = as8(value)
-        memory[500000 : 500000 + 8] = as8(instruction_pointer + 24)
+        memory[1000000 : 1000000 + 8] = as8(instruction_pointer + 24)
     elif opcode == 8:
         # subtract: slot(operand2) = slot(operand2) - slot(operand1)
         a = asint(memory[base_pointer + operand1 * 8 : base_pointer + operand1 * 8 + 8])
         b = asint(memory[base_pointer + operand2 * 8 : base_pointer + operand2 * 8 + 8])
         value = (b - a) % (2**64)
         memory[base_pointer + operand2 * 8 : base_pointer + operand2 * 8 + 8] = as8(value)
-        memory[500000 : 500000 + 8] = as8(instruction_pointer + 24)
+        memory[1000000 : 1000000 + 8] = as8(instruction_pointer + 24)
     elif opcode == 9:
         # shiftLeft: slot(operand2) = slot(operand2) << slot(operand1)
         a = asint(memory[base_pointer + operand1 * 8 : base_pointer + operand1 * 8 + 8])
         b = asint(memory[base_pointer + operand2 * 8 : base_pointer + operand2 * 8 + 8])
         value = (b << a) % (2**64)
         memory[base_pointer + operand2 * 8 : base_pointer + operand2 * 8 + 8] = as8(value)
-        memory[500000 : 500000 + 8] = as8(instruction_pointer + 24)
+        memory[1000000 : 1000000 + 8] = as8(instruction_pointer + 24)
     elif opcode == 10:
         # shiftLeftByNumber: slot(operand2) = slot(operand2) << operand1
         value = asint(memory[base_pointer + operand2 * 8 : base_pointer + operand2 * 8 + 8])
         value = (value << operand1) % (2**64)
         memory[base_pointer + operand2 * 8 : base_pointer + operand2 * 8 + 8] = as8(value)
-        memory[500000 : 500000 + 8] = as8(instruction_pointer + 24)
+        memory[1000000 : 1000000 + 8] = as8(instruction_pointer + 24)
     elif opcode == 11:
         # shiftRight: slot(operand2) = slot(operand2) >> slot(operand1)
         a = asint(memory[base_pointer + operand1 * 8 : base_pointer + operand1 * 8 + 8])
         b = asint(memory[base_pointer + operand2 * 8 : base_pointer + operand2 * 8 + 8])
         value = (b % (2**64)) >> a
         memory[base_pointer + operand2 * 8 : base_pointer + operand2 * 8 + 8] = as8(value)
-        memory[500000 : 500000 + 8] = as8(instruction_pointer + 24)
+        memory[1000000 : 1000000 + 8] = as8(instruction_pointer + 24)
     elif opcode == 12:
         # shiftRightByNumber: slot(operand2) = slot(operand2) >> operand1
         value = asint(memory[base_pointer + operand2 * 8 : base_pointer + operand2 * 8 + 8])
         value = (value % (2**64)) >> operand1
         memory[base_pointer + operand2 * 8 : base_pointer + operand2 * 8 + 8] = as8(value)
-        memory[500000 : 500000 + 8] = as8(instruction_pointer + 24)
+        memory[1000000 : 1000000 + 8] = as8(instruction_pointer + 24)
     elif opcode == 13:
         # bitwiseAnd: slot(operand2) = slot(operand2) & slot(operand1)
         a = asint(memory[base_pointer + operand1 * 8 : base_pointer + operand1 * 8 + 8])
         b = asint(memory[base_pointer + operand2 * 8 : base_pointer + operand2 * 8 + 8])
         value = a & b
         memory[base_pointer + operand2 * 8 : base_pointer + operand2 * 8 + 8] = as8(value)
-        memory[500000 : 500000 + 8] = as8(instruction_pointer + 24)
+        memory[1000000 : 1000000 + 8] = as8(instruction_pointer + 24)
     elif opcode == 14:
         # bitwiseAndWithNumber: slot(operand2) = slot(operand2) & operand1
         value = asint(memory[base_pointer + operand2 * 8 : base_pointer + operand2 * 8 + 8])
         value = value & operand1
         memory[base_pointer + operand2 * 8 : base_pointer + operand2 * 8 + 8] = as8(value)
-        memory[500000 : 500000 + 8] = as8(instruction_pointer + 24)
+        memory[1000000 : 1000000 + 8] = as8(instruction_pointer + 24)
     elif opcode == 15:
         # pushNumber: write operand1 at stack top, then advance stack top
         memory[stack_top_pointer : stack_top_pointer + 8] = as8(operand1)
         stack_top_pointer += 8
-        memory[500016 : 500016 + 8] = as8(stack_top_pointer)
-        memory[500000 : 500000 + 8] = as8(instruction_pointer + 24)
+        memory[1000016 : 1000016 + 8] = as8(stack_top_pointer)
+        memory[1000000 : 1000000 + 8] = as8(instruction_pointer + 24)
     elif opcode == 16:
         # pop: move stack top back by one slot
         stack_top_pointer -= 8
-        memory[500016 : 500016 + 8] = as8(stack_top_pointer)
-        memory[500000 : 500000 + 8] = as8(instruction_pointer + 24)
+        memory[1000016 : 1000016 + 8] = as8(stack_top_pointer)
+        memory[1000000 : 1000000 + 8] = as8(instruction_pointer + 24)
     elif opcode == 17:
         # compare: set ALU flags by comparing slot(operand1) to slot(operand2)
         a = asint(memory[base_pointer + operand1 * 8 : base_pointer + operand1 * 8 + 8])
         b = asint(memory[base_pointer + operand2 * 8 : base_pointer + operand2 * 8 + 8])
         equal_flag = 1 if a == b else 0
         greater_flag = 1 if a > b else 0
-        memory[500000 : 500000 + 8] = as8(instruction_pointer + 24)
+        memory[1000000 : 1000000 + 8] = as8(instruction_pointer + 24)
     elif opcode == 18:
         # compareToNumber: set ALU flags by comparing slot(operand1) to operand2
         value = asint(memory[base_pointer + operand1 * 8 : base_pointer + operand1 * 8 + 8])
         equal_flag = 1 if value == operand2 else 0
         greater_flag = 1 if value > operand2 else 0
-        memory[500000 : 500000 + 8] = as8(instruction_pointer + 24)
+        memory[1000000 : 1000000 + 8] = as8(instruction_pointer + 24)
     elif opcode == 19:
         # jumpIfEqual: jump to operand1 if the equal flag is set
         if equal_flag == 1:
-            memory[500000 : 500000 + 8] = as8(operand1)
+            memory[1000000 : 1000000 + 8] = as8(operand1)
         else:
-            memory[500000 : 500000 + 8] = as8(instruction_pointer + 24)
+            memory[1000000 : 1000000 + 8] = as8(instruction_pointer + 24)
     elif opcode == 20:
         # jumpIfGreater: jump to operand1 if the greater flag is set
         if greater_flag == 1:
-            memory[500000 : 500000 + 8] = as8(operand1)
+            memory[1000000 : 1000000 + 8] = as8(operand1)
         else:
-            memory[500000 : 500000 + 8] = as8(instruction_pointer + 24)
+            memory[1000000 : 1000000 + 8] = as8(instruction_pointer + 24)
     elif opcode == 21:
         # jump: set instruction pointer to operand1
-        memory[500000 : 500000 + 8] = as8(operand1)
+        memory[1000000 : 1000000 + 8] = as8(operand1)
     elif opcode == 22:
         # call: push return address and old base, set new base, then jump
         return_address = instruction_pointer + 24
@@ -169,29 +169,29 @@ def cpu_step(memory, equal_flag, greater_flag):
         # Push old base pointer
         memory[stack_top_pointer + 8 : stack_top_pointer + 16] = as8(old_base_pointer)
         # Set base pointer to the callee frame
-        memory[500008 : 500008 + 8] = as8(stack_top_pointer + 16)
+        memory[1000008 : 1000008 + 8] = as8(stack_top_pointer + 16)
         # Set stack top to the callee frame
-        memory[500016 : 500016 + 8] = as8(stack_top_pointer + 16)
+        memory[1000016 : 1000016 + 8] = as8(stack_top_pointer + 16)
         # Jump to callee
-        memory[500000 : 500000 + 8] = as8(operand1)
+        memory[1000000 : 1000000 + 8] = as8(operand1)
     elif opcode == 23:
         # return: restore return address, base pointer, and stack top
         return_address = asint(memory[base_pointer - 16 : base_pointer - 8])
         old_base_pointer = asint(memory[base_pointer - 8 : base_pointer])
         new_stack_top_pointer = base_pointer - 16
         # Restore old base pointer
-        memory[500008 : 500008 + 8] = as8(old_base_pointer)
+        memory[1000008 : 1000008 + 8] = as8(old_base_pointer)
         # Restore stack top to before return address
-        memory[500016 : 500016 + 8] = as8(new_stack_top_pointer)
+        memory[1000016 : 1000016 + 8] = as8(new_stack_top_pointer)
         # Jump back to caller
-        memory[500000 : 500000 + 8] = as8(return_address)
+        memory[1000000 : 1000000 + 8] = as8(return_address)
     return memory, equal_flag, greater_flag
 
 
 # Helper that copies a pending Tkinter keypress into keyboard IO memory
 def keyboard_step(memory, tkinter_window):
-    # Assumes keyboard IO uses 1000048 for waiting and 1000056 for key value
-    waiting_for_keypress = asint(memory[1000048 : 1000048 + 8])
+    # Assumes keyboard IO uses 1000072 for waiting and 1000080 for key value
+    waiting_for_keypress = asint(memory[1000072 : 1000072 + 8])
     # Tkinter event processing is expensive, so only poll it when the OS is listening for input
     if waiting_for_keypress != 1:
         return memory
@@ -201,39 +201,39 @@ def keyboard_step(memory, tkinter_window):
     tkinter_window["pending_key"] = None
 
     if waiting_for_keypress == 1 and key is not None:
-        memory[1000056 : 1000056 + 8] = as8(key)
-        memory[1000048 : 1000048 + 8] = [0] * 8
+        memory[1000080 : 1000080 + 8] = as8(key)
+        memory[1000072 : 1000072 + 8] = [0] * 8
     return memory
 
 
 # Helper that performs pending memory-mapped disk reads and writes
 def disk_step(memory, disk):
-    # Assumes disk IO uses 1000008 for disk address, 1000016 for memory address,
-    # 1000024 for byte count, 1000032 for read waiting, and 1000040 for write waiting
-    is_waiting_for_disk_read = asint(memory[1000032 : 1000032 + 8])
-    is_waiting_for_disk_write = asint(memory[1000040 : 1000040 + 8])
+    # Assumes disk IO uses 1000032 for disk address, 1000040 for memory address,
+    # 1000048 for byte count, 1000056 for read waiting, and 1000064 for write waiting
+    is_waiting_for_disk_read = asint(memory[1000056 : 1000056 + 8])
+    is_waiting_for_disk_write = asint(memory[1000064 : 1000064 + 8])
 
     if is_waiting_for_disk_read == 1:
-        disk_address = asint(memory[1000008 : 1000008 + 8])
-        memory_address = asint(memory[1000016 : 1000016 + 8])
-        num_bytes = asint(memory[1000024 : 1000024 + 8])
+        disk_address = asint(memory[1000032 : 1000032 + 8])
+        memory_address = asint(memory[1000040 : 1000040 + 8])
+        num_bytes = asint(memory[1000048 : 1000048 + 8])
         memory[memory_address : memory_address + num_bytes] = disk[disk_address : disk_address + num_bytes]
-        memory[1000032 : 1000032 + 8] = as8(0)
+        memory[1000056 : 1000056 + 8] = as8(0)
 
     if is_waiting_for_disk_write == 1:
-        disk_address = asint(memory[1000008 : 1000008 + 8])
-        memory_address = asint(memory[1000016 : 1000016 + 8])
-        num_bytes = asint(memory[1000024 : 1000024 + 8])
+        disk_address = asint(memory[1000032 : 1000032 + 8])
+        memory_address = asint(memory[1000040 : 1000040 + 8])
+        num_bytes = asint(memory[1000048 : 1000048 + 8])
         disk[disk_address : disk_address + num_bytes] = memory[memory_address : memory_address + num_bytes]
-        memory[1000040 : 1000040 + 8] = as8(0)
+        memory[1000064 : 1000064 + 8] = as8(0)
 
     return memory, disk
 
 
 # Helper that renders console memory into the Tkinter window
 def console_step(memory, tkinter_window):
-    # Assumes 1000064 stores the next console write address and 1000072 starts a 128 by 32 console
-    console_write_address = asint(memory[1000064 : 1000064 + 8])
+    # Assumes 1000088 stores the next console write address and 1000096 starts a 128 by 32 console
+    console_write_address = asint(memory[1000088 : 1000088 + 8])
     # Avoid redrawing the whole Tkinter console unless a console write changed it
     previous_console_write_address = tkinter_window.get("last_console_write_address")
     if previous_console_write_address == console_write_address:
@@ -250,7 +250,7 @@ def console_step(memory, tkinter_window):
     for y in range(32):
         row = []
         for x in range(128):
-            address = 1000072 + (y * 128 + x) * 8
+            address = 1000096 + (y * 128 + x) * 8
             value = asint(memory[address : address + 8])
             if value == 0:
                 value = ord(" ")
