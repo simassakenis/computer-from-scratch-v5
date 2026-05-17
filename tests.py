@@ -276,7 +276,7 @@ def test_parse_8_byte_value_accepts_short_delimited_input():
         computer.as8(15) + computer.as8(0) + computer.as8(0)
         + computer.as8(15) + computer.as8(0) + computer.as8(0)
         + computer.as8(15) + computer.as8(input_address) + computer.as8(0)
-        + computer.as8(22) + computer.as8(5616) + computer.as8(0)
+        + computer.as8(22) + computer.as8(5544) + computer.as8(0)
         + computer.as8(0) + computer.as8(0) + computer.as8(0)
     )
     memory[2000000 : 2000000 + len(program)] = program
@@ -318,7 +318,7 @@ def test_read_from_disk_program():
     disk = computer.assemble(open("os.txt").read())
     memory = [0] * 10000000
     memory[:500000] = disk[:500000]
-    command = f"{10392:x} {984:x} 0 8"
+    command = f"{10320:x} {984:x} 0 8"
     keys = [ord(character) for character in command] + [10]
     equal_flag = 0
     greater_flag = 0
@@ -353,7 +353,7 @@ def test_write_to_disk_program():
     memory[:500000] = disk[:500000]
     disk_address = 600000
     value = 0x6869
-    command = f"{11376:x} {1584:x} {disk_address:x} {value:x}"
+    command = f"{11304:x} {1584:x} {disk_address:x} {value:x}"
     keys = [ord(character) for character in command] + [10]
     equal_flag = 0
     greater_flag = 0
@@ -376,11 +376,11 @@ def test_readme_write_hi_program_example():
     memory = [0] * 10000000
     memory[:500000] = disk[:500000]
     write_command = (
-        "2c70 630 7a120 "
+        "2c28 630 7a120 "
         "f 68 0 "
-        "16 d20 0 "
+        "16 cd8 0 "
         "f 69 0 "
-        "16 d20 0 "
+        "16 cd8 0 "
         "17 0 0"
     )
     run_command = "7a120 78"
@@ -428,11 +428,11 @@ def test_write_to_transcript_enter_moves_console_to_next_line():
     memory[1000088 : 1000088 + 8] = computer.as8(1000096)
     program = (
         computer.as8(15) + computer.as8(ord("a")) + computer.as8(0)
-        + computer.as8(22) + computer.as8(3360) + computer.as8(0)
+        + computer.as8(22) + computer.as8(3288) + computer.as8(0)
         + computer.as8(15) + computer.as8(10) + computer.as8(0)
-        + computer.as8(22) + computer.as8(3360) + computer.as8(0)
+        + computer.as8(22) + computer.as8(3288) + computer.as8(0)
         + computer.as8(15) + computer.as8(ord("b")) + computer.as8(0)
-        + computer.as8(22) + computer.as8(3360) + computer.as8(0)
+        + computer.as8(22) + computer.as8(3288) + computer.as8(0)
         + computer.as8(0) + computer.as8(0) + computer.as8(0)
     )
     memory[2000000 : 2000000 + len(program)] = program
@@ -466,7 +466,7 @@ def test_write_to_transcript_scrolls_when_console_is_full():
             memory[address : address + 8] = computer.as8(ord("A") + y)
     program = (
         computer.as8(15) + computer.as8(ord("z")) + computer.as8(0)
-        + computer.as8(22) + computer.as8(3360) + computer.as8(0)
+        + computer.as8(22) + computer.as8(3288) + computer.as8(0)
         + computer.as8(0) + computer.as8(0) + computer.as8(0)
     )
     memory[2000000 : 2000000 + len(program)] = program

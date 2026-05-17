@@ -1,15 +1,10 @@
-initializeControlRegisters
+initialize
     moveNumberToAddress 500000 1000008
     moveNumberToAddress 500000 1000016
-initializeConsoleCursor
-    pushNumber 1000088 0
-    pushNumber 1000096 0
-    moveToPointer 1 0
-    jump initializeTranscriptCursor 0
-initializeTranscriptCursor
-    moveNumber 1000024 0
-    moveNumber 1032864 1
-    moveToPointer 1 0
+    moveNumberToAddress 1000096 1000088
+    moveNumberToAddress 1032864 1000024
+    pushNumber 1000024 0
+    pushNumber 0 0
     jump terminal 0
 terminal
     call printTerminalPrefix 0
