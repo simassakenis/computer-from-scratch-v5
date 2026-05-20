@@ -272,7 +272,7 @@ def tkinter_window_init():
         tkinter_window["root"],
         bg="white",
         fg="black",
-        font=("Menlo", 14),
+        font=("Menlo", 11),
         justify="left",
         anchor="nw",
     )
