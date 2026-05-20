@@ -251,7 +251,7 @@ def test_call_and_return():
 
 def test_power_on_copies_only_startup_bytes():
     # Power-on copies only the first 500000 bytes, leaving later disk bytes unloaded
-    disk = computer.assemble(open("terminalOS.txt").read())
+    disk = computer.assemble(open("os.txt").read())
     disk[500000 : 500000 + 8] = computer.as8(123)
     memory = [0] * 10000000
 
@@ -262,7 +262,7 @@ def test_power_on_copies_only_startup_bytes():
 
 def test_parse_8_byte_value_accepts_short_delimited_input():
     # Call parse8ByteValue directly and verify short hex values are left-padded and report consumed bytes
-    disk = computer.assemble(open("terminalOS.txt").read())
+    disk = computer.assemble(open("os.txt").read())
     memory = [0] * 10000000
     memory[:500000] = disk[:500000]
     memory[1000000:1000008] = computer.as8(2000000)
@@ -292,7 +292,7 @@ def test_parse_8_byte_value_accepts_short_delimited_input():
 
 def test_os_echoes_typed_character():
     # Simulate typing one key into the real terminal OS and verify it appears after the prompt
-    disk = computer.assemble(open("terminalOS.txt").read())
+    disk = computer.assemble(open("os.txt").read())
     memory = [0] * 10000000
     memory[:500000] = disk[:500000]
     keys = [ord("a")]
@@ -315,7 +315,7 @@ def test_os_echoes_typed_character():
 
 def test_read_from_disk_program():
     # Invoke readFromDiskProgram through the terminal and read the first 8 disk bytes
-    disk = computer.assemble(open("terminalOS.txt").read())
+    disk = computer.assemble(open("os.txt").read())
     memory = [0] * 10000000
     memory[:500000] = disk[:500000]
     command = f"{9792:x} {984:x} 0 8"
@@ -348,7 +348,7 @@ def test_read_from_disk_program():
 
 def test_write_to_disk_program():
     # Invoke writeToDiskProgram through the terminal and verify disk memory changes
-    disk = computer.assemble(open("terminalOS.txt").read())
+    disk = computer.assemble(open("os.txt").read())
     memory = [0] * 10000000
     memory[:500000] = disk[:500000]
     disk_address = 600000
@@ -372,7 +372,7 @@ def test_write_to_disk_program():
 
 def test_readme_write_hi_program_example():
     # Simulate the README flow: write a small program to disk, run it, and see hi
-    disk = computer.assemble(open("terminalOS.txt").read())
+    disk = computer.assemble(open("os.txt").read())
     memory = [0] * 10000000
     memory[:500000] = disk[:500000]
     write_command = (
@@ -418,7 +418,7 @@ def test_readme_write_hi_program_example():
 
 def test_write_to_transcript_enter_moves_console_to_next_line():
     # Call the OS print function directly and verify Enter advances the console cursor by spaces
-    disk = computer.assemble(open("terminalOS.txt").read())
+    disk = computer.assemble(open("os.txt").read())
     memory = [0] * 10000000
     memory[:500000] = disk[:500000]
     memory[1000000:1000008] = computer.as8(2000000)
@@ -452,7 +452,7 @@ def test_write_to_transcript_enter_moves_console_to_next_line():
 
 def test_write_to_transcript_scrolls_when_console_is_full():
     # Call the OS print function with the console cursor at the end and verify it scrolls up
-    disk = computer.assemble(open("terminalOS.txt").read())
+    disk = computer.assemble(open("os.txt").read())
     memory = [0] * 10000000
     memory[:500000] = disk[:500000]
     memory[1000000:1000008] = computer.as8(2000000)

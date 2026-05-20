@@ -2,9 +2,9 @@
 
 ![Computer diagram](diagram.jpeg)
 
-This project is an implementation of a basic simulated computer with a minimal operating system, terminalOS, from scratch in Python. When you run `python computer.py`, you will see a new window pop up that simulates the console screen of this computer, and you can use your keyboard to simulate keyboard input.
+This project is an implementation of a basic simulated computer with a minimal operating system from scratch in Python. When you run `python computer.py`, you will see a new window pop up that simulates the console screen of this computer, and you can use your keyboard to simulate keyboard input.
 
-The terminalOS operating system is just a basic terminal loop allowing you to run programs one at a time. Programs are identified by their address on disk and length, so for example typing `2640 3d8 0 8` and pressing Enter will make the computer run a program starting at address `2640` on disk and spanning `3d8` bytes, and with two input values: `0` and `8`. Values are space-separated hex numbers and can omit leading zeros.
+The operating system is just a basic terminal loop allowing you to run programs one at a time. Programs are identified by their address on disk and length, so for example typing `2640 3d8 0 8` and pressing Enter will make the computer run a program starting at address `2640` on disk and spanning `3d8` bytes, and with two input values: `0` and `8`. Values are space-separated hex numbers and can omit leading zeros.
 
 There are only two programs at first, `readFromDiskProgram` and `writeToDiskProgram`, but you can use `writeToDiskProgram` to write your own program to somewhere disk and then invoke it by its starting address and length. For example, to write a program that prints `hi`, type this into the terminal and press Enter:
 
@@ -120,7 +120,7 @@ Function calling works as follows. Arguments are pushed before `call`. The call 
 
 **OS Pseudocode**
 
-This is the operating system source from `terminalOS.txt`, written as compact pseudocode.
+This is the operating system source from `os.txt`, written as compact pseudocode.
 
 ```text
 initialize:
