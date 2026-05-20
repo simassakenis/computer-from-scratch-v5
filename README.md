@@ -1,4 +1,4 @@
-# computer-from-scratch-v5
+# Computer From Scratch
 
 ![Computer diagram](diagram.jpeg)
 
