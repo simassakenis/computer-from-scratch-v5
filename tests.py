@@ -416,8 +416,8 @@ def test_readme_write_hi_program_example():
     assert line4 == "> "
 
 
-def test_write_to_transcript_enter_moves_console_to_next_line():
-    # Call the OS print function directly and verify Enter advances the console cursor by spaces
+def test_write_to_transcript_enter_moves_display_to_next_line():
+    # Call the OS print function directly and verify Enter advances the display cursor by spaces
     disk = computer.assemble(open("os.txt").read())
     memory = [0] * 10000000
     memory[:500000] = disk[:500000]
@@ -450,8 +450,8 @@ def test_write_to_transcript_enter_moves_console_to_next_line():
     assert computer.asint(memory[1032880 : 1032880 + 8]) == ord("b")
 
 
-def test_write_to_transcript_scrolls_when_console_is_full():
-    # Call the OS print function with the console cursor at the end and verify it scrolls up
+def test_write_to_transcript_scrolls_when_display_is_full():
+    # Call the OS print function with the display cursor at the end and verify it scrolls up
     disk = computer.assemble(open("os.txt").read())
     memory = [0] * 10000000
     memory[:500000] = disk[:500000]
@@ -498,8 +498,8 @@ for test in [
     test_read_from_disk_program,
     test_write_to_disk_program,
     test_readme_write_hi_program_example,
-    test_write_to_transcript_enter_moves_console_to_next_line,
-    test_write_to_transcript_scrolls_when_console_is_full,
+    test_write_to_transcript_enter_moves_display_to_next_line,
+    test_write_to_transcript_scrolls_when_display_is_full,
 ]:
     test()
     print(f"success: {test.__name__}")

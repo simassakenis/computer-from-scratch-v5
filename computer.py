@@ -3,7 +3,7 @@ import tkinter as tk
 
 # Runs the simulated computer until stopped
 def run_computer():
-    # Tkinter receives keypresses and renders the memory-mapped console
+    # Tkinter receives keypresses and renders the memory-mapped display
     tkinter_window = tkinter_window_init()
 
     # Memory and disk are byte arrays: every element is one integer from 0 to 255
@@ -19,7 +19,7 @@ def run_computer():
         memory, equal_flag, greater_flag = cpu_step(memory, equal_flag, greater_flag)
         memory, disk = disk_step(memory, disk)
         memory = keyboard_step(memory, tkinter_window)
-        console_step(memory, tkinter_window)
+        display_step(memory, tkinter_window)
 
 
 # Helper that executes one CPU instruction
@@ -230,21 +230,21 @@ def keyboard_step(memory, tkinter_window):
     return memory
 
 
-# Helper that renders console memory into the Tkinter window
-def console_step(memory, tkinter_window):
-    # Assumes 1000088 stores the next console write address and 1000096 starts a 128 by 32 console
-    console_write_address = asint(memory[1000088 : 1000088 + 8])
-    # Avoid redrawing the whole Tkinter console unless a console write changed it
-    previous_console_write_address = tkinter_window.get("last_console_write_address")
-    if previous_console_write_address == console_write_address:
+# Helper that renders display memory into the Tkinter window
+def display_step(memory, tkinter_window):
+    # Assumes 1000088 stores the next display write address and 1000096 starts a 128 by 32 display
+    display_write_address = asint(memory[1000088 : 1000088 + 8])
+    # Avoid redrawing the whole Tkinter display unless a display write changed it
+    previous_display_write_address = tkinter_window.get("last_display_write_address")
+    if previous_display_write_address == display_write_address:
         return
     # Avoid redrawing when the new printed character is Space
-    if previous_console_write_address is not None and previous_console_write_address < console_write_address:
-        last_added_character = asint(memory[console_write_address - 8 : console_write_address])
+    if previous_display_write_address is not None and previous_display_write_address < display_write_address:
+        last_added_character = asint(memory[display_write_address - 8 : display_write_address])
         if last_added_character == 32:
-            tkinter_window["last_console_write_address"] = console_write_address
+            tkinter_window["last_display_write_address"] = display_write_address
             return
-    tkinter_window["last_console_write_address"] = console_write_address
+    tkinter_window["last_display_write_address"] = display_write_address
 
     rows = []
     for y in range(32):
@@ -261,7 +261,7 @@ def console_step(memory, tkinter_window):
     tkinter_window["root"].update_idletasks()
 
 
-# Helper that initializes a minimal Tkinter-backed console window
+# Helper that initializes a minimal Tkinter-backed display window
 def tkinter_window_init():
     tkinter_window = {}
     tkinter_window["pending_key"] = None

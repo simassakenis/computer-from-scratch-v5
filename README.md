@@ -2,7 +2,7 @@
 
 ![Computer diagram](diagram.jpeg)
 
-This project is an implementation of a basic simulated computer with a minimal operating system from scratch in Python. When you run `python computer.py`, you will see a new window pop up that simulates the console screen of this computer, and you can use your keyboard to simulate keyboard input.
+This project is an implementation of a basic simulated computer with a minimal operating system from scratch in Python. When you run `python computer.py`, you will see a new window pop up that simulates the display of this computer, and you can use your keyboard to simulate keyboard input.
 
 The operating system is just a basic terminal loop allowing you to run programs one at a time. Programs are identified by their address on disk and length, so for example typing `2640 3d8 0 8` and pressing Enter will make the computer run a program starting at address `2640` on disk and spanning `3d8` bytes, and with two input values: `0` and `8`. Values are space-separated hex numbers and can omit leading zeros.
 
@@ -39,7 +39,7 @@ The second command means:
 78    length of the new program
 ```
 
-After the second Enter, the console should show `hi` on the program output line, then a fresh `> ` prompt below it. The program above calls `writeToTranscript` at the hard-coded address `2760`, encoded as `ac8`.
+After the second Enter, the display should show `hi` on the program output line, then a fresh `> ` prompt below it. The program above calls `writeToTranscript` at the hard-coded address `2760`, encoded as `ac8`.
 
 At the moment, `readFromDiskProgram` starts at disk address `9792` and is `984` bytes long, and `writeToDiskProgram` starts at disk address `10776` and is `1584` bytes long.
 
@@ -102,8 +102,8 @@ The current memory layout is:
 1000064: disk IO write waiting flag
 1000072: keyboard waiting flag
 1000080: keyboard value
-1000088: next console write address
-1000096..<1032864: console, 128 by 32 cells, 8 bytes per cell
+1000088: next display write address
+1000096..<1032864: display, 128 by 32 cells, 8 bytes per cell
 1032864..<2000000: transcript
 2000000..<10000000: loaded user program, then user program stack
 ```
@@ -114,7 +114,7 @@ To read from disk, write disk address to `1000032`, memory address to `1000040`,
 
 To write to disk, write disk address to `1000032`, memory address to `1000040`, byte count to `1000048`, and set `1000064` to `1`. Disk hardware copies from memory to disk and resets `1000064` to `0`.
 
-Console IO uses the memory region starting at `1000096`. Each console cell is one 8-byte character value. `1000088` stores the next console write address.
+Display IO uses the memory region starting at `1000096`. Each display cell is one 8-byte character value. `1000088` stores the next display write address.
 
 Function calling works as follows. Arguments are pushed before `call`. The call instruction pushes the return address and old base pointer, then sets the base pointer to the new frame. Inside a function, non-negative slots are local variables. Negative slots refer to caller-provided values and call metadata: `slot(-1)` is old base pointer, `slot(-2)` is return address, and arguments live below those slots.
 
@@ -126,7 +126,7 @@ This is the operating system source from `os.txt`, written as compact pseudocode
 initialize:
     basePointer = 500000
     stackPointer = 500016
-    consoleCursor = 1000096
+    displayCursor = 1000096
     transcriptCursor = 1032864
     transcriptCursorPointer = 1000024
     inputStart = 0
@@ -180,15 +180,15 @@ removeLastCharacterFromTranscript() -> nothing:
 
     transcriptCursor -= 8
     valueAt(transcriptCursor) = 0
-    removeLastCharacterFromConsole()
+    removeLastCharacterFromDisplay()
     return
 
-removeLastCharacterFromConsole() -> nothing:
-    if consoleCursor <= 1000096:
+removeLastCharacterFromDisplay() -> nothing:
+    if displayCursor <= 1000096:
         return
 
-    consoleCursor -= 8
-    valueAt(consoleCursor) = 0
+    displayCursor -= 8
+    valueAt(displayCursor) = 0
     return
 
 writeToTranscript(character) -> nothing:
@@ -196,29 +196,29 @@ writeToTranscript(character) -> nothing:
     transcriptCursor += 8
 
     if character != Enter:
-        writeToConsole(character)
+        writeToDisplay(character)
         return
 
-    while isConsoleAtLineEnd() == 0:
-        writeToConsole(Space)
+    while isDisplayAtLineEnd() == 0:
+        writeToDisplay(Space)
 
-    writeToConsole(Space)
-    removeLastCharacterFromConsole()
+    writeToDisplay(Space)
+    removeLastCharacterFromDisplay()
     return
 
-isConsoleAtLineEnd() -> 0 or 1:
+isDisplayAtLineEnd() -> 0 or 1:
     lineEnd = 1001120
 
     while lineEnd <= 1032864:
-        if consoleCursor == lineEnd:
+        if displayCursor == lineEnd:
             return 1
         lineEnd += 1024
 
     return 0
 
-writeToConsole(character) -> nothing:
-    if consoleCursor == 1032864:
-        consoleCursor -= 1024
+writeToDisplay(character) -> nothing:
+    if displayCursor == 1032864:
+        displayCursor -= 1024
         readAddress = 1001120
         writeAddress = 1000096
 
@@ -227,8 +227,8 @@ writeToConsole(character) -> nothing:
             readAddress += 8
             writeAddress += 8
 
-    valueAt(consoleCursor) = character
-    consoleCursor += 8
+    valueAt(displayCursor) = character
+    displayCursor += 8
     return
 
 readFromDisk(diskAddress, memoryAddress, numBytes) -> nothing:
