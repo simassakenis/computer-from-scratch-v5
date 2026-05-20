@@ -4,12 +4,12 @@
 
 This project is an implementation of a basic simulated computer with a minimal operating system, terminalOS, from scratch in Python. When you run `python computer.py`, you will see a new window pop up that simulates the console screen of this computer, and you can use your keyboard to simulate keyboard input.
 
-The terminalOS operating system is just a basic terminal loop allowing you to run programs one at a time. Programs are identified by their address on disk and length, so for example typing `2850 3d8 0 8` and pressing Enter will make the computer run a program starting at address `2850` on disk and spanning `3d8` bytes, and with two input values: `0` and `8`. Values are space-separated hex numbers and can omit leading zeros.
+The terminalOS operating system is just a basic terminal loop allowing you to run programs one at a time. Programs are identified by their address on disk and length, so for example typing `2640 3d8 0 8` and pressing Enter will make the computer run a program starting at address `2640` on disk and spanning `3d8` bytes, and with two input values: `0` and `8`. Values are space-separated hex numbers and can omit leading zeros.
 
 There are only two programs at first, `readFromDiskProgram` and `writeToDiskProgram`, but you can use `writeToDiskProgram` to write your own program to somewhere disk and then invoke it by its starting address and length. For example, to write a program that prints `hi`, type this into the terminal and press Enter:
 
 ```text
-2c28 630 7a120 f 68 0 16 cd8 0 f 69 0 16 cd8 0 17 0 0
+2a18 630 7a120 f 68 0 16 ac8 0 f 69 0 16 ac8 0 17 0 0
 ```
 
 Then type this and press Enter to run it:
@@ -21,14 +21,14 @@ Then type this and press Enter to run it:
 The first command means:
 
 ```text
-2c28  address of writeToDiskProgram
+2a18  address of writeToDiskProgram
 630   length of writeToDiskProgram
 7a120 disk address to write the new program to
 
 f 68 0    pushNumber 104, ASCII h
-16 cd8 0 call writeToTranscript
+16 ac8 0 call writeToTranscript
 f 69 0    pushNumber 105, ASCII i
-16 cd8 0 call writeToTranscript
+16 ac8 0 call writeToTranscript
 17 0 0    return
 ```
 
@@ -39,9 +39,9 @@ The second command means:
 78    length of the new program
 ```
 
-After the second Enter, the console should show `hi` on the program output line, then a fresh `terminalOS % ` prompt below it. The program above calls `writeToTranscript` at the hard-coded address `3288`, encoded as `cd8`.
+After the second Enter, the console should show `hi` on the program output line, then a fresh `> ` prompt below it. The program above calls `writeToTranscript` at the hard-coded address `2760`, encoded as `ac8`.
 
-At the moment, `readFromDiskProgram` starts at disk address `10320` and is `984` bytes long, and `writeToDiskProgram` starts at disk address `11304` and is `1584` bytes long.
+At the moment, `readFromDiskProgram` starts at disk address `9792` and is `984` bytes long, and `writeToDiskProgram` starts at disk address `10776` and is `1584` bytes long.
 
 When powered on, the computer copies the first `500000` sacred bytes from disk into memory and executes instructions one by one forever, until the computer is powered off. The instruction pointer starts at `0`, so the CPU starts interpreting memory at address `0` as instructions. The command before Enter is interpreted as:
 
@@ -83,13 +83,13 @@ The current memory layout is:
 
 ```text
 0..<500000: operating system program
-    3288: writeToTranscript
-    4824: readFromDisk
-    5184: writeToDisk
-    5544: parse8ByteValue
-    8376: print8ByteValue
-    10320: readFromDiskProgram
-    11304: writeToDiskProgram
+    2760 (0xac8): writeToTranscript
+    4296 (0x10c8): readFromDisk
+    4656 (0x1230): writeToDisk
+    5016 (0x1398): parse8ByteValue
+    7848 (0x1ea8): print8ByteValue
+    9792 (0x2640): readFromDiskProgram
+    10776 (0x2a18): writeToDiskProgram
 500000..<1000000: operating system stack
 1000000: instruction pointer
 1000008: base pointer
@@ -162,18 +162,7 @@ terminal:
         jump terminal
 
 printTerminalPrefix() -> nothing:
-    writeToTranscript("t")
-    writeToTranscript("e")
-    writeToTranscript("r")
-    writeToTranscript("m")
-    writeToTranscript("i")
-    writeToTranscript("n")
-    writeToTranscript("a")
-    writeToTranscript("l")
-    writeToTranscript("O")
-    writeToTranscript("S")
-    writeToTranscript(" ")
-    writeToTranscript("%")
+    writeToTranscript(">")
     writeToTranscript(" ")
     return
 
