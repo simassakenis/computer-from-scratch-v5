@@ -4,12 +4,12 @@
 
 This project is an implementation of a basic simulated computer with a minimal operating system from scratch in Python. When you run `python computer.py`, you will see a new window pop up that simulates the display of this computer, and you can use your keyboard to simulate keyboard input.
 
-The operating system is just a basic terminal loop allowing you to run programs one at a time. Programs are identified by their address on disk and length, so for example typing `2640 3d8 0 8` and pressing Enter will make the computer run a program starting at address `2640` on disk and spanning `3d8` bytes, and with two input values: `0` and `8`. Values are space-separated hex numbers and can omit leading zeros.
+The operating system is just a basic terminal loop allowing you to run programs one at a time. Programs are identified by their address on disk and length, so for example typing `2628 3d8 0 8` and pressing Enter will make the computer run a program starting at address `2628` on disk and spanning `3d8` bytes, and with two input values: `0` and `8`. Values are space-separated hex numbers and can omit leading zeros.
 
 There are only two programs at first, `readFromDiskProgram` and `writeToDiskProgram`, but you can use `writeToDiskProgram` to write your own program to somewhere disk and then invoke it by its starting address and length. For example, to write a program that prints `hi`, type this into the terminal and press Enter:
 
 ```text
-2a18 630 7a120 f 68 0 16 ac8 0 f 69 0 16 ac8 0 17 0 0
+2a00 630 7a120 f 68 0 16 ab0 0 f 69 0 16 ab0 0 17 0 0
 ```
 
 Then type this and press Enter to run it:
@@ -21,14 +21,14 @@ Then type this and press Enter to run it:
 The first command means:
 
 ```text
-2a18  address of writeToDiskProgram
+2a00  address of writeToDiskProgram
 630   length of writeToDiskProgram
 7a120 disk address to write the new program to
 
 f 68 0    pushNumber 104, ASCII h
-16 ac8 0 call writeToTranscript
+16 ab0 0 call writeToTranscript
 f 69 0    pushNumber 105, ASCII i
-16 ac8 0 call writeToTranscript
+16 ab0 0 call writeToTranscript
 17 0 0    return
 ```
 
@@ -39,9 +39,9 @@ The second command means:
 78    length of the new program
 ```
 
-After the second Enter, the display should show `hi` on the program output line, then a fresh `$ ` prompt below it. The program above calls `writeToTranscript` at the hard-coded address `2760`, encoded as `ac8`.
+After the second Enter, the display should show `hi` on the program output line, then a fresh `$ ` prompt below it. The program above calls `writeToTranscript` at the hard-coded address `2736`, encoded as `ab0`.
 
-At the moment, `readFromDiskProgram` starts at disk address `9792` and is `984` bytes long, and `writeToDiskProgram` starts at disk address `10776` and is `1584` bytes long.
+At the moment, `readFromDiskProgram` starts at disk address `9768` and is `984` bytes long, and `writeToDiskProgram` starts at disk address `10752` and is `1584` bytes long.
 
 When powered on, the computer copies the first `500000` sacred bytes from disk into memory and executes instructions one by one forever, until the computer is powered off. The instruction pointer starts at `0`, so the CPU starts interpreting memory at address `0` as instructions. The command before Enter is interpreted as:
 
@@ -83,13 +83,13 @@ The current memory layout is:
 
 ```text
 0..<500000: operating system program
-    2760 (0xac8): writeToTranscript
-    4296 (0x10c8): readFromDisk
-    4656 (0x1230): writeToDisk
-    5016 (0x1398): parse8ByteValue
-    7848 (0x1ea8): print8ByteValue
-    9792 (0x2640): readFromDiskProgram
-    10776 (0x2a18): writeToDiskProgram
+    2736 (0xab0): writeToTranscript
+    4272 (0x10b0): readFromDisk
+    4632 (0x1218): writeToDisk
+    4992 (0x1380): parse8ByteValue
+    7824 (0x1e90): print8ByteValue
+    9768 (0x2628): readFromDiskProgram
+    10752 (0x2a00): writeToDiskProgram
 500000..<1000000: operating system stack
 1000000: instruction pointer
 1000008: base pointer
@@ -133,7 +133,8 @@ initialize:
     jump terminal
 
 terminal:
-    printTerminalPrefix()
+    writeToTranscript("$")
+    writeToTranscript(" ")
     inputStart = transcriptCursor
 
     while True:
@@ -160,11 +161,6 @@ terminal:
 
         writeToTranscript(Enter)
         jump terminal
-
-printTerminalPrefix() -> nothing:
-    writeToTranscript("$")
-    writeToTranscript(" ")
-    return
 
 listenForKeypress() -> character:
     valueAt(1000072) = 1

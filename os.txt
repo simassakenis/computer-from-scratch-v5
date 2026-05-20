@@ -7,7 +7,12 @@ initialize
     pushNumber 0 0
     jump terminal 0
 terminal
-    call printTerminalPrefix 0
+    pushNumber 36 0
+    call writeToTranscript 0
+    pop 0 0
+    pushNumber 32 0
+    call writeToTranscript 0
+    pop 0 0
     moveFromPointer 0 1
     jump terminalLoop 0
 terminalLoop
@@ -80,13 +85,6 @@ ifEnter
     call writeToTranscript 0
     pop 0 0
     jump terminal 0
-printTerminalPrefix
-    pushNumber 0 0
-    moveNumber 36 0
-    call writeToTranscript 0
-    moveNumber 32 0
-    call writeToTranscript 0
-    return 0 0
 listenForKeypress
     pushNumber 1000072 0
     pushNumber 1 0
