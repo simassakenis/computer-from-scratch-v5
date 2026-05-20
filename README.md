@@ -39,7 +39,7 @@ The second command means:
 78    length of the new program
 ```
 
-After the second Enter, the display should show `hi` on the program output line, then a fresh `> ` prompt below it. The program above calls `writeToTranscript` at the hard-coded address `2760`, encoded as `ac8`.
+After the second Enter, the display should show `hi` on the program output line, then a fresh `$ ` prompt below it. The program above calls `writeToTranscript` at the hard-coded address `2760`, encoded as `ac8`.
 
 At the moment, `readFromDiskProgram` starts at disk address `9792` and is `984` bytes long, and `writeToDiskProgram` starts at disk address `10776` and is `1584` bytes long.
 
@@ -162,7 +162,7 @@ terminal:
         jump terminal
 
 printTerminalPrefix() -> nothing:
-    writeToTranscript(">")
+    writeToTranscript("$")
     writeToTranscript(" ")
     return
 

@@ -307,10 +307,10 @@ def test_os_echoes_typed_character():
         memory, equal_flag, greater_flag = computer.cpu_step(memory, equal_flag, greater_flag)
 
     result = ""
-    for address in range(1000096, 1000096 + len("> a") * 8, 8):
+    for address in range(1000096, 1000096 + len("$ a") * 8, 8):
         result += chr(computer.asint(memory[address : address + 8]) & 255)
 
-    assert result == "> a"
+    assert result == "$ a"
 
 
 def test_read_from_disk_program():
@@ -331,19 +331,19 @@ def test_read_from_disk_program():
         memory, equal_flag, greater_flag = computer.cpu_step(memory, equal_flag, greater_flag)
 
     line1 = ""
-    for address in range(1000096, 1000096 + len("> " + command) * 8, 8):
+    for address in range(1000096, 1000096 + len("$ " + command) * 8, 8):
         line1 += chr(computer.asint(memory[address : address + 8]) & 255)
     line2 = ""
     for address in range(1001120, 1001120 + 16 * 8, 8):
         line2 += chr(computer.asint(memory[address : address + 8]) & 255)
     line3 = ""
-    for address in range(1002144, 1002144 + len("> ") * 8, 8):
+    for address in range(1002144, 1002144 + len("$ ") * 8, 8):
         line3 += chr(computer.asint(memory[address : address + 8]) & 255)
 
     assert keys == []
-    assert line1 == "> " + command
+    assert line1 == "$ " + command
     assert line2 == "0000000000000001"
-    assert line3 == "> "
+    assert line3 == "$ "
 
 
 def test_write_to_disk_program():
@@ -397,23 +397,23 @@ def test_readme_write_hi_program_example():
         memory, equal_flag, greater_flag = computer.cpu_step(memory, equal_flag, greater_flag)
 
     line1 = ""
-    for address in range(1000096, 1000096 + len("> " + write_command) * 8, 8):
+    for address in range(1000096, 1000096 + len("$ " + write_command) * 8, 8):
         line1 += chr(computer.asint(memory[address : address + 8]) & 255)
     line2 = ""
-    for address in range(1001120, 1001120 + len("> " + run_command) * 8, 8):
+    for address in range(1001120, 1001120 + len("$ " + run_command) * 8, 8):
         line2 += chr(computer.asint(memory[address : address + 8]) & 255)
     line3 = ""
     for address in range(1002144, 1002144 + len("hi") * 8, 8):
         line3 += chr(computer.asint(memory[address : address + 8]) & 255)
     line4 = ""
-    for address in range(1003168, 1003168 + len("> ") * 8, 8):
+    for address in range(1003168, 1003168 + len("$ ") * 8, 8):
         line4 += chr(computer.asint(memory[address : address + 8]) & 255)
 
     assert keys == []
-    assert line1 == "> " + write_command
-    assert line2 == "> " + run_command
+    assert line1 == "$ " + write_command
+    assert line2 == "$ " + run_command
     assert line3 == "hi"
-    assert line4 == "> "
+    assert line4 == "$ "
 
 
 def test_write_to_transcript_enter_moves_display_to_next_line():

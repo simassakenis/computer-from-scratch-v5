@@ -82,7 +82,7 @@ ifEnter
     jump terminal 0
 printTerminalPrefix
     pushNumber 0 0
-    moveNumber 62 0
+    moveNumber 36 0
     call writeToTranscript 0
     moveNumber 32 0
     call writeToTranscript 0
