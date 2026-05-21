@@ -2,27 +2,9 @@
 
 ![Computer diagram](diagram.jpeg)
 
-A minimal simulated computer implemented from scratch in Python (`computer.py`), plus a minimal operating system in ~600 lines of machine code (`os.txt`). See `demo.mp4` for how it can be used. Demo recording to be added.
+A minimal simulated computer implemented from scratch in Python (`computer.py`), plus a minimal operating system in ~600 lines of machine code (`os.txt`). See `demo.mp4` for how it can be used.
 
-When you run `python computer.py`, you will see a new window pop up that simulates the display of this computer, and you can use your keyboard to simulate keyboard input. You use this computer by running programs one at a time. Each program is identified by its address on disk and length, so for example typing `2628 3d8 0 8` and pressing Enter will make the computer run a program starting at address `2628` on disk and spanning `3d8` bytes, with two input values: `0` and `8`. Values are space-separated hex numbers and can omit leading zeros.
-
-There are only two programs at first, `readFromDiskProgram` and `writeToDiskProgram`, but you can use `writeToDiskProgram` to write your own program somewhere on disk and then invoke it by its starting address and length. For example, to write a program that prints `hi`, type this into the terminal and press Enter:
-
-```text
-$ 2a00 630 7a120 f 68 0 16 ab0 0 f 69 0 16 ab0 0 17 0 0
-```
-
-In this command, `2a00` is the address of `writeToDiskProgram`, `630` is its length, `7a120` is the disk address to write the new program to, and `f 68 0 16 ab0 0 f 69 0 16 ab0 0 17 0 0` is the machine code of the new program.
-
-Then type this and press Enter to run it:
-
-```text
-$ 7a120 78
-```
-
-In this command, `7a120` is the disk address of the new program, and `78` is the length of the new program.
-
-The full interaction should look like this:
+Running `python computer.py` will open a new window that simulates the display of this computer, and you can use your keyboard to simulate keyboard input. You use this computer by running programs one at a time. Each program is identified by its address on disk and length, so for example typing `2628 3d8 0 8` and Enter will make the computer run the program stored at address `2628` on disk, spanning `3d8` bytes, with two input values: `0` and `8` (all numbers are written in hex and can omit leading zeros). At first, the only programs are `readFromDiskProgram(diskAddress, numBytes)` and `writeToDiskProgram(diskAddress, values...)`, but you can use the `writeToDiskProgram` program to write new programs to disk. For example, here is how you would write a program that prints `"hi"` to disk and then invoke it:
 
 ```text
 $ 2a00 630 7a120 f 68 0 16 ab0 0 f 69 0 16 ab0 0 17 0 0
@@ -31,15 +13,15 @@ hi
 $ 
 ```
 
+The first line runs `writeToDiskProgram`: `2a00` is its address, `630` is its length, `7a120` is where to write on disk, and the rest is the machine code for printing `"hi"`. The second line runs the new program: `7a120` is its address on disk, and `78` is its length.
+
 ## What is a computer?
 
-This computer consists of memory, a CPU, disk, keyboard, and display.
+This computer consists of memory, CPU, disk, keyboard, and display.
 
-Memory is byte-addressed and currently has `10000000` bytes. Machine values are 8 bytes. When powered on, the computer copies the first `500000` sacred bytes from disk into memory.
+Memory is an electrical circuit that stores a bunch of bytes and allows reading from and writing to any address. In this computer, memory is `10000000` bytes long. Machine values are 8 bytes.
 
-CPU is a hardwired electric circuit that implements some predefined set of instructions. The instruction pointer is a special value at memory address `1000000`; it tells the CPU which instruction to execute next. The base pointer is a special value at memory address `1000008`; most instructions operate on slots relative to this pointer. A slot is an 8-byte value at an offset from the current base pointer: `slot(0)` is at the base pointer, `slot(1)` is 8 bytes after it, and `slot(-1)` is 8 bytes before it.
-
-Each instruction is 24 bytes: 8 bytes for opcode, 8 bytes for operand 1, and 8 bytes for operand 2. Unused operands are `0`. When an instruction changes something, operand 2 is usually the destination.
+CPU is an electrical circuit with hardwired logic that implements some predefined set of instructions. A CPU uses a few special values in memory for control: the instruction pointer at address `1000000` tells the CPU which instruction to execute next, the base pointer at address `1000008` tells the CPU where the current stack frame starts, and the stack top pointer at address `1000016` tells the CPU where the next pushed value should go. Most instructions operate on slots relative to the base pointer. A slot is an 8-byte value at an offset from the current base pointer: `slot(0)` is at the base pointer, `slot(1)` is 8 bytes after it, and `slot(-1)` is 8 bytes before it. Each instruction is 24 bytes: 8 bytes for opcode, 8 bytes for operand 1, and 8 bytes for operand 2. Unused operands are `0`. When an instruction changes something, operand 2 is usually the destination.
 
 | Opcode | Instruction | Effect |
 | --- | --- | --- |
@@ -70,13 +52,7 @@ Each instruction is 24 bytes: 8 bytes for opcode, 8 bytes for operand 1, and 8 b
 
 The CPU executes instructions one by one forever, until the computer is powered off. The instruction pointer starts at `0`, so the CPU starts interpreting memory at address `0` as instructions.
 
-Disk stores the operating system and user programs. The OS reads a program from disk into memory at `2000000`, calls it with `programInputStart` and `numProgramInputBytes`, then listens for the next command. The command before Enter is interpreted as:
-
-```text
-<programDiskAddress> <programLength> <programInput>
-```
-
-To read from disk, write disk address to `1000032`, memory address to `1000040`, byte count to `1000048`, and set `1000056` to `1`. Disk hardware copies from disk to memory and resets `1000056` to `0`. To write to disk, use the same address/count registers and set `1000064` to `1`; disk hardware copies from memory to disk and resets `1000064` to `0`.
+Disk stores a large array of bytes. To read from disk, write disk address to `1000032`, memory address to `1000040`, byte count to `1000048`, and set `1000056` to `1`. Disk hardware copies from disk to memory and resets `1000056` to `0`. To write to disk, use the same address/count registers and set `1000064` to `1`; disk hardware copies from memory to disk and resets `1000064` to `0`.
 
 Keyboard input works by setting `1000072` to `1`. The keyboard hardware writes the pressed key to `1000080` and resets `1000072` to `0`.
 
@@ -115,9 +91,13 @@ Function calling works as follows. Arguments are pushed before `call`. The call 
 
 ## What is an operating system?
 
-On its own, a computer can execute instructions from address `0` onwards forever, so it will run whatever program you load there. To make it continually usable, we can load a meta-program: an operating system that lets us execute other programs.
+On its own, a computer can execute instructions from address `0` onwards forever, so it will run whatever program you load there. To make it continually usable, we can load a meta-program: an operating system that lets us execute other programs. In this operating system, the command before Enter is interpreted as:
 
-This is the operating system source from `os.txt`, written as compact pseudocode.
+```text
+<programDiskAddress> <programLength> <programInput>
+```
+
+This is the operating system source from `os.txt`, written as compact pseudocode:
 
 ```text
 initialize:
@@ -405,6 +385,6 @@ writeToDiskProgram(programInputStart, numProgramInputBytes) -> nothing:
     return
 ```
 
-## Inspiration
+## Acknowledgments
 
 This project was heavily inspired by Ben Eater and Andrej Karpathy. It is a personal project purely for educational purposes.
