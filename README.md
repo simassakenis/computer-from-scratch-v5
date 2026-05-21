@@ -2,82 +2,85 @@
 
 ![Computer diagram](diagram.jpeg)
 
-This project is an implementation of a basic simulated computer with a minimal operating system from scratch in Python. When you run `python computer.py`, you will see a new window pop up that simulates the display of this computer, and you can use your keyboard to simulate keyboard input.
+A minimal simulated computer implemented from scratch in Python (`computer.py`), plus a minimal operating system in ~600 lines of machine code (`os.txt`). See `demo.mp4` for how it can be used. Demo recording to be added.
 
-The operating system is just a basic terminal loop allowing you to run programs one at a time. Programs are identified by their address on disk and length, so for example typing `2628 3d8 0 8` and pressing Enter will make the computer run a program starting at address `2628` on disk and spanning `3d8` bytes, and with two input values: `0` and `8`. Values are space-separated hex numbers and can omit leading zeros.
+When you run `python computer.py`, you will see a new window pop up that simulates the display of this computer, and you can use your keyboard to simulate keyboard input. You use this computer by running programs one at a time. Each program is identified by its address on disk and length, so for example typing `2628 3d8 0 8` and pressing Enter will make the computer run a program starting at address `2628` on disk and spanning `3d8` bytes, with two input values: `0` and `8`. Values are space-separated hex numbers and can omit leading zeros.
 
-There are only two programs at first, `readFromDiskProgram` and `writeToDiskProgram`, but you can use `writeToDiskProgram` to write your own program to somewhere disk and then invoke it by its starting address and length. For example, to write a program that prints `hi`, type this into the terminal and press Enter:
+There are only two programs at first, `readFromDiskProgram` and `writeToDiskProgram`, but you can use `writeToDiskProgram` to write your own program somewhere on disk and then invoke it by its starting address and length. For example, to write a program that prints `hi`, type this into the terminal and press Enter:
 
 ```text
-2a00 630 7a120 f 68 0 16 ab0 0 f 69 0 16 ab0 0 17 0 0
+$ 2a00 630 7a120 f 68 0 16 ab0 0 f 69 0 16 ab0 0 17 0 0
 ```
+
+In this command, `2a00` is the address of `writeToDiskProgram`, `630` is its length, `7a120` is the disk address to write the new program to, and `f 68 0 16 ab0 0 f 69 0 16 ab0 0 17 0 0` is the machine code of the new program.
 
 Then type this and press Enter to run it:
 
 ```text
-7a120 78
+$ 7a120 78
 ```
 
-The first command means:
+In this command, `7a120` is the disk address of the new program, and `78` is the length of the new program.
+
+The full interaction should look like this:
 
 ```text
-2a00  address of writeToDiskProgram
-630   length of writeToDiskProgram
-7a120 disk address to write the new program to
-
-f 68 0    pushNumber 104, ASCII h
-16 ab0 0 call writeToTranscript
-f 69 0    pushNumber 105, ASCII i
-16 ab0 0 call writeToTranscript
-17 0 0    return
+$ 2a00 630 7a120 f 68 0 16 ab0 0 f 69 0 16 ab0 0 17 0 0
+$ 7a120 78
+hi
+$ 
 ```
 
-The second command means:
+## What is a computer?
 
-```text
-7a120 disk address of the new program
-78    length of the new program
-```
+This computer consists of memory, a CPU, disk, keyboard, and display.
 
-After the second Enter, the display should show `hi` on the program output line, then a fresh `$ ` prompt below it. The program above calls `writeToTranscript` at the hard-coded address `2736`, encoded as `ab0`.
+Memory is byte-addressed and currently has `10000000` bytes. Machine values are 8 bytes. When powered on, the computer copies the first `500000` sacred bytes from disk into memory.
 
-At the moment, `readFromDiskProgram` starts at disk address `9768` and is `984` bytes long, and `writeToDiskProgram` starts at disk address `10752` and is `1584` bytes long.
+CPU is a hardwired electric circuit that implements some predefined set of instructions. The instruction pointer is a special value at memory address `1000000`; it tells the CPU which instruction to execute next. The base pointer is a special value at memory address `1000008`; most instructions operate on slots relative to this pointer. A slot is an 8-byte value at an offset from the current base pointer: `slot(0)` is at the base pointer, `slot(1)` is 8 bytes after it, and `slot(-1)` is 8 bytes before it.
 
-When powered on, the computer copies the first `500000` sacred bytes from disk into memory and executes instructions one by one forever, until the computer is powered off. The instruction pointer starts at `0`, so the CPU starts interpreting memory at address `0` as instructions. The command before Enter is interpreted as:
+Each instruction is 24 bytes: 8 bytes for opcode, 8 bytes for operand 1, and 8 bytes for operand 2. Unused operands are `0`. When an instruction changes something, operand 2 is usually the destination.
+
+| Opcode | Instruction | Effect |
+| --- | --- | --- |
+| `0` | `idle` | Do nothing and keep the instruction pointer on this instruction. |
+| `1` | `moveNumberToAddress 27 123456` | `memory[123456] = 27` |
+| `2` | `move 4 5` | `slot(5) = slot(4)` |
+| `3` | `moveNumber 27 3` | `slot(3) = 27` |
+| `4` | `moveFromPointer 3 4` | `slot(4) = memory[slot(3)]` |
+| `5` | `moveToPointer 3 4` | `memory[slot(4)] = slot(3)` |
+| `6` | `add 3 4` | `slot(4) = slot(4) + slot(3)` |
+| `7` | `addNumber 27 3` | `slot(3) = slot(3) + 27` |
+| `8` | `subtract 3 4` | `slot(4) = slot(4) - slot(3)` |
+| `9` | `shiftLeft 3 4` | `slot(4) = slot(4) << slot(3)` |
+| `10` | `shiftLeftByNumber 27 4` | `slot(4) = slot(4) << 27` |
+| `11` | `shiftRight 3 4` | `slot(4) = slot(4) >> slot(3)` |
+| `12` | `shiftRightByNumber 27 4` | `slot(4) = slot(4) >> 27` |
+| `13` | `bitwiseAnd 3 4` | `slot(4) = slot(4) & slot(3)` |
+| `14` | `bitwiseAndWithNumber 15 4` | `slot(4) = slot(4) & 15` |
+| `15` | `pushNumber 27` | Push `27` to the stack. |
+| `16` | `pop` | Move the stack top back by one slot. |
+| `17` | `compare 3 4` | Compare `slot(3)` to `slot(4)` and set ALU flags. |
+| `18` | `compareToNumber 3 67` | Compare `slot(3)` to `67` and set ALU flags. |
+| `19` | `jumpIfEqual 4000000` | Jump if the equal flag is set. |
+| `20` | `jumpIfGreater 4000000` | Jump if the greater flag is set. |
+| `21` | `jump 4000000` | Jump unconditionally. |
+| `22` | `call 4000000` | Push return address and old base pointer, set a new base pointer, then jump. |
+| `23` | `return` | Restore stack top, base pointer, and instruction pointer. |
+
+The CPU executes instructions one by one forever, until the computer is powered off. The instruction pointer starts at `0`, so the CPU starts interpreting memory at address `0` as instructions.
+
+Disk stores the operating system and user programs. The OS reads a program from disk into memory at `2000000`, calls it with `programInputStart` and `numProgramInputBytes`, then listens for the next command. The command before Enter is interpreted as:
 
 ```text
 <programDiskAddress> <programLength> <programInput>
 ```
 
-The OS reads the program from disk into memory at `2000000`, calls it with `programInputStart` and `numProgramInputBytes`, then listens for the next command.
+To read from disk, write disk address to `1000032`, memory address to `1000040`, byte count to `1000048`, and set `1000056` to `1`. Disk hardware copies from disk to memory and resets `1000056` to `0`. To write to disk, use the same address/count registers and set `1000064` to `1`; disk hardware copies from memory to disk and resets `1000064` to `0`.
 
-Memory is byte-addressed and currently has `10000000` bytes. Machine values are 8 bytes. Most instructions operate on slots. A slot is an 8-byte value at an offset from the current base pointer: `slot(0)` is at the base pointer, `slot(1)` is 8 bytes after it, and `slot(-1)` is 8 bytes before it.
+Keyboard input works by setting `1000072` to `1`. The keyboard hardware writes the pressed key to `1000080` and resets `1000072` to `0`.
 
-Each instruction is 24 bytes: 8 bytes for opcode, 8 bytes for operand 1, and 8 bytes for operand 2. Unused operands are `0`. When an instruction changes something, operand 2 is usually the destination.
-
-- `moveNumberToAddress 27 123456`: `memory[123456] = 27`
-- `move 4 5`: `slot(5) = slot(4)`
-- `moveNumber 27 3`: `slot(3) = 27`
-- `moveFromPointer 3 4`: `slot(4) = memory[slot(3)]`
-- `moveToPointer 3 4`: `memory[slot(4)] = slot(3)`
-- `add 3 4`: `slot(4) = slot(4) + slot(3)`
-- `addNumber 27 3`: `slot(3) = slot(3) + 27`
-- `subtract 3 4`: `slot(4) = slot(4) - slot(3)`
-- `shiftLeft 3 4`: `slot(4) = slot(4) << slot(3)`
-- `shiftLeftByNumber 27 4`: `slot(4) = slot(4) << 27`
-- `shiftRight 3 4`: `slot(4) = slot(4) >> slot(3)`
-- `shiftRightByNumber 27 4`: `slot(4) = slot(4) >> 27`
-- `bitwiseAnd 3 4`: `slot(4) = slot(4) & slot(3)`
-- `bitwiseAndWithNumber 15 4`: `slot(4) = slot(4) & 15`
-- `pushNumber 27`: push `27` to the stack
-- `pop`: move the stack top back by one slot
-- `compare 3 4`: compare `slot(3)` to `slot(4)` and set ALU flags
-- `compareToNumber 3 67`: compare `slot(3)` to `67` and set ALU flags
-- `jumpIfEqual 4000000`: jump if the equal flag is set
-- `jumpIfGreater 4000000`: jump if the greater flag is set
-- `jump 4000000`: jump unconditionally
-- `call 4000000`: push return address and old base pointer, set a new base pointer, then jump
-- `return`: restore stack top, base pointer, and instruction pointer
+Display output uses the memory region starting at `1000096`. Each display cell is one 8-byte character value, and `1000088` stores the next display write address.
 
 The current memory layout is:
 
@@ -108,17 +111,11 @@ The current memory layout is:
 2000000..<10000000: loaded user program, then user program stack
 ```
 
-Keyboard IO works by setting `1000072` to `1`. The keyboard hardware writes the pressed key to `1000080` and resets `1000072` to `0`.
-
-To read from disk, write disk address to `1000032`, memory address to `1000040`, byte count to `1000048`, and set `1000056` to `1`. Disk hardware copies from disk to memory and resets `1000056` to `0`.
-
-To write to disk, write disk address to `1000032`, memory address to `1000040`, byte count to `1000048`, and set `1000064` to `1`. Disk hardware copies from memory to disk and resets `1000064` to `0`.
-
-Display IO uses the memory region starting at `1000096`. Each display cell is one 8-byte character value. `1000088` stores the next display write address.
-
 Function calling works as follows. Arguments are pushed before `call`. The call instruction pushes the return address and old base pointer, then sets the base pointer to the new frame. Inside a function, non-negative slots are local variables. Negative slots refer to caller-provided values and call metadata: `slot(-1)` is old base pointer, `slot(-2)` is return address, and arguments live below those slots.
 
-**OS Pseudocode**
+## What is an operating system?
+
+On its own, a computer can execute instructions from address `0` onwards forever, so it will run whatever program you load there. To make it continually usable, we can load a meta-program: an operating system that lets us execute other programs.
 
 This is the operating system source from `os.txt`, written as compact pseudocode.
 
@@ -407,3 +404,7 @@ writeToDiskProgram(programInputStart, numProgramInputBytes) -> nothing:
     writeToDisk(diskAddress, bufferStart, bufferSize)
     return
 ```
+
+## Inspiration
+
+This project was heavily inspired by Ben Eater and Andrej Karpathy. It is a personal project purely for educational purposes.
