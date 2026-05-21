@@ -19,9 +19,11 @@ The first line runs `writeToDiskProgram`: `2a00` is its address, `630` is its le
 
 This computer consists of memory, CPU, disk, keyboard, and display.
 
-Memory is an electrical circuit that stores a bunch of bytes and allows reading from and writing to any address. In this computer, memory is `10000000` bytes long. Machine values are 8 bytes.
+Memory is an electrical circuit that stores an array of bytes and allows reading from and writing to any address. In this computer, memory is `10000000` bytes long and represented by a Python integer array (1 value = 1 byte).
 
-CPU is an electrical circuit with hardwired logic that implements some predefined set of instructions. A CPU uses a few special values in memory for control: the instruction pointer at address `1000000` tells the CPU which instruction to execute next, the base pointer at address `1000008` tells the CPU where the current stack frame starts, and the stack top pointer at address `1000016` tells the CPU where the next pushed value should go. Most instructions operate on slots relative to the base pointer. A slot is an 8-byte value at an offset from the current base pointer: `slot(0)` is at the base pointer, `slot(1)` is 8 bytes after it, and `slot(-1)` is 8 bytes before it. Each instruction is 24 bytes: 8 bytes for opcode, 8 bytes for operand 1, and 8 bytes for operand 2. Unused operands are `0`. When an instruction changes something, operand 2 is usually the destination.
+CPU is an electrical circuit with hardwired logic that implements some predefined set of instructions. It uses a few special values in memory for control: the 8-byte value from address `1000000` is the "instruction pointer" which tells the CPU from where in memory to take the next instruction; the 8-byte value from address `1000008` is the "base pointer" which tells the CPU where the current stack frame starts; and the 8-byte value from address `1000016` is the "stack top pointer" which tells the CPU where the next pushed value should go (stack is used by functions for storing local variables). Most instructions operate on slots relative to the base pointer. A slot is an 8-byte value at an offset from the current base pointer: `slot(0)` is at the base pointer, `slot(1)` is 8 bytes after it, and `slot(-1)` is 8 bytes before it. Arguments are pushed before `call`; `call` pushes the return address and old base pointer, then sets the base pointer to the new frame. Inside a function, non-negative slots are local variables, `slot(-1)` is old base pointer, `slot(-2)` is return address, and arguments live below those slots. Each instruction is 24 bytes: 8 bytes for opcode, 8 bytes for operand 1, and 8 bytes for operand 2. Unused operands are `0`. When an instruction changes something, operand 2 is usually the destination.
+
+Here is the full instruction set used in this computer:
 
 | Opcode | Instruction | Effect |
 | --- | --- | --- |
@@ -52,13 +54,13 @@ CPU is an electrical circuit with hardwired logic that implements some predefine
 
 The CPU executes instructions one by one forever, until the computer is powered off. The instruction pointer starts at `0`, so the CPU starts interpreting memory at address `0` as instructions.
 
-Disk stores a large array of bytes. To read from disk, write disk address to `1000032`, memory address to `1000040`, byte count to `1000048`, and set `1000056` to `1`. Disk hardware copies from disk to memory and resets `1000056` to `0`. To write to disk, use the same address/count registers and set `1000064` to `1`; disk hardware copies from memory to disk and resets `1000064` to `0`.
+Disk is a hardware device that stores a large array of bytes and supports read and write operations. To interact with disk, the computer uses a contract based on special memory locations. To read from disk, write disk address to `1000032`, memory address to `1000040`, byte count to `1000048`, and set `1000056` to `1`. Disk hardware copies from disk to memory and resets `1000056` to `0`. To write to disk, write disk address to `1000032`, memory address to `1000040`, byte count to `1000048`, and set `1000064` to `1`. Disk hardware copies from memory to disk and resets `1000064` to `0`.
 
-Keyboard input works by setting `1000072` to `1`. The keyboard hardware writes the pressed key to `1000080` and resets `1000072` to `0`.
+Keyboard input uses a similar contract: set `1000072` to `1`, then keyboard hardware writes the pressed key to `1000080` and resets `1000072` to `0`.
 
-Display output uses the memory region starting at `1000096`. Each display cell is one 8-byte character value, and `1000088` stores the next display write address.
+Display also uses a memory contract: the display starts at `1000096`, each display cell is one 8-byte character value, and `1000088` stores the next display write address.
 
-The current memory layout is:
+As shown in the diagram above, the current memory layout is:
 
 ```text
 0..<500000: operating system program
@@ -87,17 +89,11 @@ The current memory layout is:
 2000000..<10000000: loaded user program, then user program stack
 ```
 
-Function calling works as follows. Arguments are pushed before `call`. The call instruction pushes the return address and old base pointer, then sets the base pointer to the new frame. Inside a function, non-negative slots are local variables. Negative slots refer to caller-provided values and call metadata: `slot(-1)` is old base pointer, `slot(-2)` is return address, and arguments live below those slots.
-
 ## What is an operating system?
 
-On its own, a computer can execute instructions from address `0` onwards forever, so it will run whatever program you load there. To make it continually usable, we can load a meta-program: an operating system that lets us execute other programs. In this operating system, the command before Enter is interpreted as:
+On its own, a computer can execute instructions from address `0` onwards forever, so it will run whatever program you load there. To make it continually usable, we can load a meta-program: an operating system that lets us execute other programs.
 
-```text
-<programDiskAddress> <programLength> <programInput>
-```
-
-This is the operating system source from `os.txt`, written as compact pseudocode:
+Here is the full operating system written in pseudocode (`os.txt` is the same thing but written in CPU instructions):
 
 ```text
 initialize:
