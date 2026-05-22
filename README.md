@@ -2,9 +2,26 @@
 
 ![Computer diagram](diagram.jpeg)
 
-A minimal simulated computer implemented from scratch in Python (`computer.py`), plus a minimal operating system in ~600 lines of machine code (`os.txt`). See `demo.mp4` for how it can be used.
+A minimal simulated computer implemented from scratch in Python (`computer.py`), plus a minimal operating system in ~600 lines of machine code (`os.txt`).
 
-Running `python computer.py` will open a new window that simulates the display of this computer, and you can use your keyboard to simulate keyboard input. You use this computer by running programs one at a time. Each program is identified by its address on disk and length, so for example typing `2628 3d8 0 8` and Enter will make the computer run the program stored at address `2628` on disk, spanning `3d8` bytes, with two input values: `0` and `8` (all numbers are written in hex and can omit leading zeros). At first, the only programs are `readFromDiskProgram(diskAddress, numBytes)` and `writeToDiskProgram(diskAddress, values...)`, but you can use the `writeToDiskProgram` program to write new programs to disk. For example, here is how you would write a program that prints `"hi"` to disk and then invoke it:
+All this computer does is it runs a simple command-line loop: it listens for keyboard input, interprets it as a program invocation, runs that program, and listens for your next input. You run a program, get a result, run another program, get another result, and so on. This simple model makes it possible to remove a great deal of complexity that most operating systems have. For example, there are:
+
+- no processes
+- no threads
+- no scheduler
+- no context switching
+- no locks
+- no race conditions
+- no page tables
+- no virtual memory
+- no privilege levels
+- no kernel mode
+- no user mode
+- no system calls
+
+Running `python computer.py` will open a new window that simulates the display of this computer, and you can use your keyboard to simulate keyboard input.
+
+Each program is identified by its address on disk and length, so for example typing `2628 3d8 0 8` and Enter will make the computer run the program stored at address `2628` on disk, spanning `3d8` bytes, with two input values: `0` and `8` (all numbers are written in hex and can omit leading zeros). At first, the only programs are `readFromDiskProgram(diskAddress, numBytes)` and `writeToDiskProgram(diskAddress, values...)`, but you can use the `writeToDiskProgram` program to write new programs to disk. For example, here is how you would write a program that prints `"hi"` to disk and then invoke it:
 
 ```text
 $ 2a00 630 7a120 f 68 0 16 ab0 0 f 69 0 16 ab0 0 17 0 0
@@ -14,6 +31,8 @@ $
 ```
 
 The first line runs `writeToDiskProgram`: `2a00` is its address, `630` is its length, `7a120` is where to write on disk, and the rest is the machine code for printing `"hi"`. The second line runs the new program: `7a120` is its address on disk, and `78` is its length.
+
+See `demo.mp4` for how it can be used.
 
 ## What is a computer?
 
