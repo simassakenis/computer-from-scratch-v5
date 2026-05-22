@@ -19,7 +19,7 @@ The first line runs `writeToDiskProgram`: `2a00` is its address, `630` is its le
 
 This computer consists of memory, CPU, disk, keyboard, and display.
 
-Memory is an electrical circuit that stores an array of bytes and allows reading from and writing to any address. In this computer, memory is `10000000` bytes long and represented by a Python integer array (1 value = 1 byte).
+Memory is an array of bytes that supports reads and writes at any address. It is implemented by electrical circuits that store values while powered and lose them when unplugged. In this computer, memory is `10000000` bytes long.
 
 CPU is an electrical circuit with hardwired logic that implements some predefined set of instructions. It uses a few special values in memory for control: the 8-byte value from address `1000000` is the "instruction pointer" which tells the CPU from where in memory to take the next instruction; the 8-byte value from address `1000008` is the "base pointer" which tells the CPU where the current stack frame starts; and the 8-byte value from address `1000016` is the "stack top pointer" which tells the CPU where the next pushed value should go (stack is used by functions for storing local variables). Most instructions operate on slots relative to the base pointer. A slot is an 8-byte value at an offset from the current base pointer: `slot(0)` is at the base pointer, `slot(1)` is 8 bytes after it, and `slot(-1)` is 8 bytes before it. Arguments are pushed before `call`; `call` pushes the return address and old base pointer, then sets the base pointer to the new frame. Inside a function, non-negative slots are local variables, `slot(-1)` is old base pointer, `slot(-2)` is return address, and arguments live below those slots. Each instruction is 24 bytes: 8 bytes for opcode, 8 bytes for operand 1, and 8 bytes for operand 2. Unused operands are `0`. When an instruction changes something, operand 2 is usually the destination.
 
@@ -54,13 +54,13 @@ Here is the full instruction set used in this computer:
 
 The CPU executes instructions one by one forever, until the computer is powered off. The instruction pointer starts at `0`, so the CPU starts interpreting memory at address `0` as instructions.
 
-Disk is a hardware device that stores a large array of bytes and supports read and write operations. To interact with disk, the computer uses a contract based on special memory locations. To read from disk, write disk address to `1000032`, memory address to `1000040`, byte count to `1000048`, and set `1000056` to `1`. Disk hardware copies from disk to memory and resets `1000056` to `0`. To write to disk, write disk address to `1000032`, memory address to `1000040`, byte count to `1000048`, and set `1000064` to `1`. Disk hardware copies from memory to disk and resets `1000064` to `0`.
+Disk is like memory, but persistent: it is an array of bytes that supports reads and writes at any address, and keeps its values when unplugged. To interact with disk, the computer uses a contract based on special memory locations. To read from disk, write the disk address to `1000032`, the memory address (where to write the result) to `1000040`, byte count to `1000048`, and set `1000056` to `1`, and disk hardware will copy from disk to memory and reset `1000056` to `0`. To write to disk, write the disk address to `1000032`, the memory address (where to read from) to `1000040`, byte count to `1000048`, and set `1000064` to `1`, and disk hardware will copy from memory to disk and reset `1000064` to `0`.
 
 Keyboard input uses a similar contract: set `1000072` to `1`, then keyboard hardware writes the pressed key to `1000080` and resets `1000072` to `0`.
 
-Display also uses a memory contract: the display starts at `1000096`, each display cell is one 8-byte character value, and `1000088` stores the next display write address.
+Display also uses a memory contract: it interprets `32768` bytes starting from address `1000096` as "cells" of a 128-by-32 display, where each cell is an 8-byte value representing an ASCII character (e.g. `97` renders as `a`). The 8-byte value at `1000088` stores the next display write address.
 
-As shown in the diagram above, the current memory layout is:
+The current memory layout is as follows (also shown in the diagram above):
 
 ```text
 0..<500000: operating system program
@@ -91,9 +91,7 @@ As shown in the diagram above, the current memory layout is:
 
 ## What is an operating system?
 
-On its own, a computer can execute instructions from address `0` onwards forever, so it will run whatever program you load there. To make it continually usable, we can load a meta-program: an operating system that lets us execute other programs.
-
-Here is the full operating system written in pseudocode (`os.txt` is the same thing but written in CPU instructions):
+On its own, a computer can execute instructions from address `0` onwards forever, so it will run whatever program you load into memory. To make it continually usable, we can load a meta-program: an operating system that lets us execute other programs. The operating system in `os.txt` behaves like a basic terminal: it listens for keyboard input, interprets it as a program invocation when Enter is pressed, runs that program (which may then print to the display), and then listens for keyboard input again, and so on. Here is the full operating system written in pseudocode (I first wrote this pseudocode and then wrote `os.txt` by just translating it to machine instructions):
 
 ```text
 initialize:
@@ -101,7 +99,6 @@ initialize:
     stackPointer = 500016
     displayCursor = 1000096
     transcriptCursor = 1032864
-    transcriptCursorPointer = 1000024
     inputStart = 0
     jump terminal
 
@@ -130,7 +127,7 @@ terminal:
         programInputLength = transcriptCursor - programInputStart
 
         readFromDisk(programDiskAddress, 2000000, programLength)
-        program(programInputStart, programInputLength)
+        programAt2000000(programInputStart, programInputLength)
 
         writeToTranscript(Enter)
         jump terminal
@@ -383,4 +380,6 @@ writeToDiskProgram(programInputStart, numProgramInputBytes) -> nothing:
 
 ## Acknowledgments
 
-This project was heavily inspired by Ben Eater and Andrej Karpathy. It is a personal project purely for educational purposes.
+This project was inspired by the [8-bit breadboard computer series](https://eater.net/8bit) by Ben Eater and by projects like [microgpt](https://gist.github.com/karpathy/8627fe009c40f57531cb18360106ce95) and [llm.c](https://github.com/karpathy/llm.c) by Andrej Karpathy.
+
+This is a personal project built for educational purposes only.
