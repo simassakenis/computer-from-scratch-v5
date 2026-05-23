@@ -4,23 +4,9 @@
 
 A minimal simulated computer implemented from scratch in Python (`computer.py`), plus a minimal operating system in ~600 lines of machine code (`os.txt`).
 
-The operating system runs a simple command-line loop: it listens for keyboard input, interprets it as a program invocation, runs that program, and then listens for the next input. You run a program, get a result, run another program, get another result, and so on. Programs run one at a time, are assumed to be trusted, and are written directly in machine instructions. This strips away a huge amount of complexity -- there are:
+The operating system runs a simple command-line loop: it listens for keyboard input, interprets it as a program invocation, runs that program, and then listens for the next input. You run a program, get a result, run another program, get another result, and so on. This simple setup removes a great deal of complexity that real-world systems need to have. There are no processes. No threads. No scheduling. No concurrency. No locks. No race conditions. No page tables. No virtual memory. No privilege levels. No system calls. No device drivers. No programming languages. No compilers.
 
-- no processes;
-- no threads;
-- no scheduling;
-- no concurrency;
-- no locks;
-- no race conditions;
-- no page tables;
-- no virtual memory;
-- no privilege levels;
-- no system calls;
-- no device drivers;
-- no programming languages;
-- no compilers.
-
-See `demo.mp4` for how it can be used. Running `python computer.py` opens a window that simulates the display of this computer, and you can use your keyboard to simulate keyboard input. Programs are identified by their address on disk and length. You invoke a program by typing something like `2628 3d8 0 8` and Enter, which means "run the program stored at address `2628` on disk, spanning `3d8` bytes, with two input values: `0` and `8`" (numbers are written in hex). At first, the only programs are `readFromDiskProgram(diskAddress, numBytes)` and `writeToDiskProgram(diskAddress, values...)`, but you can use the write program to write new programs to disk. In the demo, I first run the read program, then use the write program to write a program that prints `hi`, and finally run a program that computes the n-th Fibonacci number.
+See `demo.mp4` for how this computer can be used. Running `python computer.py` will open a window that simulates the display of this computer, and you can use your keyboard to simulate keyboard input. You invoke a program by typing something like `2628 3d8 0 8` and Enter, which means "run the program stored at address `2628` on disk, spanning `3d8` bytes, with two input values: `0` and `8`" (numbers are written in hex). At first, the only programs are `readFromDiskProgram(diskAddress, numBytes)` and `writeToDiskProgram(diskAddress, values...)`, but you can use the write program to write new programs to disk. In the demo, I first run the read program, then use the write program to write a program that prints `hi`, and finally run a program that computes the n-th Fibonacci number.
 
 ## What is a computer?
 
