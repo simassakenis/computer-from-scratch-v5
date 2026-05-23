@@ -6,19 +6,19 @@ A minimal simulated computer implemented from scratch in Python (`computer.py`),
 
 The operating system runs a simple command-line loop: it listens for keyboard input, interprets it as a program invocation, runs that program, and then listens for the next input. You run a program, get a result, run another program, get another result, and so on. This simple setup removes a great deal of complexity that real-world operating systems need to have. There are no processes. No threads. No scheduling. No concurrency. No locks. No race conditions. No page tables. No virtual memory. No privilege levels. No system calls. No device drivers. No programming languages. No compilers.
 
-See [demo.mov](demo.mov) for how this computer can be used. Running `python computer.py` will open a window that simulates the display of this computer, and you can use your keyboard to simulate keyboard input. Programs are invoked by typing something like `26d0 3d8 0 8` and Enter, which means "run the program stored at address `26d0` on disk, spanning `3d8` bytes, with two input values: `0` and `8`" (numbers are written in hex). At first, the only programs are `readFromDiskProgram(diskAddress, numBytes)` and `writeToDiskProgram(diskAddress, values...)`, but you can use the write program to write new programs to disk. In the demo, I first run the read program to read the first 8 bytes from disk, then write a new program that prints `hi` and invoke it, and finally write a new Fibonacci program and invoke it with `n=1`, `n=2`, `n=3`, `n=4`, `n=5`, and `n=9` (`n=9` outputs `22`, which is `34` in hex).
+See [demo.mov](demo.mov) for how this computer can be used. Running `python computer.py` will open a window that simulates the display of this computer, and you can use your keyboard to simulate keyboard input. Programs are invoked by typing something like `26d0 3d8 0 8` and Enter, which means "run the program stored at address `26d0` on disk, spanning `3d8` bytes, with two input values: `0` and `8`" (numbers are written in hex). At first, the only programs are `readFromDiskProgram(diskAddress, numBytes)` and `writeToDiskProgram(diskAddress, values...)`, but you can use the write program to write new programs to disk. In the demo, I first run the read program to read the first 8 bytes from disk, then write a new program that prints `hi` and invoke it, and finally write a new program that computes the n-th Fibonacci number and invoke it with `n=1`, `n=2`, `n=3`, `n=4`, `n=5`, and `n=9` (e.g., `n=9` outputs `22`, which is `34` in hex).
 
 ## What is a computer?
 
 This computer consists of 5 basic components: memory, CPU, disk, keyboard, and display.
 
-Memory is the component that stores values while the computer is powered on. It stores an array of bytes and allows read and write operations at any address. In this computer, memory is `10000000` bytes long.
+Memory is the component that stores values while the computer is powered on. It is organized as an array of bytes and allows read and write operations at any address. In this computer, memory is `10000000` bytes long.
 
-CPU is the component that performs operations on memory values. The set of supported operations, or "machine instructions", is fixed ahead of time, and the CPU has hard-wired circuits implementing each of them. The CPU interprets memory values as instructions and executes them one by one until powered off. At each clock cycle, it looks up the instruction pointer (a special 8-byte value at address `1000000` that stores the address of the next instruction), fetches the next instruction, executes it, and updates the instruction pointer. To store local variables, the CPU uses a dedicated "stack" space in memory where values are pushed and popped. The base pointer (a special 8-byte value at address `1000008`) stores where the current function's stack space starts, and the stack pointer (a special 8-byte value at address `1000016`) stores where it ends. Many instructions operate on slots, where `slot(n)` is the 8-byte value at `basePointer + n * 8`. By convention, `slot(0)`, `slot(1)`, ... are used for local variables, and `slot(-3)`, `slot(-4)`, ... are used for function arguments and return values (`slot(-1)` and `slot(-2)` are reserved for the old base pointer and return address). Here is the full instruction set used in this computer:
+CPU is the component that performs operations on memory values. The set of supported operations, or "machine instructions", is fixed ahead of time, and the CPU has hard-wired circuits implementing each of them. The CPU interprets memory values as instructions and executes them one by one until powered off. At each clock cycle, it looks up the instruction pointer (a special 8-byte value at address `1000000` that stores the address of the next instruction), fetches the next instruction, executes it, and updates the instruction pointer. To store local variables, the CPU uses a dedicated "stack" space in memory where values are pushed and popped. The base pointer (a special 8-byte value at address `1000008`) stores where the current function's stack space starts, and the stack pointer (a special 8-byte value at address `1000016`) stores where it ends. Many instructions operate on slots, where `slot(n)` is the 8-byte value at `basePointer + n * 8`. By convention, `slot(0)`, `slot(1)`, ... are used for local variables, and `slot(-3)`, `slot(-4)`, ... are used for function arguments and return values (`slot(-1)` and `slot(-2)` are reserved for the old base pointer and return address). Each instruction is encoded as 24 bytes: 8 for the opcode, 8 for the first operand, and 8 for the second operand, padded with 0s for unused operands. Here is the full instruction set used in this computer:
 
 | Opcode | Instruction | Effect |
 | --- | --- | --- |
-| `0` | `idle` | Do nothing and keep the instruction pointer on this instruction. |
+| `0` | `idle` | Do nothing and keep instruction pointer unchanged. |
 | `1` | `moveNumberToAddress 27 123456` | `memory[123456] = 27` |
 | `2` | `move 4 5` | `slot(5) = slot(4)` |
 | `3` | `moveNumber 27 3` | `slot(3) = 27` |
@@ -43,11 +43,11 @@ CPU is the component that performs operations on memory values. The set of suppo
 | `22` | `call 4000000` | Push return address and old base pointer, set a new base pointer, then jump. |
 | `23` | `return` | Restore stack top, base pointer, and instruction pointer. |
 
-Disk is the component that stores values persistently. Like memory, it is an array of bytes that supports reads and writes at any address, but it keeps its values when unplugged. To interact with disk, the computer uses a contract based on special memory locations. To read from disk, write the disk address to `1000024`, the memory address (where to write the result) to `1000032`, byte count to `1000040`, and set `1000048` to `1`, and disk hardware will copy these bytes from disk to memory and reset `1000048` to `0`. To write to disk, write the disk address to `1000024`, the memory address (where to read from) to `1000032`, byte count to `1000040`, and set `1000056` to `1`, and disk hardware will copy these bytes from memory to disk and reset `1000056` to `0`.
+Disk is the component that stores values persistently. Like memory, it is an array of bytes that supports reads and writes at any address, but it keeps its values when unplugged. Disk interaction happens through a contract based on special memory locations. To read from disk, write the disk address to `1000024`, the memory address (where to write the result) to `1000032`, byte count to `1000040`, and set `1000048` to `1`, and disk hardware will copy these bytes from disk to memory and reset `1000048` to `0`. To write to disk, write the disk address to `1000024`, the memory address (where to read from) to `1000032`, byte count to `1000040`, and set `1000056` to `1`, and disk hardware will copy these bytes from memory to disk and reset `1000056` to `0`.
 
-Keyboard is the component that provides input. It uses a similar contract: when `1000064` is set to `1`, keyboard hardware writes the pressed key to `1000072` and resets `1000064` to `0`.
+Keyboard is the component that provides input. It uses a similar contract: set the 8-byte value at `1000064` to `1` to signal "listening for keypress", and keyboard hardware will write the pressed key to `1000072` and reset `1000064` to `0`.
 
-Display is the component that shows output. It also uses a memory contract: it interprets `32768` bytes starting from address `1000096` as "cells" of a 128-by-32 cell display, where each cell is an 8-byte value representing an ASCII character (e.g. `97` renders as `a`). The 8-byte value at `1000088` stores the next display write address.
+Display is the component that shows output. It also uses a memory contract: it interprets `32768` bytes starting from address `1000096` as "cells" of a 128-by-32 cell display, where each cell is an 8-byte value representing an ASCII character (e.g. `97` renders as `a`).
 
 The current memory layout is as follows (also shown in the diagram above):
 
@@ -88,7 +88,6 @@ initialize:
     stackPointer = 500016
     displayCursor = 1000096
     transcriptCursor = 1032864
-    inputStart = 0
     jump commandLine
 
 commandLine:
@@ -180,6 +179,11 @@ writeToDisplay(character) -> nothing:
         while readAddress != 1032864:
             valueAt(writeAddress) = valueAt(readAddress)
             readAddress += 8
+            writeAddress += 8
+
+        // clear last display row
+        while writeAddress != 1032864:
+            valueAt(writeAddress) = 0
             writeAddress += 8
 
     valueAt(displayCursor) = character
