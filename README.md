@@ -89,9 +89,9 @@ initialize:
     displayCursor = 1000096
     transcriptCursor = 1032864
     inputStart = 0
-    jump terminal
+    jump commandLine
 
-terminal:
+commandLine:
     writeToTranscript("$")
     writeToTranscript(" ")
     inputStart = transcriptCursor
@@ -119,7 +119,7 @@ terminal:
         programAt2000000(programInputStart, programInputLength)
 
         writeToTranscript(Enter)
-        jump terminal
+        jump commandLine
 
 listenForKeypress() -> character:
     valueAt(1000064) = 1

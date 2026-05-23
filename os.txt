@@ -5,8 +5,8 @@ initialize
     moveNumberToAddress 1032864 1000080
     pushNumber 1000080 0
     pushNumber 0 0
-    jump terminal 0
-terminal
+    jump commandLine 0
+commandLine
     pushNumber 36 0
     call writeToTranscript 0
     pop 0 0
@@ -14,8 +14,8 @@ terminal
     call writeToTranscript 0
     pop 0 0
     moveFromPointer 0 1
-    jump terminalLoop 0
-terminalLoop
+    jump commandLineLoop 0
+commandLineLoop
     pushNumber 0 0
     call listenForKeypress 0
     compareToNumber 2 8
@@ -28,18 +28,18 @@ ifBackspace
     jumpIfGreater ifNonEmptyInput 0
     pop 0 0
     pop 0 0
-    jump terminalLoop 0
+    jump commandLineLoop 0
 ifNonEmptyInput
     call removeLastCharacterFromTranscript 0
     pop 0 0
     pop 0 0
-    jump terminalLoop 0
+    jump commandLineLoop 0
 elseBackspace
     call writeToTranscript 0
     compareToNumber 2 10
     jumpIfEqual ifEnter 0
     pop 0 0
-    jump terminalLoop 0
+    jump commandLineLoop 0
 ifEnter
     pushNumber 0 0
     pushNumber 0 0
@@ -84,7 +84,7 @@ ifEnter
     pushNumber 10 0
     call writeToTranscript 0
     pop 0 0
-    jump terminal 0
+    jump commandLine 0
 listenForKeypress
     pushNumber 1000064 0
     pushNumber 1 0

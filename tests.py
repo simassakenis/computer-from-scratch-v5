@@ -291,7 +291,7 @@ def test_parse_8_byte_value_accepts_short_delimited_input():
 
 
 def test_os_echoes_typed_character():
-    # Simulate typing one key into the real terminal OS and verify it appears after the prompt
+    # Simulate typing one key into the real command-line OS and verify it appears after the prompt
     disk = computer.assemble(open("os.txt").read())
     memory = [0] * 10000000
     memory[:500000] = disk[:500000]
@@ -314,7 +314,7 @@ def test_os_echoes_typed_character():
 
 
 def test_read_from_disk_program():
-    # Invoke readFromDiskProgram through the terminal and read the first 8 disk bytes
+    # Invoke readFromDiskProgram through the command line and read the first 8 disk bytes
     disk = computer.assemble(open("os.txt").read())
     memory = [0] * 10000000
     memory[:500000] = disk[:500000]
@@ -347,7 +347,7 @@ def test_read_from_disk_program():
 
 
 def test_write_to_disk_program():
-    # Invoke writeToDiskProgram through the terminal and verify disk memory changes
+    # Invoke writeToDiskProgram through the command line and verify disk memory changes
     disk = computer.assemble(open("os.txt").read())
     memory = [0] * 10000000
     memory[:500000] = disk[:500000]
