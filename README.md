@@ -6,7 +6,7 @@ A minimal simulated computer implemented from scratch in Python (`computer.py`),
 
 The operating system runs a simple command-line loop: it listens for keyboard input, interprets it as a program invocation, runs that program, and then listens for the next input. You run a program, get a result, run another program, get another result, and so on. This simple setup removes a great deal of complexity that real-world systems need to have. There are no processes. No threads. No scheduling. No concurrency. No locks. No race conditions. No page tables. No virtual memory. No privilege levels. No system calls. No device drivers. No programming languages. No compilers.
 
-See `demo.mp4` for how this computer can be used. Running `python computer.py` will open a window that simulates the display of this computer, and you can use your keyboard to simulate keyboard input. Programs are invoked by typing something like `2628 3d8 0 8` and Enter, which means "run the program stored at address `2628` on disk, spanning `3d8` bytes, with two input values: `0` and `8`" (numbers are written in hex). At first, the only programs are `readFromDiskProgram(diskAddress, numBytes)` and `writeToDiskProgram(diskAddress, values...)`, but you can use the write program to write new programs to disk. In the demo, I first run the read program to read the first 8 bytes from disk, then write a new program that prints `hi` and invoke it, and finally write a new program that computes the n-th Fibonacci number and invoke it with `n=20`.
+See `demo.mp4` for how this computer can be used. Running `python computer.py` will open a window that simulates the display of this computer, and you can use your keyboard to simulate keyboard input. Programs are invoked by typing something like `26d0 3d8 0 8` and Enter, which means "run the program stored at address `26d0` on disk, spanning `3d8` bytes, with two input values: `0` and `8`" (numbers are written in hex). At first, the only programs are `readFromDiskProgram(diskAddress, numBytes)` and `writeToDiskProgram(diskAddress, values...)`, but you can use the write program to write new programs to disk. In the demo, I first run the read program to read the first 8 bytes from disk, then write a new program that prints `hi` and invoke it, and finally write a new program that computes the n-th Fibonacci number and invoke it with `n=20`.
 
 ## What is a computer?
 
@@ -54,12 +54,12 @@ The current memory layout is as follows (also shown in the diagram above):
 ```text
 0..<500000: operating system program
     2736 (0xab0): writeToTranscript
-    4272 (0x10b0): readFromDisk
-    4632 (0x1218): writeToDisk
-    4992 (0x1380): parse8ByteValue
-    7824 (0x1e90): print8ByteValue
-    9768 (0x2628): readFromDiskProgram
-    10752 (0x2a00): writeToDiskProgram
+    4440 (0x1158): readFromDisk
+    4800 (0x12c0): writeToDisk
+    5160 (0x1428): parse8ByteValue
+    7992 (0x1f38): print8ByteValue
+    9936 (0x26d0): readFromDiskProgram
+    10920 (0x2aa8): writeToDiskProgram
 500000..<1000000: operating system stack
 1000000: instruction pointer
 1000008: base pointer

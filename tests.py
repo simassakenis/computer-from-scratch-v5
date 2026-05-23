@@ -276,7 +276,7 @@ def test_parse_8_byte_value_accepts_short_delimited_input():
         computer.as8(15) + computer.as8(0) + computer.as8(0)
         + computer.as8(15) + computer.as8(0) + computer.as8(0)
         + computer.as8(15) + computer.as8(input_address) + computer.as8(0)
-        + computer.as8(22) + computer.as8(4992) + computer.as8(0)
+        + computer.as8(22) + computer.as8(5160) + computer.as8(0)
         + computer.as8(0) + computer.as8(0) + computer.as8(0)
     )
     memory[2000000 : 2000000 + len(program)] = program
@@ -318,7 +318,7 @@ def test_read_from_disk_program():
     disk = computer.assemble(open("os.txt").read())
     memory = [0] * 10000000
     memory[:500000] = disk[:500000]
-    command = f"{9768:x} {984:x} 0 8"
+    command = f"{9936:x} {984:x} 0 8"
     keys = [ord(character) for character in command] + [10]
     equal_flag = 0
     greater_flag = 0
@@ -353,7 +353,7 @@ def test_write_to_disk_program():
     memory[:500000] = disk[:500000]
     disk_address = 600000
     value = 0x6869
-    command = f"{10752:x} {1584:x} {disk_address:x} {value:x}"
+    command = f"{10920:x} {1584:x} {disk_address:x} {value:x}"
     keys = [ord(character) for character in command] + [10]
     equal_flag = 0
     greater_flag = 0
@@ -376,7 +376,7 @@ def test_readme_write_hi_program_example():
     memory = [0] * 10000000
     memory[:500000] = disk[:500000]
     write_command = (
-        "2a00 630 7a120 "
+        "2aa8 630 7a120 "
         "f 68 0 "
         "16 ab0 0 "
         "f 69 0 "
@@ -478,6 +478,8 @@ def test_write_to_transcript_scrolls_when_display_is_full():
 
     assert computer.asint(memory[1000096 : 1000096 + 8]) == ord("B")
     assert computer.asint(memory[1031840 : 1031840 + 8]) == ord("z")
+    assert computer.asint(memory[1031848 : 1031848 + 8]) == 0
+    assert computer.asint(memory[1032856 : 1032856 + 8]) == 0
     assert computer.asint(memory[1000088 : 1000088 + 8]) == 1031848
 
 

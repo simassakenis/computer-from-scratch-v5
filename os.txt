@@ -197,8 +197,17 @@ shiftDisplayBackLoop
     addNumber 8 2
     addNumber 8 3
     compareToNumber 2 1032864
-    jumpIfEqual regularWriteToDisplay 0
+    jumpIfEqual clearLastDisplayLine 0
     jump shiftDisplayBackLoop 0
+clearLastDisplayLine
+    moveNumber 0 4
+    jump clearLastDisplayLineLoop 0
+clearLastDisplayLineLoop
+    moveToPointer 4 3
+    addNumber 8 3
+    compareToNumber 3 1032864
+    jumpIfEqual regularWriteToDisplay 0
+    jump clearLastDisplayLineLoop 0
 regularWriteToDisplay
     moveToPointer -3 1
     addNumber 8 1
