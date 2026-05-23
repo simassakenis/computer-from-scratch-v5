@@ -190,32 +190,32 @@ def cpu_step(memory, equal_flag, greater_flag):
 
 # Helper that performs pending memory-mapped disk reads and writes
 def disk_step(memory, disk):
-    # Assumes disk IO uses 1000032 for disk address, 1000040 for memory address,
-    # 1000048 for byte count, 1000056 for read waiting, and 1000064 for write waiting
-    is_waiting_for_disk_read = asint(memory[1000056 : 1000056 + 8])
-    is_waiting_for_disk_write = asint(memory[1000064 : 1000064 + 8])
+    # Assumes disk IO uses 1000024 for disk address, 1000032 for memory address,
+    # 1000040 for byte count, 1000048 for read waiting, and 1000056 for write waiting
+    is_waiting_for_disk_read = asint(memory[1000048 : 1000048 + 8])
+    is_waiting_for_disk_write = asint(memory[1000056 : 1000056 + 8])
 
     if is_waiting_for_disk_read == 1:
-        disk_address = asint(memory[1000032 : 1000032 + 8])
-        memory_address = asint(memory[1000040 : 1000040 + 8])
-        num_bytes = asint(memory[1000048 : 1000048 + 8])
+        disk_address = asint(memory[1000024 : 1000024 + 8])
+        memory_address = asint(memory[1000032 : 1000032 + 8])
+        num_bytes = asint(memory[1000040 : 1000040 + 8])
         memory[memory_address : memory_address + num_bytes] = disk[disk_address : disk_address + num_bytes]
-        memory[1000056 : 1000056 + 8] = as8(0)
+        memory[1000048 : 1000048 + 8] = as8(0)
 
     if is_waiting_for_disk_write == 1:
-        disk_address = asint(memory[1000032 : 1000032 + 8])
-        memory_address = asint(memory[1000040 : 1000040 + 8])
-        num_bytes = asint(memory[1000048 : 1000048 + 8])
+        disk_address = asint(memory[1000024 : 1000024 + 8])
+        memory_address = asint(memory[1000032 : 1000032 + 8])
+        num_bytes = asint(memory[1000040 : 1000040 + 8])
         disk[disk_address : disk_address + num_bytes] = memory[memory_address : memory_address + num_bytes]
-        memory[1000064 : 1000064 + 8] = as8(0)
+        memory[1000056 : 1000056 + 8] = as8(0)
 
     return memory, disk
 
 
 # Helper that copies a pending Tkinter keypress into keyboard IO memory
 def keyboard_step(memory, tkinter_window):
-    # Assumes keyboard IO uses 1000072 for waiting and 1000080 for key value
-    waiting_for_keypress = asint(memory[1000072 : 1000072 + 8])
+    # Assumes keyboard IO uses 1000064 for waiting and 1000072 for key value
+    waiting_for_keypress = asint(memory[1000064 : 1000064 + 8])
     # Tkinter event processing is expensive, so only poll it when the OS is listening for input
     if waiting_for_keypress != 1:
         return memory
@@ -225,8 +225,8 @@ def keyboard_step(memory, tkinter_window):
     tkinter_window["pending_key"] = None
 
     if waiting_for_keypress == 1 and key is not None:
-        memory[1000080 : 1000080 + 8] = as8(key)
-        memory[1000072 : 1000072 + 8] = [0] * 8
+        memory[1000072 : 1000072 + 8] = as8(key)
+        memory[1000064 : 1000064 + 8] = [0] * 8
     return memory
 
 

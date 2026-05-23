@@ -300,9 +300,9 @@ def test_os_echoes_typed_character():
     greater_flag = 0
 
     for cycle in range(5000):
-        if cycle % 10 == 0 and keys and computer.asint(memory[1000072 : 1000072 + 8]) == 1:
-            memory[1000080 : 1000080 + 8] = computer.as8(keys.pop(0))
-            memory[1000072 : 1000072 + 8] = computer.as8(0)
+        if cycle % 10 == 0 and keys and computer.asint(memory[1000064 : 1000064 + 8]) == 1:
+            memory[1000072 : 1000072 + 8] = computer.as8(keys.pop(0))
+            memory[1000064 : 1000064 + 8] = computer.as8(0)
         memory, disk = computer.disk_step(memory, disk)
         memory, equal_flag, greater_flag = computer.cpu_step(memory, equal_flag, greater_flag)
 
@@ -324,9 +324,9 @@ def test_read_from_disk_program():
     greater_flag = 0
 
     for cycle in range(80000):
-        if cycle % 10 == 0 and keys and computer.asint(memory[1000072 : 1000072 + 8]) == 1:
-            memory[1000080 : 1000080 + 8] = computer.as8(keys.pop(0))
-            memory[1000072 : 1000072 + 8] = computer.as8(0)
+        if cycle % 10 == 0 and keys and computer.asint(memory[1000064 : 1000064 + 8]) == 1:
+            memory[1000072 : 1000072 + 8] = computer.as8(keys.pop(0))
+            memory[1000064 : 1000064 + 8] = computer.as8(0)
         memory, disk = computer.disk_step(memory, disk)
         memory, equal_flag, greater_flag = computer.cpu_step(memory, equal_flag, greater_flag)
 
@@ -359,9 +359,9 @@ def test_write_to_disk_program():
     greater_flag = 0
 
     for cycle in range(100000):
-        if cycle % 10 == 0 and keys and computer.asint(memory[1000072 : 1000072 + 8]) == 1:
-            memory[1000080 : 1000080 + 8] = computer.as8(keys.pop(0))
-            memory[1000072 : 1000072 + 8] = computer.as8(0)
+        if cycle % 10 == 0 and keys and computer.asint(memory[1000064 : 1000064 + 8]) == 1:
+            memory[1000072 : 1000072 + 8] = computer.as8(keys.pop(0))
+            memory[1000064 : 1000064 + 8] = computer.as8(0)
         memory, disk = computer.disk_step(memory, disk)
         memory, equal_flag, greater_flag = computer.cpu_step(memory, equal_flag, greater_flag)
 
@@ -390,9 +390,9 @@ def test_readme_write_hi_program_example():
     greater_flag = 0
 
     for cycle in range(160000):
-        if cycle % 10 == 0 and keys and computer.asint(memory[1000072 : 1000072 + 8]) == 1:
-            memory[1000080 : 1000080 + 8] = computer.as8(keys.pop(0))
-            memory[1000072 : 1000072 + 8] = computer.as8(0)
+        if cycle % 10 == 0 and keys and computer.asint(memory[1000064 : 1000064 + 8]) == 1:
+            memory[1000072 : 1000072 + 8] = computer.as8(keys.pop(0))
+            memory[1000064 : 1000064 + 8] = computer.as8(0)
         memory, disk = computer.disk_step(memory, disk)
         memory, equal_flag, greater_flag = computer.cpu_step(memory, equal_flag, greater_flag)
 
@@ -424,7 +424,7 @@ def test_write_to_transcript_enter_moves_display_to_next_line():
     memory[1000000:1000008] = computer.as8(2000000)
     memory[1000008:1000016] = computer.as8(500000)
     memory[1000016:1000024] = computer.as8(500000)
-    memory[1000024 : 1000024 + 8] = computer.as8(1032864)
+    memory[1000080 : 1000080 + 8] = computer.as8(1032864)
     memory[1000088 : 1000088 + 8] = computer.as8(1000096)
     program = (
         computer.as8(15) + computer.as8(ord("a")) + computer.as8(0)
@@ -458,7 +458,7 @@ def test_write_to_transcript_scrolls_when_display_is_full():
     memory[1000000:1000008] = computer.as8(2000000)
     memory[1000008:1000016] = computer.as8(500000)
     memory[1000016:1000024] = computer.as8(500000)
-    memory[1000024 : 1000024 + 8] = computer.as8(1032864)
+    memory[1000080 : 1000080 + 8] = computer.as8(1032864)
     memory[1000088 : 1000088 + 8] = computer.as8(1032864)
     for y in range(32):
         for x in range(128):

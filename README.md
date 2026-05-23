@@ -43,9 +43,9 @@ CPU is the component that performs operations on memory values. The set of suppo
 | `22` | `call 4000000` | Push return address and old base pointer, set a new base pointer, then jump. |
 | `23` | `return` | Restore stack top, base pointer, and instruction pointer. |
 
-Disk is the component that stores values persistently. Like memory, it is an array of bytes that supports reads and writes at any address, but it keeps its values when unplugged. To interact with disk, the computer uses a contract based on special memory locations. To read from disk, write the disk address to `1000032`, the memory address (where to write the result) to `1000040`, byte count to `1000048`, and set `1000056` to `1`, and disk hardware will copy these bytes from disk to memory and reset `1000056` to `0`. To write to disk, write the disk address to `1000032`, the memory address (where to read from) to `1000040`, byte count to `1000048`, and set `1000064` to `1`, and disk hardware will copy these bytes from memory to disk and reset `1000064` to `0`.
+Disk is the component that stores values persistently. Like memory, it is an array of bytes that supports reads and writes at any address, but it keeps its values when unplugged. To interact with disk, the computer uses a contract based on special memory locations. To read from disk, write the disk address to `1000024`, the memory address (where to write the result) to `1000032`, byte count to `1000040`, and set `1000048` to `1`, and disk hardware will copy these bytes from disk to memory and reset `1000048` to `0`. To write to disk, write the disk address to `1000024`, the memory address (where to read from) to `1000032`, byte count to `1000040`, and set `1000056` to `1`, and disk hardware will copy these bytes from memory to disk and reset `1000056` to `0`.
 
-Keyboard is the component that provides input. It uses a similar contract: when `1000072` is set to `1`, keyboard hardware writes the pressed key to `1000080` and resets `1000072` to `0`.
+Keyboard is the component that provides input. It uses a similar contract: when `1000064` is set to `1`, keyboard hardware writes the pressed key to `1000072` and resets `1000064` to `0`.
 
 Display is the component that shows output. It also uses a memory contract: it interprets `32768` bytes starting from address `1000096` as "cells" of a 128-by-32 cell display, where each cell is an 8-byte value representing an ASCII character (e.g. `97` renders as `a`). The 8-byte value at `1000088` stores the next display write address.
 
@@ -64,14 +64,14 @@ The current memory layout is as follows (also shown in the diagram above):
 1000000: instruction pointer
 1000008: base pointer
 1000016: stack pointer
-1000024: next transcript write address
-1000032: disk IO disk address
-1000040: disk IO memory address
-1000048: disk IO byte count
-1000056: disk IO read waiting flag
-1000064: disk IO write waiting flag
-1000072: keyboard waiting flag
-1000080: keyboard value
+1000024: disk IO disk address
+1000032: disk IO memory address
+1000040: disk IO byte count
+1000048: disk IO read waiting flag
+1000056: disk IO write waiting flag
+1000064: keyboard waiting flag
+1000072: keyboard value
+1000080: next transcript write address
 1000088: next display write address
 1000096..<1032864: display, 128 by 32 cells, 8 bytes per cell
 1032864..<2000000: transcript
@@ -122,12 +122,12 @@ terminal:
         jump terminal
 
 listenForKeypress() -> character:
-    valueAt(1000072) = 1
+    valueAt(1000064) = 1
 
-    while valueAt(1000072) != 0:
+    while valueAt(1000064) != 0:
         continue
 
-    return valueAt(1000080)
+    return valueAt(1000072)
 
 removeLastCharacterFromTranscript() -> nothing:
     if transcriptCursor <= 1032864:
@@ -187,22 +187,22 @@ writeToDisplay(character) -> nothing:
     return
 
 readFromDisk(diskAddress, memoryAddress, numBytes) -> nothing:
-    valueAt(1000032) = diskAddress
-    valueAt(1000040) = memoryAddress
-    valueAt(1000048) = numBytes
-    valueAt(1000056) = 1
+    valueAt(1000024) = diskAddress
+    valueAt(1000032) = memoryAddress
+    valueAt(1000040) = numBytes
+    valueAt(1000048) = 1
 
-    while valueAt(1000056) != 0:
+    while valueAt(1000048) != 0:
         continue
     return
 
 writeToDisk(diskAddress, memoryAddress, numBytes) -> nothing:
-    valueAt(1000032) = diskAddress
-    valueAt(1000040) = memoryAddress
-    valueAt(1000048) = numBytes
-    valueAt(1000064) = 1
+    valueAt(1000024) = diskAddress
+    valueAt(1000032) = memoryAddress
+    valueAt(1000040) = numBytes
+    valueAt(1000056) = 1
 
-    while valueAt(1000064) != 0:
+    while valueAt(1000056) != 0:
         continue
     return
 
