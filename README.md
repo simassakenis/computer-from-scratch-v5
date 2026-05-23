@@ -6,17 +6,15 @@ A minimal simulated computer implemented from scratch in Python (`computer.py`),
 
 The operating system runs a simple command-line loop: it listens for keyboard input, interprets it as a program invocation, runs that program, and then listens for the next input. You run a program, get a result, run another program, get another result, and so on. This simple setup removes a great deal of complexity that real-world systems need to have. There are no processes. No threads. No scheduling. No concurrency. No locks. No race conditions. No page tables. No virtual memory. No privilege levels. No system calls. No device drivers. No programming languages. No compilers.
 
-See `demo.mp4` for how this computer can be used. Running `python computer.py` will open a window that simulates the display of this computer, and you can use your keyboard to simulate keyboard input. You invoke a program by typing something like `2628 3d8 0 8` and Enter, which means "run the program stored at address `2628` on disk, spanning `3d8` bytes, with two input values: `0` and `8`" (numbers are written in hex). At first, the only programs are `readFromDiskProgram(diskAddress, numBytes)` and `writeToDiskProgram(diskAddress, values...)`, but you can use the write program to write new programs to disk. In the demo, I first run the read program, then use the write program to write a program that prints `hi`, and finally run a program that computes the n-th Fibonacci number.
+See `demo.mp4` for how this computer can be used. Running `python computer.py` will open a window that simulates the display of this computer, and you can use your keyboard to simulate keyboard input. Programs are invoked by typing something like `2628 3d8 0 8` and Enter, which means "run the program stored at address `2628` on disk, spanning `3d8` bytes, with two input values: `0` and `8`" (numbers are written in hex). At first, the only programs are `readFromDiskProgram(diskAddress, numBytes)` and `writeToDiskProgram(diskAddress, values...)`, but you can use the write program to write new programs to disk. In the demo, I first run the read program to read the first 8 bytes from disk, then write a new program that prints `hi` and invoke it, and finally write a new program that computes the n-th Fibonacci number and invoke it with `n=20`.
 
 ## What is a computer?
 
-This computer consists of memory, CPU, disk, keyboard, and display.
+This computer consists of 5 basic components: memory, CPU, disk, keyboard, and display.
 
-Memory is an array of bytes that supports reads and writes at any address. It is implemented by electrical circuits that store values while powered and lose them when unplugged. In this computer, memory is `10000000` bytes long.
+Memory is the component that stores values while the computer is powered on. It stores an array of bytes and allows read and write operations at any address. In this computer, memory is `10000000` bytes long.
 
-CPU is an electrical circuit with hardwired logic that implements some predefined set of instructions. It uses a few special values in memory for control: the 8-byte value from address `1000000` is the "instruction pointer" which tells the CPU from where in memory to take the next instruction; the 8-byte value from address `1000008` is the "base pointer" which tells the CPU where the current stack frame starts; and the 8-byte value from address `1000016` is the "stack top pointer" which tells the CPU where the next pushed value should go (stack is used by functions for storing local variables). Most instructions operate on slots relative to the base pointer. A slot is an 8-byte value at an offset from the current base pointer: `slot(0)` is at the base pointer, `slot(1)` is 8 bytes after it, and `slot(-1)` is 8 bytes before it. Arguments are pushed before `call`; `call` pushes the return address and old base pointer, then sets the base pointer to the new frame. Inside a function, non-negative slots are local variables, `slot(-1)` is old base pointer, `slot(-2)` is return address, and arguments live below those slots. Each instruction is 24 bytes: 8 bytes for opcode, 8 bytes for operand 1, and 8 bytes for operand 2. Unused operands are `0`. When an instruction changes something, operand 2 is usually the destination.
-
-Here is the full instruction set used in this computer:
+CPU is the component that performs operations on memory values. The set of supported operations, or "machine instructions", is fixed ahead of time, and the CPU has hard-wired circuits implementing each of them. The CPU interprets memory values as instructions and executes them one by one until powered off. At each clock cycle, it looks up the instruction pointer (a special 8-byte value at address `1000000` that stores the address of the next instruction), fetches the next instruction, executes it, and updates the instruction pointer. To store local variables, the CPU uses a dedicated "stack" space in memory where values are pushed and popped. The base pointer (a special 8-byte value at address `1000008`) stores where the current function's stack space starts, and the stack pointer (a special 8-byte value at address `1000016`) stores where it ends. Many instructions operate on slots, where `slot(n)` is the 8-byte value at `basePointer + n * 8`. By convention, `slot(0)`, `slot(1)`, ... are used for local variables, and `slot(-3)`, `slot(-4)`, ... are used for function arguments and return values (`slot(-1)` and `slot(-2)` are reserved for the old base pointer and return address). Here is the full instruction set used in this computer:
 
 | Opcode | Instruction | Effect |
 | --- | --- | --- |
@@ -45,13 +43,11 @@ Here is the full instruction set used in this computer:
 | `22` | `call 4000000` | Push return address and old base pointer, set a new base pointer, then jump. |
 | `23` | `return` | Restore stack top, base pointer, and instruction pointer. |
 
-The CPU executes instructions one by one forever, until the computer is powered off. The instruction pointer starts at `0`, so the CPU starts interpreting memory at address `0` as instructions.
+Disk is the component that stores values persistently. Like memory, it is an array of bytes that supports reads and writes at any address, but it keeps its values when unplugged. To interact with disk, the computer uses a contract based on special memory locations. To read from disk, write the disk address to `1000032`, the memory address (where to write the result) to `1000040`, byte count to `1000048`, and set `1000056` to `1`, and disk hardware will copy these bytes from disk to memory and reset `1000056` to `0`. To write to disk, write the disk address to `1000032`, the memory address (where to read from) to `1000040`, byte count to `1000048`, and set `1000064` to `1`, and disk hardware will copy these bytes from memory to disk and reset `1000064` to `0`.
 
-Disk is like memory, but persistent: it is an array of bytes that supports reads and writes at any address, and keeps its values when unplugged. To interact with disk, the computer uses a contract based on special memory locations. To read from disk, write the disk address to `1000032`, the memory address (where to write the result) to `1000040`, byte count to `1000048`, and set `1000056` to `1`, and disk hardware will copy from disk to memory and reset `1000056` to `0`. To write to disk, write the disk address to `1000032`, the memory address (where to read from) to `1000040`, byte count to `1000048`, and set `1000064` to `1`, and disk hardware will copy from memory to disk and reset `1000064` to `0`.
+Keyboard is the component that provides input. It uses a similar contract: when `1000072` is set to `1`, keyboard hardware writes the pressed key to `1000080` and resets `1000072` to `0`.
 
-Keyboard input uses a similar contract: set `1000072` to `1`, then keyboard hardware writes the pressed key to `1000080` and resets `1000072` to `0`.
-
-Display also uses a memory contract: it interprets `32768` bytes starting from address `1000096` as "cells" of a 128-by-32 display, where each cell is an 8-byte value representing an ASCII character (e.g. `97` renders as `a`). The 8-byte value at `1000088` stores the next display write address.
+Display is the component that shows output. It also uses a memory contract: it interprets `32768` bytes starting from address `1000096` as "cells" of a 128-by-32 cell display, where each cell is an 8-byte value representing an ASCII character (e.g. `97` renders as `a`). The 8-byte value at `1000088` stores the next display write address.
 
 The current memory layout is as follows (also shown in the diagram above):
 
@@ -67,7 +63,7 @@ The current memory layout is as follows (also shown in the diagram above):
 500000..<1000000: operating system stack
 1000000: instruction pointer
 1000008: base pointer
-1000016: stack top pointer
+1000016: stack pointer
 1000024: next transcript write address
 1000032: disk IO disk address
 1000040: disk IO memory address
@@ -84,7 +80,7 @@ The current memory layout is as follows (also shown in the diagram above):
 
 ## What is an operating system?
 
-On its own, a computer can execute instructions from address `0` onwards forever, so it will run whatever program you load into memory. To make it continually usable, we can load a meta-program: an operating system that lets us execute other programs. The operating system in `os.txt` behaves like a basic terminal: it listens for keyboard input, interprets it as a program invocation when Enter is pressed, runs that program (which may then print to the display), and then listens for keyboard input again, and so on. Here is the full operating system written in pseudocode (I first wrote this pseudocode and then wrote `os.txt` by just translating it to machine instructions):
+On its own, a computer can execute instructions from address `0` onwards forever, so it will run whatever program you load into memory. To make it continually usable, we can load a meta-program: an operating system that lets us execute other programs. The operating system in `os.txt` is just a simple command-line loop: it listens for keyboard input, interprets it as a program invocation when Enter is pressed, runs that program, and listens for keyboard input again. Here is the full operating system written in pseudocode (I first wrote this pseudocode and then wrote `os.txt` by just translating it to machine instructions):
 
 ```text
 initialize:
