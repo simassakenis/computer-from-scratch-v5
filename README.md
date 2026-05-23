@@ -181,7 +181,6 @@ writeToDisplay(character) -> nothing:
             readAddress += 8
             writeAddress += 8
 
-        // clear last display row
         while writeAddress != 1032864:
             valueAt(writeAddress) = 0
             writeAddress += 8
