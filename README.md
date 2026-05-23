@@ -4,9 +4,9 @@
 
 A minimal simulated computer implemented from scratch in Python (`computer.py`), plus a minimal operating system in ~600 lines of machine code (`os.txt`).
 
-The operating system runs a simple command-line loop: it listens for keyboard input, interprets it as a program invocation, runs that program, and then listens for the next input. You run a program, get a result, run another program, get another result, and so on. This simple setup removes a great deal of complexity that real-world systems need to have. There are no processes. No threads. No scheduling. No concurrency. No locks. No race conditions. No page tables. No virtual memory. No privilege levels. No system calls. No device drivers. No programming languages. No compilers.
+The operating system runs a simple command-line loop: it listens for keyboard input, interprets it as a program invocation, runs that program, and then listens for the next input. You run a program, get a result, run another program, get another result, and so on. This simple setup removes a great deal of complexity that real-world operating systems need to have. There are no processes. No threads. No scheduling. No concurrency. No locks. No race conditions. No page tables. No virtual memory. No privilege levels. No system calls. No device drivers. No programming languages. No compilers.
 
-See [demo.mov](demo.mov) for how this computer can be used. Running `python computer.py` will open a window that simulates the display of this computer, and you can use your keyboard to simulate keyboard input. Programs are invoked by typing something like `26d0 3d8 0 8` and Enter, which means "run the program stored at address `26d0` on disk, spanning `3d8` bytes, with two input values: `0` and `8`" (numbers are written in hex). At first, the only programs are `readFromDiskProgram(diskAddress, numBytes)` and `writeToDiskProgram(diskAddress, values...)`, but you can use the write program to write new programs to disk. In the demo, I first run the read program to read the first 8 bytes from disk, then write a new program that prints `hi` and invoke it, and finally write a new Fibonacci program and invoke it with `n=1`, `n=2`, `n=3`, `n=4`, `n=5`, and `n=9` (`n=9` outputs `22` in hex).
+See [demo.mov](demo.mov) for how this computer can be used. Running `python computer.py` will open a window that simulates the display of this computer, and you can use your keyboard to simulate keyboard input. Programs are invoked by typing something like `26d0 3d8 0 8` and Enter, which means "run the program stored at address `26d0` on disk, spanning `3d8` bytes, with two input values: `0` and `8`" (numbers are written in hex). At first, the only programs are `readFromDiskProgram(diskAddress, numBytes)` and `writeToDiskProgram(diskAddress, values...)`, but you can use the write program to write new programs to disk. In the demo, I first run the read program to read the first 8 bytes from disk, then write a new program that prints `hi` and invoke it, and finally write a new Fibonacci program and invoke it with `n=1`, `n=2`, `n=3`, `n=4`, `n=5`, and `n=9` (`n=9` outputs `22`, which is `34` in hex).
 
 ## What is a computer?
 
@@ -53,13 +53,13 @@ The current memory layout is as follows (also shown in the diagram above):
 
 ```text
 0..<500000: operating system program
-    2736 (0xab0): writeToTranscript
-    4440 (0x1158): readFromDisk
-    4800 (0x12c0): writeToDisk
-    5160 (0x1428): parse8ByteValue
-    7992 (0x1f38): print8ByteValue
-    9936 (0x26d0): readFromDiskProgram
-    10920 (0x2aa8): writeToDiskProgram
+    2736 (0xab0): writeToTranscript(character)
+    4440 (0x1158): readFromDisk(diskAddress, memoryAddress, numBytes)
+    4800 (0x12c0): writeToDisk(diskAddress, memoryAddress, numBytes)
+    5160 (0x1428): parse8ByteValue(inputStart) -> value, numberOfBytesRead
+    7992 (0x1f38): print8ByteValue(value)
+    9936 (0x26d0): readFromDiskProgram(diskAddress, numBytes), length 984 (0x3d8)
+    10920 (0x2aa8): writeToDiskProgram(diskAddress, values...), length 1584 (0x630)
 500000..<1000000: operating system stack
 1000000: instruction pointer
 1000008: base pointer
@@ -80,7 +80,7 @@ The current memory layout is as follows (also shown in the diagram above):
 
 ## What is an operating system?
 
-On its own, a computer can execute instructions from address `0` onwards forever, so it will run whatever program you load into memory. To make it continually usable, we can load a meta-program: an operating system that lets us execute other programs. The operating system in `os.txt` is just a simple command-line loop: it listens for keyboard input, interprets it as a program invocation when Enter is pressed, runs that program, and listens for keyboard input again. Here is the full operating system written in pseudocode (I first wrote this pseudocode and then wrote `os.txt` by just translating it to machine instructions):
+On its own, a computer can execute instructions from address `0` onwards forever, so it will run whatever program you load into memory. To make it continually usable, we can load a meta-program: an operating system that lets us execute other programs. The operating system in `os.txt` is just a simple command-line loop (listen for program invocation, run program, repeat), plus helper functions for writing to transcript, writing to display, reading and writing disk, parsing input, and printing values, plus two built-in programs: `readFromDiskProgram` and `writeToDiskProgram`. Here is the full operating system written in pseudocode (I first wrote this pseudocode and then wrote `os.txt` by just translating it to machine instructions):
 
 ```text
 initialize:
