@@ -8,6 +8,8 @@ The operating system runs a simple command-line loop: it listens for keyboard in
 
 See [demo.mov](demo.mov) for how this computer can be used. Running `python computer.py` will open a window that simulates the display of this computer, and you can use your keyboard to simulate keyboard input. Programs are invoked by typing something like `26d0 3d8 0 8` and Enter, which means "run the program stored at address `26d0` on disk, spanning `3d8` bytes, with two input values: `0` and `8`" (numbers are written in hex). At first, the only programs are `readFromDiskProgram(diskAddress, numBytes)` and `writeToDiskProgram(diskAddress, values...)`, but you can use the write program to write new programs to disk. In the demo, I first run the read program to read the first 8 bytes from disk, then write a new program that prints `hi` and invoke it, and finally write a new program that computes the n-th Fibonacci number and invoke it with `n=1`, `n=2`, `n=3`, `n=4`, `n=5`, and `n=9` (e.g., `n=9` outputs `22`, which is `34` in hex).
 
+![Final demo window](screenshot.png)
+
 ## What is a computer?
 
 This computer consists of 5 basic components: memory, CPU, disk, keyboard, and display.
