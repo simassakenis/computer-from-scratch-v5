@@ -10,7 +10,7 @@ See [demo.mov](demo.mov) for how this computer can be used. Running `python comp
 
 ![Final demo window](screenshot.png)
 
-## What is a computer?
+## What Is a Computer?
 
 This computer consists of 5 basic components: memory, CPU, disk, keyboard, and display.
 
@@ -80,7 +80,7 @@ The current memory layout is as follows (also shown in the diagram above):
 2000000..<10000000: loaded user program, then user program stack
 ```
 
-## What is an operating system?
+## What Is an Operating System?
 
 On its own, a computer can execute instructions from address `0` onwards forever, so it will run whatever program you load into memory. To make it continually usable, we can load a meta-program: an operating system that lets us execute other programs. The operating system in `os.txt` is just a simple command-line loop (listen for program invocation, run program, repeat), plus helper functions for writing to transcript, writing to display, reading and writing disk, parsing input, and printing values, plus two built-in programs: `readFromDiskProgram` and `writeToDiskProgram`. Here is the full operating system written in pseudocode (I first wrote this pseudocode and then wrote `os.txt` by just translating it to machine instructions):
 
