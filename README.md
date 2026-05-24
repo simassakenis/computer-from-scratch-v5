@@ -374,6 +374,6 @@ writeToDiskProgram(programInputStart, numProgramInputBytes) -> nothing:
 
 ## Acknowledgments
 
-This project was inspired by the [8-bit breadboard computer series](https://eater.net/8bit) by Ben Eater and by projects like [microgpt](https://gist.github.com/karpathy/8627fe009c40f57531cb18360106ce95) and [llm.c](https://github.com/karpathy/llm.c) by Andrej Karpathy.
+This project was inspired by the [8-bit breadboard computer series](https://eater.net/8bit) by Ben Eater and by projects like [microgpt](https://gist.github.com/karpathy/8627fe009c40f57531cb18360106ce95) by Andrej Karpathy.
 
 This is a personal project built for educational purposes only.
