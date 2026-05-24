@@ -19,28 +19,28 @@ commandLineLoop:
     pushNumber 0 0
     call listenForKeypress 0
     compareToNumber 2 8
-    jumpIfEqual ifBackspace 0
-    jump elseBackspace 0
-ifBackspace:
+    jumpIfEqual commandLineIfBackspace 0
+    jump commandLineElseBackspace 0
+commandLineIfBackspace:
     pushNumber 0 0
     moveFromPointer 0 3
     compare 3 1
-    jumpIfGreater ifNonEmptyInput 0
+    jumpIfGreater commandLineIfNonEmptyInput 0
     pop 0 0
     pop 0 0
     jump commandLineLoop 0
-ifNonEmptyInput:
+commandLineIfNonEmptyInput:
     call removeLastCharacterFromTranscript 0
     pop 0 0
     pop 0 0
     jump commandLineLoop 0
-elseBackspace:
+commandLineElseBackspace:
     call writeToTranscript 0
     compareToNumber 2 10
-    jumpIfEqual ifEnter 0
+    jumpIfEqual commandLineIfEnter 0
     pop 0 0
     jump commandLineLoop 0
-ifEnter:
+commandLineIfEnter:
     pushNumber 0 0
     pushNumber 0 0
     pushNumber 0 0
@@ -104,9 +104,9 @@ removeLastCharacterFromTranscript:
     pushNumber 0 0
     moveFromPointer 0 1
     compareToNumber 1 1032864
-    jumpIfGreater regularRemoveLastCharacter 0
+    jumpIfGreater removeLastCharacterFromTranscriptRegular 0
     return 0 0
-regularRemoveLastCharacter:
+removeLastCharacterFromTranscriptRegular:
     pushNumber 0 0
     addNumber -8 1
     moveToPointer 2 1
@@ -118,9 +118,9 @@ removeLastCharacterFromDisplay:
     pushNumber 0 0
     moveFromPointer 0 1
     compareToNumber 1 1000096
-    jumpIfGreater regularRemoveLastCharacterFromDisplay 0
+    jumpIfGreater removeLastCharacterFromDisplayRegular 0
     return 0 0
-regularRemoveLastCharacterFromDisplay:
+removeLastCharacterFromDisplayRegular:
     pushNumber 0 0
     addNumber -8 1
     moveToPointer 2 1
@@ -183,32 +183,32 @@ writeToDisplay:
     pushNumber 0 0
     moveFromPointer 0 1
     compareToNumber 1 1032864
-    jumpIfEqual shiftDisplayBack 0
-    jump regularWriteToDisplay 0
-shiftDisplayBack:
+    jumpIfEqual writeToDisplayShiftBack 0
+    jump writeToDisplayRegular 0
+writeToDisplayShiftBack:
     addNumber -1024 1
     pushNumber 1001120 0
     pushNumber 1000096 0
     pushNumber 0 0
-    jump shiftDisplayBackLoop 0
-shiftDisplayBackLoop:
+    jump writeToDisplayShiftBackLoop 0
+writeToDisplayShiftBackLoop:
     moveFromPointer 2 4
     moveToPointer 4 3
     addNumber 8 2
     addNumber 8 3
     compareToNumber 2 1032864
-    jumpIfEqual clearLastDisplayLine 0
-    jump shiftDisplayBackLoop 0
-clearLastDisplayLine:
+    jumpIfEqual writeToDisplayClearLastLine 0
+    jump writeToDisplayShiftBackLoop 0
+writeToDisplayClearLastLine:
     moveNumber 0 4
-    jump clearLastDisplayLineLoop 0
-clearLastDisplayLineLoop:
+    jump writeToDisplayClearLastLineLoop 0
+writeToDisplayClearLastLineLoop:
     moveToPointer 4 3
     addNumber 8 3
     compareToNumber 3 1032864
-    jumpIfEqual regularWriteToDisplay 0
-    jump clearLastDisplayLineLoop 0
-regularWriteToDisplay:
+    jumpIfEqual writeToDisplayRegular 0
+    jump writeToDisplayClearLastLineLoop 0
+writeToDisplayRegular:
     moveToPointer -3 1
     addNumber 8 1
     moveToPointer 1 0
