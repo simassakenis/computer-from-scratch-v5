@@ -3,14 +3,16 @@ import tkinter as tk
 
 # Runs the simulated computer until stopped
 def run_computer():
-    # Tkinter receives keypresses and renders the memory-mapped display
+    # Tkinter renders the simulated display and receives keypresses
     tkinter_window = tkinter_window_init()
 
     # Memory and disk are byte arrays: every element is one integer from 0 to 255
-    disk = assemble(open("os.txt").read())
-    memory = [0] * 10000000
+    disk = [0] * 100000000
+    os_bytes = assemble(open("os.txt").read())
+    disk[: len(os_bytes)] = os_bytes
 
-    # Power-on loads the sacred startup and operating system bytes into memory
+    # Power-on loads the first 500000 disk bytes into memory
+    memory = [0] * 10000000
     memory[:500000] = disk[:500000]
     equal_flag = 0
     greater_flag = 0
@@ -24,7 +26,7 @@ def run_computer():
 
 # Helper that executes one CPU instruction
 def cpu_step(memory, equal_flag, greater_flag):
-    # Assumes control registers live at 1000000, 1000008, and 1000016
+    # Assumes control values live at 1000000, 1000008, and 1000016
     # Fetch one 24-byte instruction: opcode, operand1, operand2
     instruction_pointer = asint(memory[1000000 : 1000000 + 8])
     opcode = asint(memory[instruction_pointer : instruction_pointer + 8])
@@ -33,10 +35,10 @@ def cpu_step(memory, equal_flag, greater_flag):
 
     # Slots are addressed relative to the current base pointer
     base_pointer = asint(memory[1000008 : 1000008 + 8])
-    stack_top_pointer = asint(memory[1000016 : 1000016 + 8])
+    stack_pointer = asint(memory[1000016 : 1000016 + 8])
 
     if opcode == 0:
-        # idle: do nothing and keep pointing at this instruction
+        # idle: do nothing and keep instruction pointer unchanged
         memory[1000000 : 1000000 + 8] = as8(instruction_pointer)
     elif opcode == 1:
         # moveNumberToAddress: value at address operand2 = operand1
@@ -122,25 +124,25 @@ def cpu_step(memory, equal_flag, greater_flag):
         memory[base_pointer + operand2 * 8 : base_pointer + operand2 * 8 + 8] = as8(value)
         memory[1000000 : 1000000 + 8] = as8(instruction_pointer + 24)
     elif opcode == 15:
-        # pushNumber: write operand1 at stack top, then advance stack top
-        memory[stack_top_pointer : stack_top_pointer + 8] = as8(operand1)
-        stack_top_pointer += 8
-        memory[1000016 : 1000016 + 8] = as8(stack_top_pointer)
+        # pushNumber: write operand1 at stack pointer, then advance stack pointer
+        memory[stack_pointer : stack_pointer + 8] = as8(operand1)
+        stack_pointer += 8
+        memory[1000016 : 1000016 + 8] = as8(stack_pointer)
         memory[1000000 : 1000000 + 8] = as8(instruction_pointer + 24)
     elif opcode == 16:
-        # pop: move stack top back by one slot
-        stack_top_pointer -= 8
-        memory[1000016 : 1000016 + 8] = as8(stack_top_pointer)
+        # pop: move stack pointer back by one slot
+        stack_pointer -= 8
+        memory[1000016 : 1000016 + 8] = as8(stack_pointer)
         memory[1000000 : 1000000 + 8] = as8(instruction_pointer + 24)
     elif opcode == 17:
-        # compare: set ALU flags by comparing slot(operand1) to slot(operand2)
+        # compare: set equal flag and greater flag by comparing slot(operand1) to slot(operand2)
         a = asint(memory[base_pointer + operand1 * 8 : base_pointer + operand1 * 8 + 8])
         b = asint(memory[base_pointer + operand2 * 8 : base_pointer + operand2 * 8 + 8])
         equal_flag = 1 if a == b else 0
         greater_flag = 1 if a > b else 0
         memory[1000000 : 1000000 + 8] = as8(instruction_pointer + 24)
     elif opcode == 18:
-        # compareToNumber: set ALU flags by comparing slot(operand1) to operand2
+        # compareToNumber: set equal flag and greater flag by comparing slot(operand1) to operand2
         value = asint(memory[base_pointer + operand1 * 8 : base_pointer + operand1 * 8 + 8])
         equal_flag = 1 if value == operand2 else 0
         greater_flag = 1 if value > operand2 else 0
@@ -165,30 +167,30 @@ def cpu_step(memory, equal_flag, greater_flag):
         return_address = instruction_pointer + 24
         old_base_pointer = base_pointer
         # Push return address
-        memory[stack_top_pointer : stack_top_pointer + 8] = as8(return_address)
+        memory[stack_pointer : stack_pointer + 8] = as8(return_address)
         # Push old base pointer
-        memory[stack_top_pointer + 8 : stack_top_pointer + 16] = as8(old_base_pointer)
+        memory[stack_pointer + 8 : stack_pointer + 16] = as8(old_base_pointer)
         # Set base pointer to the callee frame
-        memory[1000008 : 1000008 + 8] = as8(stack_top_pointer + 16)
-        # Set stack top to the callee frame
-        memory[1000016 : 1000016 + 8] = as8(stack_top_pointer + 16)
+        memory[1000008 : 1000008 + 8] = as8(stack_pointer + 16)
+        # Set stack pointer to the callee frame
+        memory[1000016 : 1000016 + 8] = as8(stack_pointer + 16)
         # Jump to callee
         memory[1000000 : 1000000 + 8] = as8(operand1)
     elif opcode == 23:
-        # return: restore return address, base pointer, and stack top
+        # return: restore return address, base pointer, and stack pointer
         return_address = asint(memory[base_pointer - 16 : base_pointer - 8])
         old_base_pointer = asint(memory[base_pointer - 8 : base_pointer])
-        new_stack_top_pointer = base_pointer - 16
+        new_stack_pointer = base_pointer - 16
         # Restore old base pointer
         memory[1000008 : 1000008 + 8] = as8(old_base_pointer)
-        # Restore stack top to before return address
-        memory[1000016 : 1000016 + 8] = as8(new_stack_top_pointer)
+        # Restore stack pointer to before return address
+        memory[1000016 : 1000016 + 8] = as8(new_stack_pointer)
         # Jump back to caller
         memory[1000000 : 1000000 + 8] = as8(return_address)
     return memory, equal_flag, greater_flag
 
 
-# Helper that performs pending memory-mapped disk reads and writes
+# Helper that simulates disk hardware
 def disk_step(memory, disk):
     # Assumes disk IO uses 1000024 for disk address, 1000032 for memory address,
     # 1000040 for byte count, 1000048 for read waiting, and 1000056 for write waiting
@@ -212,7 +214,7 @@ def disk_step(memory, disk):
     return memory, disk
 
 
-# Helper that copies a pending Tkinter keypress into keyboard IO memory
+# Helper that simulates keyboard hardware
 def keyboard_step(memory, tkinter_window):
     # Assumes keyboard IO uses 1000064 for waiting and 1000072 for key value
     waiting_for_keypress = asint(memory[1000064 : 1000064 + 8])
@@ -230,15 +232,15 @@ def keyboard_step(memory, tkinter_window):
     return memory
 
 
-# Helper that renders display memory into the Tkinter window
+# Helper that simulates display hardware
 def display_step(memory, tkinter_window):
     # Assumes 1000088 stores the next display write address and 1000096 starts a 128 by 32 display
     display_write_address = asint(memory[1000088 : 1000088 + 8])
-    # Avoid redrawing the whole Tkinter display unless a display write changed it
+    # Optimization 1: avoid redrawing the whole Tkinter display unless a display write changed it
     previous_display_write_address = tkinter_window.get("last_display_write_address")
     if previous_display_write_address == display_write_address:
         return
-    # Avoid redrawing when the new printed character is Space
+    # Optimization 2: avoid redrawing when the new printed character is Space
     if previous_display_write_address is not None and previous_display_write_address < display_write_address:
         last_added_character = asint(memory[display_write_address - 8 : display_write_address])
         if last_added_character == 32:
@@ -292,7 +294,7 @@ def tkinter_window_init():
     return tkinter_window
 
 
-# Helper that turns disk source text into the initial disk bytes
+# Helper that translates machine instructions written as text into bytes
 def assemble(source):
     opcodes = {
         "moveNumberToAddress": 1,
@@ -319,7 +321,6 @@ def assemble(source):
         "call": 22,
         "return": 23,
     }
-    disk = [0] * 4000000
     labels = {}
     lines = []
     address = 0
@@ -337,7 +338,7 @@ def assemble(source):
         address += 8 * len(parts)
         lines.append(parts)
 
-    address = 0
+    result = []
     for parts in lines:
         values = parts
 
@@ -346,10 +347,9 @@ def assemble(source):
 
         for value in values:
             value = labels[value] if value in labels else int(value)
-            disk[address : address + 8] = as8(value)
-            address += 8
+            result += as8(value)
 
-    return disk
+    return result
 
 
 # Helper that turns one machine value into 8 memory bytes

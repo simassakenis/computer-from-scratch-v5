@@ -2,7 +2,7 @@ import computer
 
 
 def test_idle():
-    # An idle instruction leaves the instruction pointer and ALU flags unchanged
+    # An idle instruction leaves the instruction pointer and comparison flags unchanged
     memory = [0] * 10000000
     memory[1000000:1000008] = computer.as8(24)
     memory[1000008:1000016] = computer.as8(2000)
@@ -124,11 +124,11 @@ def test_shift_and_bitwise():
 
 
 def test_push_number_and_pop():
-    # Verifies push writes at stack top and pop moves stack top back
+    # Verifies push writes at stack pointer and pop moves stack pointer back
     # Program:
     #   pushNumber 55
     #   pop
-    # The value remains in memory, but stack top moves back
+    # The value remains in memory, but stack pointer moves back
     memory = [0] * 10000000
     memory[1000000:1000008] = computer.as8(24)
     memory[1000008:1000016] = computer.as8(2000)
@@ -251,7 +251,9 @@ def test_call_and_return():
 
 def test_power_on_copies_only_startup_bytes():
     # Power-on copies only the first 500000 bytes, leaving later disk bytes unloaded
-    disk = computer.assemble(open("os.txt").read())
+    disk = [0] * 4000000
+    os_bytes = computer.assemble(open("os.txt").read())
+    disk[: len(os_bytes)] = os_bytes
     disk[500000 : 500000 + 8] = computer.as8(123)
     memory = [0] * 10000000
 
@@ -262,7 +264,9 @@ def test_power_on_copies_only_startup_bytes():
 
 def test_parse_8_byte_value_accepts_short_delimited_input():
     # Call parse8ByteValue directly and verify short hex values are left-padded and report consumed bytes
-    disk = computer.assemble(open("os.txt").read())
+    disk = [0] * 4000000
+    os_bytes = computer.assemble(open("os.txt").read())
+    disk[: len(os_bytes)] = os_bytes
     memory = [0] * 10000000
     memory[:500000] = disk[:500000]
     memory[1000000:1000008] = computer.as8(2000000)
@@ -292,7 +296,9 @@ def test_parse_8_byte_value_accepts_short_delimited_input():
 
 def test_os_echoes_typed_character():
     # Simulate typing one key into the real command-line OS and verify it appears after the prompt
-    disk = computer.assemble(open("os.txt").read())
+    disk = [0] * 4000000
+    os_bytes = computer.assemble(open("os.txt").read())
+    disk[: len(os_bytes)] = os_bytes
     memory = [0] * 10000000
     memory[:500000] = disk[:500000]
     keys = [ord("a")]
@@ -315,7 +321,9 @@ def test_os_echoes_typed_character():
 
 def test_read_from_disk_program():
     # Invoke readFromDiskProgram through the command line and read the first 8 disk bytes
-    disk = computer.assemble(open("os.txt").read())
+    disk = [0] * 4000000
+    os_bytes = computer.assemble(open("os.txt").read())
+    disk[: len(os_bytes)] = os_bytes
     memory = [0] * 10000000
     memory[:500000] = disk[:500000]
     command = f"{9936:x} {984:x} 0 8"
@@ -348,7 +356,9 @@ def test_read_from_disk_program():
 
 def test_write_to_disk_program():
     # Invoke writeToDiskProgram through the command line and verify disk memory changes
-    disk = computer.assemble(open("os.txt").read())
+    disk = [0] * 4000000
+    os_bytes = computer.assemble(open("os.txt").read())
+    disk[: len(os_bytes)] = os_bytes
     memory = [0] * 10000000
     memory[:500000] = disk[:500000]
     disk_address = 600000
@@ -372,7 +382,9 @@ def test_write_to_disk_program():
 
 def test_readme_write_hi_program_example():
     # Simulate the README flow: write a small program to disk, run it, and see hi
-    disk = computer.assemble(open("os.txt").read())
+    disk = [0] * 4000000
+    os_bytes = computer.assemble(open("os.txt").read())
+    disk[: len(os_bytes)] = os_bytes
     memory = [0] * 10000000
     memory[:500000] = disk[:500000]
     write_command = (
@@ -418,7 +430,9 @@ def test_readme_write_hi_program_example():
 
 def test_write_to_transcript_enter_moves_display_to_next_line():
     # Call the OS print function directly and verify Enter advances the display cursor by spaces
-    disk = computer.assemble(open("os.txt").read())
+    disk = [0] * 4000000
+    os_bytes = computer.assemble(open("os.txt").read())
+    disk[: len(os_bytes)] = os_bytes
     memory = [0] * 10000000
     memory[:500000] = disk[:500000]
     memory[1000000:1000008] = computer.as8(2000000)
@@ -452,7 +466,9 @@ def test_write_to_transcript_enter_moves_display_to_next_line():
 
 def test_write_to_transcript_scrolls_when_display_is_full():
     # Call the OS print function with the display cursor at the end and verify it scrolls up
-    disk = computer.assemble(open("os.txt").read())
+    disk = [0] * 4000000
+    os_bytes = computer.assemble(open("os.txt").read())
+    disk[: len(os_bytes)] = os_bytes
     memory = [0] * 10000000
     memory[:500000] = disk[:500000]
     memory[1000000:1000008] = computer.as8(2000000)

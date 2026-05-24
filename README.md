@@ -36,14 +36,14 @@ CPU is the component that performs operations on memory values. The set of suppo
 | `13` | `bitwiseAnd 3 4` | `slot(4) = slot(4) & slot(3)` |
 | `14` | `bitwiseAndWithNumber 15 4` | `slot(4) = slot(4) & 15` |
 | `15` | `pushNumber 27` | Push `27` to the stack. |
-| `16` | `pop` | Move the stack top back by one slot. |
-| `17` | `compare 3 4` | Compare `slot(3)` to `slot(4)` and set ALU flags. |
-| `18` | `compareToNumber 3 67` | Compare `slot(3)` to `67` and set ALU flags. |
+| `16` | `pop` | Move the stack pointer back by one slot. |
+| `17` | `compare 3 4` | Compare `slot(3)` to `slot(4)` and set equal flag and greater flag. |
+| `18` | `compareToNumber 3 67` | Compare `slot(3)` to `67` and set equal flag and greater flag. |
 | `19` | `jumpIfEqual 4000000` | Jump if the equal flag is set. |
 | `20` | `jumpIfGreater 4000000` | Jump if the greater flag is set. |
 | `21` | `jump 4000000` | Jump unconditionally. |
 | `22` | `call 4000000` | Push return address and old base pointer, set a new base pointer, then jump. |
-| `23` | `return` | Restore stack top, base pointer, and instruction pointer. |
+| `23` | `return` | Restore stack pointer, base pointer, and instruction pointer. |
 
 Disk is the component that stores values persistently. Like memory, it is an array of bytes that supports reads and writes at any address, but it keeps its values when unplugged. Disk interaction happens through a contract based on special memory locations. To read from disk, write the disk address to `1000024`, the memory address (where to write the result) to `1000032`, byte count to `1000040`, and set `1000048` to `1`, and disk hardware will copy these bytes from disk to memory and reset `1000048` to `0`. To write to disk, write the disk address to `1000024`, the memory address (where to read from) to `1000032`, byte count to `1000040`, and set `1000056` to `1`, and disk hardware will copy these bytes from memory to disk and reset `1000056` to `0`.
 
