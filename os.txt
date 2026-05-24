@@ -1,4 +1,4 @@
-initialize
+initialize:
     moveNumberToAddress 500000 1000008
     moveNumberToAddress 500000 1000016
     moveNumberToAddress 1000096 1000088
@@ -6,7 +6,7 @@ initialize
     pushNumber 1000080 0
     pushNumber 0 0
     jump commandLine 0
-commandLine
+commandLine:
     pushNumber 36 0
     call writeToTranscript 0
     pop 0 0
@@ -15,13 +15,13 @@ commandLine
     pop 0 0
     moveFromPointer 0 1
     jump commandLineLoop 0
-commandLineLoop
+commandLineLoop:
     pushNumber 0 0
     call listenForKeypress 0
     compareToNumber 2 8
     jumpIfEqual ifBackspace 0
     jump elseBackspace 0
-ifBackspace
+ifBackspace:
     pushNumber 0 0
     moveFromPointer 0 3
     compare 3 1
@@ -29,18 +29,18 @@ ifBackspace
     pop 0 0
     pop 0 0
     jump commandLineLoop 0
-ifNonEmptyInput
+ifNonEmptyInput:
     call removeLastCharacterFromTranscript 0
     pop 0 0
     pop 0 0
     jump commandLineLoop 0
-elseBackspace
+elseBackspace:
     call writeToTranscript 0
     compareToNumber 2 10
     jumpIfEqual ifEnter 0
     pop 0 0
     jump commandLineLoop 0
-ifEnter
+ifEnter:
     pushNumber 0 0
     pushNumber 0 0
     pushNumber 0 0
@@ -85,48 +85,48 @@ ifEnter
     call writeToTranscript 0
     pop 0 0
     jump commandLine 0
-listenForKeypress
+listenForKeypress:
     pushNumber 1000064 0
     pushNumber 1 0
     moveToPointer 1 0
     jump listenForKeypressLoop 0
-listenForKeypressLoop
+listenForKeypressLoop:
     moveFromPointer 0 1
     compareToNumber 1 0
     jumpIfEqual listenForKeypressLoopExit 0
     jump listenForKeypressLoop 0
-listenForKeypressLoopExit
+listenForKeypressLoopExit:
     moveNumber 1000072 1
     moveFromPointer 1 -3
     return 0 0
-removeLastCharacterFromTranscript
+removeLastCharacterFromTranscript:
     pushNumber 1000080 0
     pushNumber 0 0
     moveFromPointer 0 1
     compareToNumber 1 1032864
     jumpIfGreater regularRemoveLastCharacter 0
     return 0 0
-regularRemoveLastCharacter
+regularRemoveLastCharacter:
     pushNumber 0 0
     addNumber -8 1
     moveToPointer 2 1
     moveToPointer 1 0
     call removeLastCharacterFromDisplay 0
     return 0 0
-removeLastCharacterFromDisplay
+removeLastCharacterFromDisplay:
     pushNumber 1000088 0
     pushNumber 0 0
     moveFromPointer 0 1
     compareToNumber 1 1000096
     jumpIfGreater regularRemoveLastCharacterFromDisplay 0
     return 0 0
-regularRemoveLastCharacterFromDisplay
+regularRemoveLastCharacterFromDisplay:
     pushNumber 0 0
     addNumber -8 1
     moveToPointer 2 1
     moveToPointer 1 0
     return 0 0
-writeToTranscript
+writeToTranscript:
     pushNumber 1000080 0
     pushNumber 0 0
     moveFromPointer 0 1
@@ -136,10 +136,10 @@ writeToTranscript
     compareToNumber -3 10
     jumpIfEqual writeToTranscriptCharacterEnter 0
     jump writeToTranscriptCharacterNotEnter 0
-writeToTranscriptCharacterEnter
+writeToTranscriptCharacterEnter:
     pushNumber 0 0
     jump writeToTranscriptWriteSpacesForEnterLoop 0
-writeToTranscriptWriteSpacesForEnterLoop
+writeToTranscriptWriteSpacesForEnterLoop:
     call isDisplayAtLineEnd 0
     compareToNumber 2 1
     jumpIfEqual writeToTranscriptWriteSpacesForEnterLoopExit 0
@@ -147,51 +147,51 @@ writeToTranscriptWriteSpacesForEnterLoop
     call writeToDisplay 0
     pop 0 0
     jump writeToTranscriptWriteSpacesForEnterLoop 0
-writeToTranscriptWriteSpacesForEnterLoopExit
+writeToTranscriptWriteSpacesForEnterLoopExit:
     pushNumber 32 0
     call writeToDisplay 0
     call removeLastCharacterFromDisplay 0
     return 0 0
-writeToTranscriptCharacterNotEnter
+writeToTranscriptCharacterNotEnter:
     pushNumber 0 0
     move -3 2
     call writeToDisplay 0
     return 0 0
-isDisplayAtLineEnd
+isDisplayAtLineEnd:
     pushNumber 1000088 0
     pushNumber 0 0
     moveFromPointer 0 1
     pushNumber 1001120 0
     jump isDisplayAtLineEndLoop 0
-isDisplayAtLineEndLoop
+isDisplayAtLineEndLoop:
     compareToNumber 2 1032864
     jumpIfGreater isDisplayAtLineEndReturnZero 0
     jump isDisplayAtLineEndLoopBody 0
-isDisplayAtLineEndLoopBody
+isDisplayAtLineEndLoopBody:
     compare 1 2
     jumpIfEqual isDisplayAtLineEndReturnOne 0
     addNumber 1024 2
     jump isDisplayAtLineEndLoop 0
-isDisplayAtLineEndReturnZero
+isDisplayAtLineEndReturnZero:
     moveNumber 0 -3
     return 0 0
-isDisplayAtLineEndReturnOne
+isDisplayAtLineEndReturnOne:
     moveNumber 1 -3
     return 0 0
-writeToDisplay
+writeToDisplay:
     pushNumber 1000088 0
     pushNumber 0 0
     moveFromPointer 0 1
     compareToNumber 1 1032864
     jumpIfEqual shiftDisplayBack 0
     jump regularWriteToDisplay 0
-shiftDisplayBack
+shiftDisplayBack:
     addNumber -1024 1
     pushNumber 1001120 0
     pushNumber 1000096 0
     pushNumber 0 0
     jump shiftDisplayBackLoop 0
-shiftDisplayBackLoop
+shiftDisplayBackLoop:
     moveFromPointer 2 4
     moveToPointer 4 3
     addNumber 8 2
@@ -199,21 +199,21 @@ shiftDisplayBackLoop
     compareToNumber 2 1032864
     jumpIfEqual clearLastDisplayLine 0
     jump shiftDisplayBackLoop 0
-clearLastDisplayLine
+clearLastDisplayLine:
     moveNumber 0 4
     jump clearLastDisplayLineLoop 0
-clearLastDisplayLineLoop
+clearLastDisplayLineLoop:
     moveToPointer 4 3
     addNumber 8 3
     compareToNumber 3 1032864
     jumpIfEqual regularWriteToDisplay 0
     jump clearLastDisplayLineLoop 0
-regularWriteToDisplay
+regularWriteToDisplay:
     moveToPointer -3 1
     addNumber 8 1
     moveToPointer 1 0
     return 0 0
-readFromDisk
+readFromDisk:
     pushNumber 1000024 0
     moveToPointer -5 0
     moveNumber 1000032 0
@@ -224,14 +224,14 @@ readFromDisk
     pushNumber 1 0
     moveToPointer 1 0
     jump readFromDiskLoop 0
-readFromDiskLoop
+readFromDiskLoop:
     moveFromPointer 0 1
     compareToNumber 1 0
     jumpIfEqual readFromDiskLoopExit 0
     jump readFromDiskLoop 0
-readFromDiskLoopExit
+readFromDiskLoopExit:
     return 0 0
-writeToDisk
+writeToDisk:
     pushNumber 1000024 0
     moveToPointer -5 0
     moveNumber 1000032 0
@@ -242,21 +242,21 @@ writeToDisk
     pushNumber 1 0
     moveToPointer 1 0
     jump writeToDiskLoop 0
-writeToDiskLoop
+writeToDiskLoop:
     moveFromPointer 0 1
     compareToNumber 1 0
     jumpIfEqual writeToDiskLoopExit 0
     jump writeToDiskLoop 0
-writeToDiskLoopExit
+writeToDiskLoopExit:
     return 0 0
-parse8ByteValue
+parse8ByteValue:
     pushNumber 0 0
     move -3 0
     pushNumber 0 0
     pushNumber 0 0
     pushNumber 0 0
     jump parse8ByteValueScanLoop 0
-parse8ByteValueScanLoop
+parse8ByteValueScanLoop:
     compareToNumber 1 16
     jumpIfEqual parse8ByteValueScanLoopExit 0
     addNumber 8 2
@@ -268,21 +268,21 @@ parse8ByteValueScanLoop
     addNumber 1 1
     addNumber 8 0
     jump parse8ByteValueScanLoop 0
-parse8ByteValueScanLoopExit
+parse8ByteValueScanLoopExit:
     compareToNumber 1 16
     jumpIfEqual parse8ByteValueScanLoopReadSixteen 0
     jump parse8ByteValueContinue 0
-parse8ByteValueScanLoopReadSixteen
+parse8ByteValueScanLoopReadSixteen:
     moveFromPointer 0 3
     compareToNumber 3 32
     jumpIfEqual parse8ByteValueScanLoopNeedToReadOneMore 0
     compareToNumber 3 10
     jumpIfEqual parse8ByteValueScanLoopNeedToReadOneMore 0
     jump parse8ByteValueContinue 0
-parse8ByteValueScanLoopNeedToReadOneMore
+parse8ByteValueScanLoopNeedToReadOneMore:
     addNumber 8 2
     jump parse8ByteValueContinue 0
-parse8ByteValueContinue
+parse8ByteValueContinue:
     move -3 0
     pushNumber 16 0
     subtract 1 4
@@ -290,7 +290,7 @@ parse8ByteValueContinue
     pushNumber 0 0
     pushNumber 0 0
     jump parse8ByteValueLoop 0
-parse8ByteValueLoop
+parse8ByteValueLoop:
     compareToNumber 6 16
     jumpIfEqual parse8ByteValueLoopExit 0
     moveNumber 0 7
@@ -330,81 +330,81 @@ parse8ByteValueLoop
     compareToNumber 3 102
     jumpIfEqual parse8ByteValueLoopBody15 0
     jump parse8ByteValueLoopBodyContinue 0
-parse8ByteValueLoopBody0
+parse8ByteValueLoopBody0:
     moveNumber 0 7
     jump parse8ByteValueLoopBodyContinue 0
-parse8ByteValueLoopBody1
+parse8ByteValueLoopBody1:
     moveNumber 1 7
     jump parse8ByteValueLoopBodyContinue 0
-parse8ByteValueLoopBody2
+parse8ByteValueLoopBody2:
     moveNumber 2 7
     jump parse8ByteValueLoopBodyContinue 0
-parse8ByteValueLoopBody3
+parse8ByteValueLoopBody3:
     moveNumber 3 7
     jump parse8ByteValueLoopBodyContinue 0
-parse8ByteValueLoopBody4
+parse8ByteValueLoopBody4:
     moveNumber 4 7
     jump parse8ByteValueLoopBodyContinue 0
-parse8ByteValueLoopBody5
+parse8ByteValueLoopBody5:
     moveNumber 5 7
     jump parse8ByteValueLoopBodyContinue 0
-parse8ByteValueLoopBody6
+parse8ByteValueLoopBody6:
     moveNumber 6 7
     jump parse8ByteValueLoopBodyContinue 0
-parse8ByteValueLoopBody7
+parse8ByteValueLoopBody7:
     moveNumber 7 7
     jump parse8ByteValueLoopBodyContinue 0
-parse8ByteValueLoopBody8
+parse8ByteValueLoopBody8:
     moveNumber 8 7
     jump parse8ByteValueLoopBodyContinue 0
-parse8ByteValueLoopBody9
+parse8ByteValueLoopBody9:
     moveNumber 9 7
     jump parse8ByteValueLoopBodyContinue 0
-parse8ByteValueLoopBody10
+parse8ByteValueLoopBody10:
     moveNumber 10 7
     jump parse8ByteValueLoopBodyContinue 0
-parse8ByteValueLoopBody11
+parse8ByteValueLoopBody11:
     moveNumber 11 7
     jump parse8ByteValueLoopBodyContinue 0
-parse8ByteValueLoopBody12
+parse8ByteValueLoopBody12:
     moveNumber 12 7
     jump parse8ByteValueLoopBodyContinue 0
-parse8ByteValueLoopBody13
+parse8ByteValueLoopBody13:
     moveNumber 13 7
     jump parse8ByteValueLoopBodyContinue 0
-parse8ByteValueLoopBody14
+parse8ByteValueLoopBody14:
     moveNumber 14 7
     jump parse8ByteValueLoopBodyContinue 0
-parse8ByteValueLoopBody15
+parse8ByteValueLoopBody15:
     moveNumber 15 7
     jump parse8ByteValueLoopBodyContinue 0
-parse8ByteValueLoopBodyContinue
+parse8ByteValueLoopBodyContinue:
     shiftLeftByNumber 4 5
     add 7 5
     addNumber 8 0
     addNumber 1 6
     jump parse8ByteValueLoop 0
-parse8ByteValueLoopOmittedCharacter
+parse8ByteValueLoopOmittedCharacter:
     shiftLeftByNumber 4 5
     add 7 5
     addNumber 1 6
     jump parse8ByteValueLoop 0
-parse8ByteValueLoopExit
+parse8ByteValueLoopExit:
     move 5 -5
     move 2 -4
     return 0 0
-print8ByteValue
+print8ByteValue:
     pushNumber 60 0
     pushNumber 0 0
     pushNumber 0 0
     jump print8ByteValueLoop 0
-print8ByteValueLoop
+print8ByteValueLoop:
     compareToNumber 0 0
     jumpIfGreater print8ByteValueLoopBody 0
     compareToNumber 0 0
     jumpIfEqual print8ByteValueLoopBody 0
     jump print8ByteValueLoopExit 0
-print8ByteValueLoopBody
+print8ByteValueLoopBody:
     move -3 1
     shiftRight 0 1
     bitwiseAndWithNumber 15 1
@@ -441,61 +441,61 @@ print8ByteValueLoopBody
     jumpIfEqual print8ByteValueLoopBody14 0
     compareToNumber 1 15
     jumpIfEqual print8ByteValueLoopBody15 0
-print8ByteValueLoopBody0
+print8ByteValueLoopBody0:
     moveNumber 48 2
     jump print8ByteValueLoopBodyContinue 0
-print8ByteValueLoopBody1
+print8ByteValueLoopBody1:
     moveNumber 49 2
     jump print8ByteValueLoopBodyContinue 0
-print8ByteValueLoopBody2
+print8ByteValueLoopBody2:
     moveNumber 50 2
     jump print8ByteValueLoopBodyContinue 0
-print8ByteValueLoopBody3
+print8ByteValueLoopBody3:
     moveNumber 51 2
     jump print8ByteValueLoopBodyContinue 0
-print8ByteValueLoopBody4
+print8ByteValueLoopBody4:
     moveNumber 52 2
     jump print8ByteValueLoopBodyContinue 0
-print8ByteValueLoopBody5
+print8ByteValueLoopBody5:
     moveNumber 53 2
     jump print8ByteValueLoopBodyContinue 0
-print8ByteValueLoopBody6
+print8ByteValueLoopBody6:
     moveNumber 54 2
     jump print8ByteValueLoopBodyContinue 0
-print8ByteValueLoopBody7
+print8ByteValueLoopBody7:
     moveNumber 55 2
     jump print8ByteValueLoopBodyContinue 0
-print8ByteValueLoopBody8
+print8ByteValueLoopBody8:
     moveNumber 56 2
     jump print8ByteValueLoopBodyContinue 0
-print8ByteValueLoopBody9
+print8ByteValueLoopBody9:
     moveNumber 57 2
     jump print8ByteValueLoopBodyContinue 0
-print8ByteValueLoopBody10
+print8ByteValueLoopBody10:
     moveNumber 97 2
     jump print8ByteValueLoopBodyContinue 0
-print8ByteValueLoopBody11
+print8ByteValueLoopBody11:
     moveNumber 98 2
     jump print8ByteValueLoopBodyContinue 0
-print8ByteValueLoopBody12
+print8ByteValueLoopBody12:
     moveNumber 99 2
     jump print8ByteValueLoopBodyContinue 0
-print8ByteValueLoopBody13
+print8ByteValueLoopBody13:
     moveNumber 100 2
     jump print8ByteValueLoopBodyContinue 0
-print8ByteValueLoopBody14
+print8ByteValueLoopBody14:
     moveNumber 101 2
     jump print8ByteValueLoopBodyContinue 0
-print8ByteValueLoopBody15
+print8ByteValueLoopBody15:
     moveNumber 102 2
     jump print8ByteValueLoopBodyContinue 0
-print8ByteValueLoopBodyContinue
+print8ByteValueLoopBodyContinue:
     call writeToTranscript 0
     addNumber -4 0
     jump print8ByteValueLoop 0
-print8ByteValueLoopExit
+print8ByteValueLoopExit:
     return 0 0
-readFromDiskProgram
+readFromDiskProgram:
     pushNumber 0 0
     pushNumber 0 0
     pushNumber 0 0
@@ -528,19 +528,19 @@ readFromDiskProgram
     move 4 1
     addNumber -8 1
     jump readFromDiskProgramPrintLoop 0
-readFromDiskProgramPrintLoop
+readFromDiskProgramPrintLoop:
     compare 0 1
     jumpIfGreater readFromDiskProgramPrintLoopExit 0
     jump readFromDiskProgramPrintLoopBody 0
-readFromDiskProgramPrintLoopBody
+readFromDiskProgramPrintLoopBody:
     moveFromPointer 0 2
     moveToPointer 2 5
     call print8ByteValue 0
     addNumber 8 0
     jump readFromDiskProgramPrintLoop 0
-readFromDiskProgramPrintLoopExit
+readFromDiskProgramPrintLoopExit:
     return 0 0
-writeToDiskProgram
+writeToDiskProgram:
     pushNumber 0 0
     pushNumber 0 0
     pushNumber 0 0
@@ -554,7 +554,7 @@ writeToDiskProgram
     pushNumber 0 0
     pushNumber 0 0
     jump writeToDiskProgramBufferSizeLoop 0
-writeToDiskProgramBufferSizeLoop
+writeToDiskProgramBufferSizeLoop:
     compare 2 3
     jumpIfGreater writeToDiskProgramBufferSizeLoopExit 0
     compare 2 3
@@ -566,10 +566,10 @@ writeToDiskProgramBufferSizeLoop
     compareToNumber 5 10
     jumpIfEqual writeToDiskProgramBufferSizeLoopAdvanceBufferSize 0
     jump writeToDiskProgramBufferSizeLoop 0
-writeToDiskProgramBufferSizeLoopAdvanceBufferSize
+writeToDiskProgramBufferSizeLoopAdvanceBufferSize:
     addNumber 8 4
     jump writeToDiskProgramBufferSizeLoop 0
-writeToDiskProgramBufferSizeLoopExit
+writeToDiskProgramBufferSizeLoopExit:
     move 1 2
     moveNumber 1000008 5
     pushNumber 0 0
@@ -593,7 +593,7 @@ writeToDiskProgramBufferSizeLoopExit
     add 7 15
     moveToPointer 15 14
     jump writeToDiskProgramParseLoop 0
-writeToDiskProgramParseLoop
+writeToDiskProgramParseLoop:
     compare 2 3
     jumpIfGreater writeToDiskProgramParseLoopExit 0
     compare 2 3
@@ -606,7 +606,7 @@ writeToDiskProgramParseLoop
     addNumber 8 8
     add 13 2
     jump writeToDiskProgramParseLoop 0
-writeToDiskProgramParseLoopExit
+writeToDiskProgramParseLoopExit:
     moveToPointer 0 9
     moveToPointer 6 10
     moveToPointer 4 11
